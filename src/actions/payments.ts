@@ -74,7 +74,7 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
         throw new Error("Esta orden ya no admite abonos");
       }
 
-      let finalItems = order.items.map(i => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice }));
+      let finalItems = order.items.map((i: any) => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice }));
       let finalTotal = order.totalAmount;
       const isFirstPayment = order.status === 'PENDING';
 
