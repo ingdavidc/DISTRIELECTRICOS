@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// Enums
+enum Role {
+  ADMIN
+  CASHIER
+  WAREHOUSE
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+  OPEN_INVOICE
+}
+
+enum TransactionType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  RECEIVED
+  CANCELLED
+}
+
+// Models
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String   // Hashed password
+  role      Role     @default(CUSTOMER)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Supplier {
+  id             String          @id @default(uuid())
+  name           String
+  nit            String?
+  contactName    String?
+  email          String?
+  phone          String?
+  address        String?
+  category       String?
+  paymentTerms   String?         @default("CONTADO") // Ej: CONTADO, CREDITO 30 DIAS
+  status         String          @default("ACTIVE") // ACTIVE / INACTIVE
+
+  // 1. Datos fiscales y legales extra
+  taxRegime      String?         // Ej: Responsable IVA, Gran Contribuyente
+
+  // 3. Información financiera y de pagos extra
+  bankDetails    String?         // JSON o texto: Banco, tipo, cuenta
+  paymentMethod  String?         // Ej: Transferencia, Cheque
+  creditLimit    Float?          @default(0) // Monto máximo de deuda
+
+  // 4. Configuración contable interna
+  cxpAccount     String?         // Cuenta por pagar
+  expenseAccount String?         // Cuenta de gasto/costo
+  retentionCodes String?         // Códigos de retención a aplicar
+
+  products       Product[]       @relation("MainSupplier")
+  altProducts    Product[]       @relation("AltSupplier")
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  
+  // 1. Identificación
+  sku            String   @unique
+  name           String
+  description    String?
+  brand          String?
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id])
+  
+  // 2. Inventario y Medidas
+  unit           String   @default("Und")
+  stock          Int      @default(0)
+  minStockLimit  Int      @default(10)
+  maxStockLimit  Int?
+  location       String?  // Ej: Pasillo 3, Estante A
+
+  // 3. Costos y Precios
+  cost           Float    @default(0)
+  profitMargin   Float    @default(30) // Porcentaje de ganancia, ej 30%
+  tax            Float    @default(19) // IVA, ej 19%
+  price          Float    // Precio Venta Público (PVP)
+
+  // 4. Proveedores e Imagen
+  supplierId     String?
+  supplier       Supplier? @relation("MainSupplier", fields: [supplierId], references: [id])
+  altSupplierId  String?
+  altSupplier    Supplier? @relation("AltSupplier", fields: [altSupplierId], references: [id])
+  imageUrl       String?
+  
+  // Relaciones históricas
+  orderItems     OrderItem[]
+  transactions   InventoryTransaction[]
+  purchaseItems  PurchaseOrderItem[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model InventoryTransaction {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  type        TransactionType
+  quantity    Int
+  reason      String?
+  createdAt   DateTime @default(now())
+}
+
+model Customer {
+  id             String    @id @default(uuid())
+  identification String    @unique // CC, NIT, etc.
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  orders         Order[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  userId      String?  // Cajero que procesó la venta
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  customerId  String?  // Cliente que compró
+  customer    Customer? @relation(fields: [customerId], references: [id])
+
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+  notes       String?
+  deliveryType String   @default("RETIRO") // RETIRO, DOMICILIO
+  
+  // Datos Financieros (Caja)
+  amountPaid  Float    @default(0)
+  receiptType String?  // FACTURA, VOUCHER
+
+  items       OrderItem[]
+  payments    OrderPayment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OrderPayment {
+  id             String   @id @default(uuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  amount         Float
+  method         String   // EFECTIVO, TARJETA, TRANSFERENCIA, CREDITO
+  bank           String?
+  transactionId  String?
+  creditProvider String?
+  creditDays     Int?
+  
+  createdAt      DateTime @default(now())
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  unitPrice   Float
+}
+
+model PurchaseOrder {
+  id          String              @id @default(uuid())
+  supplierId  String
+  supplier    Supplier            @relation(fields: [supplierId], references: [id])
+  status      PurchaseOrderStatus @default(DRAFT)
+  notes       String?
+  
+  items       PurchaseOrderItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  quantityNeeded  Int
+}
