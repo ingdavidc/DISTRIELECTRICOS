@@ -185,7 +185,7 @@ export default function DispatchPage() {
               <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem" }}>
                 <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--color-primary)" }}>Artículos a Buscar</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  {selectedOrder.items.map(item => (
+                  {selectedOrder.items.map((item: any) => (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "white" }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginBottom: "0.25rem" }}>SKU: {item.product.sku}</div>
@@ -287,7 +287,7 @@ export default function DispatchPage() {
               </tr>
             </thead>
             <tbody>
-              {selectedOrder.items.map(item => (
+              {selectedOrder.items.map((item: any) => (
                 <tr key={item.id}>
                   <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem" }}>
                     <div style={{ width: "20px", height: "20px", border: "2px solid black", borderRadius: "3px" }}></div>
