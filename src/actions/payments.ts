@@ -63,7 +63,7 @@ interface ModifiedItem {
 
 export async function processPayment(orderId: string, paymentData: PaymentData, modifiedItems?: ModifiedItem[]) {
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: { items: true, payments: true }
