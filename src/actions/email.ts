@@ -16,7 +16,7 @@ export async function sendPurchaseOrderEmail(finalOrder: any) {
   let pdfBuffer: Buffer;
   try {
     const stream = await renderToStream(
-      React.createElement(PurchaseOrderPDF, { order: finalOrder, items: orderDetails })
+      React.createElement(PurchaseOrderPDF, { order: finalOrder, items: orderDetails }) as any
     );
     
     // Convert stream to buffer

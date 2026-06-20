@@ -11,7 +11,7 @@ const connectionString = process.env.DATABASE_URL;
 
 // Initialize the Prisma Pg adapter
 const pool = connectionString ? new Pool({ connectionString }) : null;
-const adapter = pool ? new PrismaPg(pool) : null;
+const adapter = pool ? new PrismaPg(pool) : undefined;
 
 export const prisma =
   globalForPrisma.prisma ??

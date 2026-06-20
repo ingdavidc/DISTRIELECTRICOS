@@ -84,7 +84,7 @@ export default function PublicNavbar() {
         <Link href="#" style={{ fontWeight: 500, color: "var(--color-text-main)" }}>Conductores Eléctricos</Link>
         <Link href="#" style={{ fontWeight: 500, color: "var(--color-text-main)" }}>Herramientas</Link>
         <Link href="#" style={{ fontWeight: 500, color: "var(--color-text-main)" }}>Automatización Industrial</Link>
-        <Link href="#" style={{ fontWeight: 500, color: "var(--color-text-main)", color: "var(--color-danger)" }}>Ofertas Flash</Link>
+        <Link href="/ofertas" style={{ textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, color: "var(--color-danger)" }}>Ofertas Flash</Link>
       </nav>
     </header>
   );

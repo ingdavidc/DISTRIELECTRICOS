@@ -133,7 +133,7 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
       // Calcular nuevo balance
       const totalPaidSoFar = order.amountPaid + paymentData.amount;
       
-      let newStatus = order.status;
+      let newStatus: any = order.status;
       if (isFirstPayment) {
         // Al pagar por primera vez, pasa a bodega o se cierra si no manejamos entrega separada.
         // Como el sistema pasa a bodega (PREPARING) o OPEN_INVOICE
