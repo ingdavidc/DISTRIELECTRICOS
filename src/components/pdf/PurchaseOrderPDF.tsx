@@ -240,7 +240,7 @@ export default function PurchaseOrderPDF({ order, items }: PurchaseOrderPDFProps
   deliveryDate.setDate(deliveryDate.getDate() + 5);
   const formattedDeliveryDate = deliveryDate.toLocaleDateString('es-CO');
 
-  const subtotal = items.reduce((sum, item) => sum + (item.product.cost * item.quantityNeeded), 0);
+  const subtotal = items.reduce((sum: any, item: any) => sum + (item.product.cost * item.quantityNeeded), 0);
   const taxes = 0; // Se asume IVA incluido en el costo para este ERP simplificado, o se puede calcular si hay campo de impuesto aplicable al costo.
   const total = subtotal + taxes;
 

@@ -131,7 +131,7 @@ export default function PaymentsPage() {
   // Calcular balance basado en edición en vivo (si aplica)
   const isPending = selectedOrder?.status === 'PENDING';
   const currentTotal = isPending 
-    ? editableItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0)
+    ? editableItems.reduce((acc: any, item: any) => acc + (item.quantity * item.unitPrice), 0)
     : (selectedOrder?.totalAmount || 0);
   
   const currentBalance = currentTotal - (selectedOrder?.amountPaid || 0);

@@ -122,7 +122,7 @@ export default function PurchasesPage() {
             const currentDrafts = draftItems[order.id] || [];
             
             // Calcular el total de la orden
-            const orderTotal = order.items.reduce((sum, item) => {
+            const orderTotal = order.items.reduce((sum: any, item: any) => {
               const draftItem = currentDrafts.find(d => d.id === item.id);
               if (!draftItem) return sum;
               return sum + (item.product.cost * draftItem.quantityNeeded);

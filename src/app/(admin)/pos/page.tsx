@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
 
-type Product = Awaited<ReturnType<typeof getPosProducts>>[0];
+import { Product } from "@prisma/client";
 type Customer = Awaited<ReturnType<typeof searchCustomers>>[0];
 type Order = Awaited<ReturnType<typeof getCustomerOrders>>[0];
 
@@ -116,8 +116,8 @@ export default function POSPage() {
     setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.cartQuantity / (1 + (item.tax / 100))), 0);
-  const total = cart.reduce((sum, item) => sum + (item.price * item.cartQuantity), 0);
+  const subtotal = cart.reduce((sum: any, item: any) => sum + (item.price * item.cartQuantity / (1 + (item.tax / 100))), 0);
+  const total = cart.reduce((sum: any, item: any) => sum + (item.price * item.cartQuantity), 0);
   const taxes = total - subtotal;
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
@@ -509,7 +509,7 @@ export default function POSPage() {
                               {getStatusBadge(order.status)}
                             </div>
                             <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                              <Package size={14} /> {order.items.reduce((acc, item) => acc + item.quantity, 0)} artículos • Total: ${order.totalAmount.toLocaleString()}
+                              <Package size={14} /> {order.items.reduce((acc: any, item: any) => acc + item.quantity, 0)} artículos • Total: ${order.totalAmount.toLocaleString()}
                             </div>
                           </div>
                         ))}

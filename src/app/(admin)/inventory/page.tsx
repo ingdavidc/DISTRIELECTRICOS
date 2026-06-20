@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import toast from "react-hot-toast";
 import { Trash2, Edit } from "lucide-react";
 
-type Product = Awaited<ReturnType<typeof getInventoryProducts>>[0];
+import { Product } from "@prisma/client";
 type Supplier = Awaited<ReturnType<typeof getSuppliers>>[0];
 type Category = Awaited<ReturnType<typeof getCategories>>[0];
 

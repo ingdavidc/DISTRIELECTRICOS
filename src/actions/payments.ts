@@ -82,7 +82,7 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
       if (isFirstPayment) {
         if (modifiedItems && modifiedItems.length > 0) {
           finalItems = modifiedItems;
-          finalTotal = modifiedItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+          finalTotal = modifiedItems.reduce((acc: any, item: any) => acc + (item.quantity * item.unitPrice), 0);
 
           await tx.orderItem.deleteMany({ where: { orderId } });
           await tx.orderItem.createMany({
