@@ -33,7 +33,7 @@ export async function submitOrderToCashier(items: { productId: string, quantity:
     // (El descuento real se hace en Caja, pero evitamos enviar basura a caja)
     for (const item of items) {
       const product = await prisma.product.findUnique({ where: { id: item.productId } });
-      if (!product || product.stock < item.quantity) {
+      if (!product || (product.stock < item.quantity && !product.sku.startsWith("ESP-"))) {
         return { success: false, error: `Stock insuficiente para el producto ${product?.name || item.productId}` };
       }
     }
@@ -63,5 +63,26 @@ export async function submitOrderToCashier(items: { productId: string, quantity:
   } catch (error: any) {
     console.error("Error submitting order:", error);
     return { success: false, error: error.message || "Error al enviar la orden a caja" };
+  }
+}
+
+export async function createSpecialProduct(name: string, price: number) {
+  try {
+    const product = await prisma.product.create({
+      data: {
+        sku: `ESP-${Date.now()}`,
+        name: `[ESPECIAL] ${name}`,
+        price: price,
+        stock: 0,
+        cost: 0, // No trackeamos costo de productos especiales adhoc
+        tax: 0,
+        profitMargin: 0,
+        unit: "UNIDAD",
+      }
+    });
+    return { success: true, product };
+  } catch (error: any) {
+    console.error("Error creating special product:", error);
+    return { success: false, error: error.message };
   }
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package } from "lucide-react";
 import toast from "react-hot-toast";
-import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
+import { getPosProducts, submitOrderToCashier, createSpecialProduct } from "@/actions/pos";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
 
 import { Product } from "@prisma/client";
@@ -34,6 +34,10 @@ export default function POSPage() {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
+  // Special Product State
+  const [isSpecialModalOpen, setIsSpecialModalOpen] = useState(false);
+  const [specialProduct, setSpecialProduct] = useState({ name: "", price: "" });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -170,6 +174,21 @@ export default function POSPage() {
     }
   };
 
+  const handleAddSpecialProduct = async () => {
+    if (!specialProduct.name || !specialProduct.price) return toast.error("Completa nombre y precio");
+    setIsProcessing(true);
+    const res = await createSpecialProduct(specialProduct.name, Number(specialProduct.price));
+    if (res.success && res.product) {
+      setCart(prev => [...prev, { ...(res.product as any), cartQuantity: 1 }]);
+      setIsSpecialModalOpen(false);
+      setSpecialProduct({ name: "", price: "" });
+      toast.success("Producto especial agregado al carrito");
+    } else {
+      toast.error(res.error || "Error al crear producto especial");
+    }
+    setIsProcessing(false);
+  };
+
   const openHistoryModal = async () => {
     if (!selectedCustomer) return;
     setIsHistoryModalOpen(true);
@@ -209,17 +228,26 @@ export default function POSPage() {
             {searchQuery === "" ? <Flame color="#f59e0b" size={24} /> : null}
             {searchQuery === "" ? "Más Vendidos" : "Búsqueda Rápida"}
           </h2>
-          <div className="search-bar" style={{ width: "350px", display: "flex", alignItems: "center", position: "relative" }}>
-            <Search size={18} style={{ position: "absolute", left: "1rem", color: "var(--color-text-muted)" }} />
-            <input 
-              ref={searchInputRef}
-              type="text" 
-              className="form-input" 
-              style={{ paddingLeft: "2.5rem" }} 
-              placeholder="Escanear código o buscar producto..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button 
+              className="btn btn-outline" 
+              onClick={() => setIsSpecialModalOpen(true)}
+              style={{ padding: "0 1rem", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <Plus size={16} /> Ítem Especial
+            </button>
+            <div className="search-bar" style={{ width: "350px", display: "flex", alignItems: "center", position: "relative" }}>
+              <Search size={18} style={{ position: "absolute", left: "1rem", color: "var(--color-text-muted)" }} />
+              <input 
+                ref={searchInputRef}
+                type="text" 
+                className="form-input" 
+                style={{ paddingLeft: "2.5rem" }} 
+                placeholder="Escanear código o buscar producto..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
@@ -553,6 +581,50 @@ export default function POSPage() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setIsHistoryModalOpen(false)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Special Product Modal */}
+      {isSpecialModalOpen && (
+        <div className="modal-overlay" onClick={() => !isProcessing && setIsSpecialModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: "400px" }}>
+            <div className="modal-header">
+              <h2>Añadir Ítem Especial</h2>
+              <button className="btn-close" onClick={() => setIsSpecialModalOpen(false)} disabled={isProcessing}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="form-group">
+                <label>Descripción del Artículo</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Ej. Cable X-500 Custom..." 
+                  value={specialProduct.name}
+                  onChange={(e) => setSpecialProduct({...specialProduct, name: e.target.value})}
+                  disabled={isProcessing}
+                />
+              </div>
+              <div className="form-group">
+                <label>Precio de Venta Unitario ($)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  placeholder="0.00" 
+                  value={specialProduct.price}
+                  onChange={(e) => setSpecialProduct({...specialProduct, price: e.target.value})}
+                  disabled={isProcessing}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setIsSpecialModalOpen(false)} disabled={isProcessing}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handleAddSpecialProduct} disabled={isProcessing}>
+                {isProcessing ? "Añadiendo..." : "Agregar al Carrito"}
+              </button>
             </div>
           </div>
         </div>
