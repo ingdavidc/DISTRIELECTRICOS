@@ -87,7 +87,7 @@ export default function POSPage() {
           toast.error(`Solo hay ${product.stock} unidades de ${product.name}`);
           return prev;
         }
-        return prev.map(item => 
+        return prev.map((item: any) => 
           item.id === product.id 
             ? { ...item, cartQuantity: item.cartQuantity + 1 }
             : item
@@ -98,7 +98,7 @@ export default function POSPage() {
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
+    setCart(prev => prev.map((item: any) => {
       if (item.id === id) {
         const newQty = item.cartQuantity + delta;
         if (newQty <= 0) return item; 
@@ -142,7 +142,7 @@ export default function POSPage() {
     const tid = toast.loading("Enviando orden a caja...");
 
     try {
-      const items = cart.map(item => ({
+      const items = cart.map((item: any) => ({
         productId: item.id,
         quantity: item.cartQuantity,
         unitPrice: item.price
@@ -229,7 +229,7 @@ export default function POSPage() {
           ) : products.length === 0 ? (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "3rem", color: "var(--color-text-muted)" }}>No se encontraron productos.</div>
           ) : (
-            products.map(product => {
+            products.map((product: any) => {
               const hasStock = product.stock > 0;
               return (
                 <div 
@@ -313,7 +313,7 @@ export default function POSPage() {
               {customerQuery.length > 2 && (
                 <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "white", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-md)", zIndex: 50, marginTop: "0.25rem", overflow: "hidden" }}>
                   {customerResults.length > 0 ? (
-                    customerResults.map(c => (
+                    customerResults.map((c: any) => (
                       <div 
                         key={c.id} 
                         style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--color-border)", cursor: "pointer", display: "flex", justifyContent: "space-between" }}
@@ -353,7 +353,7 @@ export default function POSPage() {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {cart.map(item => (
+              {cart.map((item: any) => (
                 <div key={item.id} style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingBottom: "1rem", borderBottom: "1px dashed var(--color-border)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ fontWeight: 500, fontSize: "0.9rem", flex: 1 }}>{item.name}</div>
@@ -502,7 +502,7 @@ export default function POSPage() {
                         Pedidos Activos
                       </h3>
                       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                        {activeOrders.map(order => (
+                        {activeOrders.map((order: any) => (
                           <div key={order.id} style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "1rem", background: "var(--color-surface)" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
                               <div style={{ fontWeight: 600, fontSize: "1rem" }}>Orden #{order.id.slice(-6).toUpperCase()}</div>
@@ -534,7 +534,7 @@ export default function POSPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {pastOrders.map(order => (
+                            {pastOrders.map((order: any) => (
                               <tr key={order.id}>
                                 <td style={{ fontWeight: 500 }}>#{order.id.slice(-6).toUpperCase()}</td>
                                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>

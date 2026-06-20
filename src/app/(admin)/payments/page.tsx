@@ -94,7 +94,7 @@ export default function PaymentsPage() {
 
   const handleSelectOrder = (order: Order) => {
     setSelectedOrder(order);
-    setEditableItems(order.items.map(i => ({
+    setEditableItems(order.items.map((i: any) => ({
       id: i.id,
       productId: i.productId,
       name: i.product.name,
@@ -114,7 +114,7 @@ export default function PaymentsPage() {
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setEditableItems(prev => prev.map(item => {
+    setEditableItems(prev => prev.map((item: any) => {
       if (item.id === id) {
         const newQty = item.quantity + delta;
         if (newQty <= 0) return item;
@@ -284,7 +284,7 @@ export default function PaymentsPage() {
                {isSearching ? "Este cliente no tiene deudas pendientes." : "No hay tickets pendientes de pago."}
              </div>
           ) : (
-            orders.map(order => {
+            orders.map((order: any) => {
               const balance = order.totalAmount - order.amountPaid;
               return (
                 <div 
@@ -397,7 +397,7 @@ export default function PaymentsPage() {
                   {isPending ? "Auditoría de Artículos" : "Artículos Despachados"}
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  {editableItems.map(item => (
+                  {editableItems.map((item: any) => (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "0.75rem", borderBottom: "1px dashed var(--color-border)" }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 500, color: isPending ? "inherit" : "var(--color-text-muted)" }}>{item.name}</div>
@@ -600,7 +600,7 @@ export default function PaymentsPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {customerOrders.map(order => (
+                            {customerOrders.map((order: any) => (
                               <tr key={order.id}>
                                 <td style={{ fontWeight: 500 }}>#{order.id.slice(-6).toUpperCase()}</td>
                                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>

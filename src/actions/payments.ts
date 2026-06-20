@@ -86,7 +86,7 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
 
           await tx.orderItem.deleteMany({ where: { orderId } });
           await tx.orderItem.createMany({
-            data: modifiedItems.map(item => ({
+            data: modifiedItems.map((item: any) => ({
               orderId,
               productId: item.productId,
               quantity: item.quantity,

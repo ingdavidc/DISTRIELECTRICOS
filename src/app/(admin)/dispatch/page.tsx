@@ -109,7 +109,7 @@ export default function DispatchPage() {
             ) : filteredOrders.length === 0 ? (
                <div style={{ textAlign: "center", padding: "3rem", color: "var(--color-text-muted)" }}>No hay pedidos en cola.</div>
             ) : (
-              filteredOrders.map(order => (
+              filteredOrders.map((order: any) => (
                 <div 
                   key={order.id} 
                   onClick={() => setSelectedOrder(order)}

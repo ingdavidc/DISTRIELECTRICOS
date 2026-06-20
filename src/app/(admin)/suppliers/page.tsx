@@ -202,7 +202,7 @@ export default function SuppliersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredSuppliers.map(supplier => (
+                {filteredSuppliers.map((supplier: any) => (
                   <tr key={supplier.id}>
                     <td>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -279,7 +279,7 @@ export default function SuppliersPage() {
                 { id: "contact", label: "Contacto", icon: Phone },
                 { id: "financial", label: "Finanzas y Pagos", icon: CreditCard },
                 { id: "accounting", label: "Contabilidad", icon: BookOpen },
-              ].map(tab => {
+              ].map((tab: any) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (

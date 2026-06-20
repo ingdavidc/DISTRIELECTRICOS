@@ -279,7 +279,7 @@ export default function InventoryPage() {
                 { id: 2, label: "2. Inventario" },
                 { id: 3, label: "3. Costos y Precios" },
                 { id: 4, label: "4. Proveedores" }
-              ].map(tab => (
+              ].map((tab: any) => (
                 <button
                   key={tab.id}
                   type="button"
@@ -317,7 +317,7 @@ export default function InventoryPage() {
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Categoría / Familia *</label>
                       <select required className="input" value={formData.categoryId} onChange={(e) => setFormData({...formData, categoryId: e.target.value})}>
                         <option value="">Seleccione Categoría...</option>
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -415,14 +415,14 @@ export default function InventoryPage() {
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Proveedor Principal (Auto-Compra)</label>
                       <select className="input" value={formData.supplierId} onChange={(e) => setFormData({...formData, supplierId: e.target.value})}>
                         <option value="">Seleccione Proveedor...</option>
-                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Proveedor Alternativo</label>
                       <select className="input" value={formData.altSupplierId} onChange={(e) => setFormData({...formData, altSupplierId: e.target.value})}>
                         <option value="">Ninguno / Opcional</option>
-                        {suppliers.filter(s => s.id !== formData.supplierId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        {suppliers.filter(s => s.id !== formData.supplierId).map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>

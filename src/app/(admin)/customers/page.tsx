@@ -163,7 +163,7 @@ export default function CustomersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredCustomers.map(customer => (
+                {filteredCustomers.map((customer: any) => (
                   <tr key={customer.id}>
                     <td>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>

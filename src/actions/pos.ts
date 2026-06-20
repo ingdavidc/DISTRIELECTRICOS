@@ -47,7 +47,7 @@ export async function submitOrderToCashier(items: { productId: string, quantity:
         notes,
         deliveryType,
         items: {
-          create: items.map(item => ({
+          create: items.map((item: any) => ({
             productId: item.productId,
             quantity: item.quantity,
             unitPrice: item.unitPrice

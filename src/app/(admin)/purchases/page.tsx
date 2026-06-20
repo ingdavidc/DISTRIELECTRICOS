@@ -33,7 +33,7 @@ export default function PurchasesPage() {
       // Initialize draft state
       const initialDrafts: Record<string, any> = {};
       data.forEach(order => {
-        initialDrafts[order.id] = order.items.map(i => ({ id: i.id, quantityNeeded: i.quantityNeeded }));
+        initialDrafts[order.id] = order.items.map((i: any) => ({ id: i.id, quantityNeeded: i.quantityNeeded }));
       });
       setDraftItems(initialDrafts);
 
@@ -48,7 +48,7 @@ export default function PurchasesPage() {
     if (newQty < 0) return;
     setDraftItems(prev => ({
       ...prev,
-      [orderId]: prev[orderId].map(item => item.id === itemId ? { ...item, quantityNeeded: newQty } : item)
+      [orderId]: prev[orderId].map((item: any) => item.id === itemId ? { ...item, quantityNeeded: newQty } : item)
     }));
   };
 
@@ -118,7 +118,7 @@ export default function PurchasesPage() {
              No hay órdenes de compra pendientes.
            </div>
         ) : (
-          orders.map(order => {
+          orders.map((order: any) => {
             const currentDrafts = draftItems[order.id] || [];
             
             // Calcular el total de la orden
@@ -143,7 +143,7 @@ export default function PurchasesPage() {
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: "0.9rem", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>Ajustar Cantidades:</h4>
                   <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    {order.items.map(item => {
+                    {order.items.map((item: any) => {
                       const draftItem = currentDrafts.find(d => d.id === item.id);
                       if (!draftItem) return null; // Was deleted
 
@@ -198,7 +198,7 @@ export default function PurchasesPage() {
                       className="btn btn-outline" 
                       style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "var(--color-primary)", borderColor: "var(--color-primary)" }} 
                       onClick={() => {
-                        const itemsForPdf = order.items.map(i => {
+                        const itemsForPdf = order.items.map((i: any) => {
                           const draftItem = currentDrafts.find(d => d.id === i.id);
                           return draftItem ? { product: i.product, quantityNeeded: draftItem.quantityNeeded } : null;
                         }).filter(Boolean) as any[];
