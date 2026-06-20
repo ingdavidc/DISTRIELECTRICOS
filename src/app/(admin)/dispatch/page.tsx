@@ -19,7 +19,7 @@ export default function DispatchPage() {
       const data = await getOrdersForDispatch();
       setOrders(data);
       if (selectedOrder) {
-        const stillExists = data.find(o => o.id === selectedOrder.id);
+        const stillExists = data.find((o: any) => o.id === selectedOrder.id);
         if (!stillExists) setSelectedOrder(null);
         else setSelectedOrder(stillExists);
       }
