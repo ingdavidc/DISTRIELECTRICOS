@@ -222,3 +222,15 @@ model PurchaseOrderItem {
   product         Product       @relation(fields: [productId], references: [id])
   quantityNeeded  Int
 }
+
+model SpecialRequest {
+  id            String   @id @default(uuid())
+  productName   String
+  quantity      Int
+  customerName  String?
+  customerPhone String?
+  notes         String?
+  status        String   @default("PENDING") // PENDING, SOURCED, REJECTED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

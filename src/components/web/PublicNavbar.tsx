@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { ShoppingCart, Search, Menu, User, Phone } from "lucide-react";
+import { useCart } from "./CartContext";
 
 export default function PublicNavbar() {
+  const { totalItems, totalPrice, openCart } = useCart();
+
   return (
     <header style={{ position: "sticky", top: 0, zIndex: 50, background: "white", boxShadow: "var(--shadow-sm)" }}>
       {/* Top Bar for B2B/Contact */}
@@ -61,14 +64,19 @@ export default function PublicNavbar() {
             <User size={24} />
             <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Mi Cuenta</span>
           </Link>
-          <div style={{ position: "relative", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", color: "var(--color-primary)", gap: "0.25rem" }}>
+          <div 
+            onClick={openCart}
+            style={{ position: "relative", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", color: "var(--color-primary)", gap: "0.25rem" }}
+          >
             <div style={{ position: "relative" }}>
               <ShoppingCart size={24} />
-              <span style={{ position: "absolute", top: "-8px", right: "-8px", background: "var(--color-secondary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", width: "20px", height: "20px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                3
-              </span>
+              {totalItems > 0 && (
+                <span style={{ position: "absolute", top: "-8px", right: "-8px", background: "var(--color-secondary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", width: "20px", height: "20px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {totalItems}
+                </span>
+              )}
             </div>
-            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>$150.000</span>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>${totalPrice.toLocaleString('es-CO')}</span>
           </div>
         </div>
       </div>

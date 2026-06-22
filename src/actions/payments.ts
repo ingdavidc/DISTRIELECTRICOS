@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { triggerN8nWebhook } from "@/lib/n8n";
 
 export async function getPendingOrders() {
   try {
@@ -163,6 +164,16 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
     revalidatePath('/dispatch'); 
     revalidatePath('/inventory');
     revalidatePath('/dashboard');
+    
+    // Trigger n8n webhook con los datos del pago
+    triggerN8nWebhook("new-sale", {
+      orderId: result.id,
+      amountPaid: paymentData.amount,
+      totalAmount: result.totalAmount,
+      method: paymentData.method,
+      status: result.status,
+      receiptType: paymentData.receiptType
+    });
     
     return { success: true, orderId: result.id };
   } catch (error: any) {

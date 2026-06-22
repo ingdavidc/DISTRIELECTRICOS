@@ -1,6 +1,8 @@
 import PublicNavbar from "@/components/web/PublicNavbar";
 import Footer from "@/components/web/Footer";
 import AiAssistant from "@/components/web/AiAssistant";
+import { CartProvider } from "@/components/web/CartContext";
+import CartSidebar from "@/components/web/CartSidebar";
 
 export default function WebLayout({
   children,
@@ -8,13 +10,16 @@ export default function WebLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <PublicNavbar />
-      <main style={{ flex: 1 }}>
-        {children}
-      </main>
-      <Footer />
-      <AiAssistant />
-    </div>
+    <CartProvider>
+      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <PublicNavbar />
+        <main style={{ flex: 1 }}>
+          {children}
+        </main>
+        <Footer />
+        <AiAssistant />
+      </div>
+      <CartSidebar />
+    </CartProvider>
   );
 }

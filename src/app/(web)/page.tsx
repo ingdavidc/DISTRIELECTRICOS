@@ -2,8 +2,11 @@
 
 import Image from "next/image";
 import { Zap, Truck, ShieldCheck, Wrench, ArrowRight, ShoppingCart } from "lucide-react";
+import { useCart } from "@/components/web/CartContext";
 
 export default function WebHomePage() {
+  const { addToCart } = useCart();
+
   const featuredCategories = [
     { name: "Conductores y Cables", img: "🔌", color: "#f39423" },
     { name: "Iluminación Comercial", img: "💡", color: "#203562" },
@@ -116,7 +119,11 @@ export default function WebHomePage() {
                   <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1 }}>{prod.name}</div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                     <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price}</div>
-                    <button className="btn btn-primary" style={{ padding: "0.5rem", borderRadius: "50%" }}>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ padding: "0.5rem", borderRadius: "50%" }}
+                      onClick={() => addToCart({ id: prod.id, name: prod.name, price: parseInt(prod.price.replace(".", "")), brand: prod.brand })}
+                    >
                       <ShoppingCart size={20} />
                     </button>
                   </div>

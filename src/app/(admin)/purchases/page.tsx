@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getPurchaseOrders, approvePurchaseOrder } from "@/actions/purchases";
+import { getSpecialRequests, updateSpecialRequestStatus } from "@/actions/requests";
 import { Truck, CheckCircle, Clock, Trash2, Loader2, ShieldAlert, UserCog, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import PDFPreviewModal from "@/components/pdf/PDFPreviewModal";
@@ -13,6 +14,9 @@ export default function PurchasesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [previewOrder, setPreviewOrder] = useState<{order: any, items: any[]} | null>(null);
+  
+  // Special Requests
+  const [specialRequests, setSpecialRequests] = useState<any[]>([]);
   
   // Simulador de Rol (ya que no hay login aún)
   const [simulatedRole, setSimulatedRole] = useState<"ADMIN" | "WAREHOUSE">("ADMIN");
@@ -36,6 +40,10 @@ export default function PurchasesPage() {
         initialDrafts[order.id] = order.items.map((i: any) => ({ id: i.id, quantityNeeded: i.quantityNeeded }));
       });
       setDraftItems(initialDrafts);
+
+      // Load special requests
+      const reqs = await getSpecialRequests();
+      setSpecialRequests(reqs);
 
     } catch (error) {
       toast.error("Error al cargar las órdenes de compra");
@@ -83,6 +91,17 @@ export default function PurchasesPage() {
     setIsApproving(null);
   };
 
+  const handleUpdateSpecialRequest = async (id: string, newStatus: string) => {
+    const tid = toast.loading("Actualizando solicitud...");
+    const res = await updateSpecialRequestStatus(id, newStatus);
+    if (res.success) {
+      toast.success("Solicitud actualizada", { id: tid });
+      loadOrders();
+    } else {
+      toast.error(res.error || "Error al actualizar", { id: tid });
+    }
+  };
+
   return (
     <>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -107,6 +126,59 @@ export default function PurchasesPage() {
           </select>
         </div>
       </div>
+
+      {/* SPECIAL REQUESTS SECTION */}
+      {specialRequests.length > 0 && (
+        <div style={{ marginBottom: "2rem" }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--color-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <ShieldAlert size={20} color="#f59e0b" />
+            Solicitudes Especiales desde Punto de Venta
+          </h2>
+          <div className="table-responsive">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Producto Solicitado</th>
+                  <th>Cant.</th>
+                  <th>Cliente</th>
+                  <th>Contacto</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {specialRequests.map(req => (
+                  <tr key={req.id}>
+                    <td>{new Date(req.createdAt).toLocaleDateString()}</td>
+                    <td style={{ fontWeight: 600 }}>{req.productName}</td>
+                    <td>{req.quantity}</td>
+                    <td>{req.customerName || "-"}</td>
+                    <td>{req.customerPhone || "-"}</td>
+                    <td>
+                      <span className={`badge ${req.status === 'PENDING' ? 'badge-warning' : req.status === 'SOURCED' ? 'badge-success' : 'badge-danger'}`}>
+                        {req.status === 'PENDING' ? 'Pendiente' : req.status === 'SOURCED' ? 'Conseguido' : 'Rechazado'}
+                      </span>
+                    </td>
+                    <td>
+                      {req.status === 'PENDING' && (
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <button className="btn btn-outline" style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem", color: "var(--color-success)", borderColor: "var(--color-success)" }} onClick={() => handleUpdateSpecialRequest(req.id, "SOURCED")}>
+                            <CheckCircle size={14} /> Listo
+                          </button>
+                          <button className="btn btn-outline" style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem", color: "var(--color-danger)", borderColor: "var(--color-danger)" }} onClick={() => handleUpdateSpecialRequest(req.id, "REJECTED")}>
+                            <Trash2 size={14} /> Rechazar
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "1.5rem" }}>
         {isLoading ? (

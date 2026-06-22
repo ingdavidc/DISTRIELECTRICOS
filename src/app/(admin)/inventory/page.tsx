@@ -7,6 +7,7 @@ import { getSuppliers } from "@/actions/purchases";
 import { createClient } from "@supabase/supabase-js";
 import toast from "react-hot-toast";
 import { Trash2, Edit } from "lucide-react";
+import imageCompression from "browser-image-compression";
 
 import { Product } from "@prisma/client";
 type Supplier = Awaited<ReturnType<typeof getSuppliers>>[0];
@@ -24,6 +25,55 @@ export default function InventoryPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingImage(true);
+      const tid = toast.loading("Optimizando y subiendo imagen...");
+
+      // Comprimir
+      const options = {
+        maxSizeMB: 0.1, // Max 100KB
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+        fileType: "image/webp" as string,
+      };
+      const compressedFile = await imageCompression(file, options);
+
+      // Subir a Supabase
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !supabaseKey) throw new Error("Supabase no configurado");
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, "_")}.webp`;
+      
+      const { error } = await supabase.storage
+        .from("products")
+        .upload(fileName, compressedFile, { contentType: "image/webp", upsert: true });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, imageUrl: publicUrl }));
+      toast.success("Imagen subida con éxito", { id: tid });
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Error al subir: " + (error.message || "Revisa las políticas de Supabase"), { duration: 5000 });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const initialProductState: ProductInputData = {
     name: "", sku: "", description: "", brand: "", categoryId: "",
@@ -210,7 +260,20 @@ export default function InventoryPage() {
                 filteredProducts.map((prod: any) => {
                   const currentStock = prod.stock;
                   const limit = prod.minStockLimit || 10;
-                  const isLowStock = currentStock <= limit;
+                  
+                  let stockColor = "inherit";
+                  let statusBadge = null;
+
+                  if (currentStock === 0) {
+                    stockColor = "var(--color-danger)";
+                    statusBadge = <div className="badge badge-danger" style={{ display: "inline-block", marginTop: "0.25rem" }}>Sin Existencias</div>;
+                  } else if (currentStock <= limit) {
+                    stockColor = "var(--color-warning)";
+                    statusBadge = <div className="badge badge-warning" style={{ display: "inline-block", marginTop: "0.25rem" }}>Stock Bajo</div>;
+                  } else {
+                    stockColor = "var(--color-success)";
+                    statusBadge = <div className="badge badge-success" style={{ display: "inline-block", marginTop: "0.25rem" }}>Normal</div>;
+                  }
 
                   return (
                     <tr key={prod.id}>
@@ -223,12 +286,12 @@ export default function InventoryPage() {
                       <td style={{ fontWeight: 700, color: "var(--color-secondary)" }}>${prod.price?.toLocaleString()}</td>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <span style={{ fontWeight: 700, fontSize: "1.1rem", color: isLowStock ? "var(--color-danger)" : "inherit" }}>
+                          <span style={{ fontWeight: 700, fontSize: "1.1rem", color: stockColor }}>
                             {currentStock}
                           </span>
                           <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>{prod.unit}</span>
                         </div>
-                        {isLowStock && <div style={{ fontSize: "0.75rem", color: "var(--color-danger)" }}>Stock Crítico</div>}
+                        {statusBadge}
                       </td>
                       <td>
                         <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -427,10 +490,49 @@ export default function InventoryPage() {
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <ImageIcon size={18} /> URL de Imagen del Producto
+                        <ImageIcon size={18} /> Imagen del Producto
                       </label>
-                      <input type="text" className="input" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} placeholder="https://ejemplo.com/imagen.jpg" />
-                      <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>* Próximamente: Integración con carga de archivos y cámara web.</span>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+                        {formData.imageUrl && (
+                          <div style={{ width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={formData.imageUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        )}
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          {isMobile ? (
+                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                              <label className="btn btn-outline" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", cursor: isUploadingImage ? "not-allowed" : "pointer", opacity: isUploadingImage ? 0.6 : 1, padding: "0.5rem", fontSize: "0.85rem" }}>
+                                📸 Cámara
+                                <input type="file" accept="image/*" capture="environment" onChange={handleImageUpload} disabled={isUploadingImage} style={{ display: "none" }} />
+                              </label>
+                              <label className="btn btn-outline" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", cursor: isUploadingImage ? "not-allowed" : "pointer", opacity: isUploadingImage ? 0.6 : 1, padding: "0.5rem", fontSize: "0.85rem" }}>
+                                🖼️ Galería
+                                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} style={{ display: "none" }} />
+                              </label>
+                            </div>
+                          ) : (
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handleImageUpload} 
+                              disabled={isUploadingImage}
+                              className="input" 
+                              style={{ padding: "0.5rem" }}
+                            />
+                          )}
+                          <input 
+                            type="text" 
+                            className="input" 
+                            value={formData.imageUrl} 
+                            onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
+                            placeholder="O pega la URL de la imagen directamente..." 
+                          />
+                          <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                            * La imagen se comprimirá automáticamente a WebP (&lt;100KB) antes de subirse.
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

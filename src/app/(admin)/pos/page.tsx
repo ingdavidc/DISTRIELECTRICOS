@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package } from "lucide-react";
 import toast from "react-hot-toast";
-import { getPosProducts, submitOrderToCashier, createSpecialProduct } from "@/actions/pos";
+import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
+import { createSpecialRequest } from "@/actions/requests";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
 
 import { Product } from "@prisma/client";
@@ -37,7 +38,7 @@ export default function POSPage() {
 
   // Special Product State
   const [isSpecialModalOpen, setIsSpecialModalOpen] = useState(false);
-  const [specialProduct, setSpecialProduct] = useState({ name: "", price: "" });
+  const [specialProduct, setSpecialProduct] = useState({ name: "", quantity: "1", customerName: "", customerPhone: "" });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -175,16 +176,20 @@ export default function POSPage() {
   };
 
   const handleAddSpecialProduct = async () => {
-    if (!specialProduct.name || !specialProduct.price) return toast.error("Completa nombre y precio");
+    if (!specialProduct.name || !specialProduct.quantity) return toast.error("Completa nombre y cantidad");
     setIsProcessing(true);
-    const res = await createSpecialProduct(specialProduct.name, Number(specialProduct.price));
-    if (res.success && res.product) {
-      setCart(prev => [...prev, { ...(res.product as any), cartQuantity: 1 }]);
+    const res = await createSpecialRequest({
+      productName: specialProduct.name,
+      quantity: Number(specialProduct.quantity),
+      customerName: specialProduct.customerName,
+      customerPhone: specialProduct.customerPhone
+    });
+    if (res.success) {
       setIsSpecialModalOpen(false);
-      setSpecialProduct({ name: "", price: "" });
-      toast.success("Producto especial agregado al carrito");
+      setSpecialProduct({ name: "", quantity: "1", customerName: "", customerPhone: "" });
+      toast.success("Solicitud especial enviada a Compras");
     } else {
-      toast.error(res.error || "Error al crear producto especial");
+      toast.error(res.error || "Error al enviar solicitud especial");
     }
     setIsProcessing(false);
   };
@@ -209,9 +214,9 @@ export default function POSPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING': return <span className="badge badge-warning">Esperando Pago</span>;
-      case 'PREPARING': return <span className="badge" style={{ background: "#3b82f6", color: "white" }}>En Bodega</span>;
-      case 'READY': return <span className="badge badge-success">Listo para Retirar</span>;
-      case 'DELIVERED': return <span className="badge" style={{ background: "var(--color-light-gray)", color: "var(--color-text-main)" }}>Entregado</span>;
+      case 'PREPARING': return <span className="badge badge-danger">Por Alistar</span>;
+      case 'READY': return <span className="badge badge-warning">Alistado</span>;
+      case 'DELIVERED': return <span className="badge badge-success">Entregado</span>;
       case 'CANCELLED': return <span className="badge badge-danger">Anulado</span>;
       default: return <span className="badge">{status}</span>;
     }
@@ -259,6 +264,12 @@ export default function POSPage() {
           ) : (
             products.map((product: any) => {
               const hasStock = product.stock > 0;
+              const limit = product.minStockLimit || 10;
+              
+              let badgeClass = "badge-success";
+              if (product.stock === 0) badgeClass = "badge-danger";
+              else if (product.stock <= limit) badgeClass = "badge-warning";
+
               return (
                 <div 
                   key={product.id} 
@@ -272,7 +283,7 @@ export default function POSPage() {
                     flexDirection: "column",
                     gap: "0.5rem",
                     transition: "all 0.2s",
-                    backgroundColor: "var(--color-surface)",
+                    backgroundColor: "white",
                   }}
                   onClick={() => hasStock && addToCart(product)}
                   onMouseOver={(e) => hasStock && (e.currentTarget.style.borderColor = "var(--color-primary)", e.currentTarget.style.boxShadow = "var(--shadow-sm)")}
@@ -280,11 +291,9 @@ export default function POSPage() {
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 600 }}>{product.sku}</span>
-                    {hasStock ? (
-                      <span className="badge badge-success">{product.stock} {product.unit}</span>
-                    ) : (
-                      <span className="badge badge-danger">Agotado</span>
-                    )}
+                    <span className={`badge ${badgeClass}`}>
+                      {hasStock ? `${product.stock} ${product.unit}` : "Agotado"}
+                    </span>
                   </div>
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0.25rem 0", flex: 1 }}>{product.name}</h3>
                   <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)" }}>
@@ -591,14 +600,14 @@ export default function POSPage() {
         <div className="modal-overlay" onClick={() => !isProcessing && setIsSpecialModalOpen(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: "400px" }}>
             <div className="modal-header">
-              <h2>Añadir Ítem Especial</h2>
+              <h2>Solicitar Producto a Compras</h2>
               <button className="btn-close" onClick={() => setIsSpecialModalOpen(false)} disabled={isProcessing}>
                 <X size={20} />
               </button>
             </div>
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div className="form-group">
-                <label>Descripción del Artículo</label>
+                <label>Descripción detallada del Artículo</label>
                 <input 
                   type="text" 
                   className="form-input" 
@@ -609,13 +618,35 @@ export default function POSPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Precio de Venta Unitario ($)</label>
+                <label>Cantidad Solicitada</label>
                 <input 
                   type="number" 
                   className="form-input" 
-                  placeholder="0.00" 
-                  value={specialProduct.price}
-                  onChange={(e) => setSpecialProduct({...specialProduct, price: e.target.value})}
+                  placeholder="1" 
+                  value={specialProduct.quantity}
+                  onChange={(e) => setSpecialProduct({...specialProduct, quantity: e.target.value})}
+                  disabled={isProcessing}
+                />
+              </div>
+              <div className="form-group">
+                <label>Nombre del Cliente (Opcional)</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Ej. Juan Pérez" 
+                  value={specialProduct.customerName}
+                  onChange={(e) => setSpecialProduct({...specialProduct, customerName: e.target.value})}
+                  disabled={isProcessing}
+                />
+              </div>
+              <div className="form-group">
+                <label>Teléfono (Opcional)</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Ej. 3001234567" 
+                  value={specialProduct.customerPhone}
+                  onChange={(e) => setSpecialProduct({...specialProduct, customerPhone: e.target.value})}
                   disabled={isProcessing}
                 />
               </div>
@@ -623,7 +654,7 @@ export default function POSPage() {
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setIsSpecialModalOpen(false)} disabled={isProcessing}>Cancelar</button>
               <button className="btn btn-primary" onClick={handleAddSpecialProduct} disabled={isProcessing}>
-                {isProcessing ? "Añadiendo..." : "Agregar al Carrito"}
+                {isProcessing ? "Enviando..." : "Enviar a Compras"}
               </button>
             </div>
           </div>

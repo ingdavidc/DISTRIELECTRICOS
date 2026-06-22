@@ -255,9 +255,9 @@ button {
   font-size: 0.75rem;
   font-weight: 600;
 }
-.badge-success { background: #d1fae5; color: #065f46; }
-.badge-warning { background: #fef3c7; color: #92400e; }
-.badge-danger { background: #fee2e2; color: #991b1b; }
+.badge-success { background: #a7f3d0; color: #064e3b; }
+.badge-warning { background: #fde68a; color: #78350f; }
+.badge-danger { background: #fecaca; color: #7f1d1d; }
 
 /* Grid Layouts */
 .grid-cards {

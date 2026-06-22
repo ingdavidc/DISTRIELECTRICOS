@@ -127,9 +127,9 @@ export default function DispatchPage() {
                     <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       #{order.id.slice(-6).toUpperCase()}
                       {order.status === 'READY' ? (
-                        <span className="badge badge-success">Listo para Entrega</span>
+                        <span className="badge badge-warning">Alistado</span>
                       ) : (
-                        <span className="badge badge-warning">Alistar</span>
+                        <span className="badge badge-danger">Por Alistar</span>
                       )}
                     </div>
                     {order.deliveryType === 'DOMICILIO' ? (
