@@ -9,14 +9,6 @@ export const metadata: Metadata = {
     description: "Todo el material eléctrico para tus grandes proyectos. Ideas con energía.",
     url: "https://www.distrielectricoseyd.com",
     siteName: "Distrielectricos E&D",
-    images: [
-      {
-        url: "/logo.png",
-        width: 800,
-        height: 800,
-        alt: "Distrielectricos E&D Logo",
-      },
-    ],
     locale: "es_CO",
     type: "website",
   },
