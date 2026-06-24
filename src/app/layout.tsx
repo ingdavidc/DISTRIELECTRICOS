@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.distrielectricoseyd.com"),
   title: "Distrielectricos E&D | Eléctricos y más",
   description: "Todo el material eléctrico para tus grandes proyectos. Ideas con energía.",
   openGraph: {
