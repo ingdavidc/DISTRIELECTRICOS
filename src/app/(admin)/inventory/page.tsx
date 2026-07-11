@@ -135,7 +135,7 @@ export default function InventoryPage() {
     const subtotal = cost * (1 + (margin / 100));
     const finalPrice = subtotal * (1 + (tax / 100));
     
-    setFormData(prev => ({ ...prev, price: Math.round(finalPrice) }));
+    setFormData(prev => ({ ...prev, price: Math.ceil(finalPrice / 100) * 100 }));
   }, [formData.cost, formData.profitMargin, formData.tax]);
 
   const handleSaveSubmit = async (e: React.FormEvent) => {
