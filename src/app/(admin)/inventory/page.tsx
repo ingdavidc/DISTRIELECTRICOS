@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles, Barcode, Printer, RefreshCw } from "lucide-react";
 import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, ProductInputData } from "@/actions/inventory";
 import { getSuppliers } from "@/actions/purchases";
 import AiPdfModal from "@/components/admin/AiPdfModal";
@@ -200,6 +200,64 @@ export default function InventoryPage() {
     setIsSaving(false);
   };
 
+  const handleGenerateSKU = () => {
+    const randomSKU = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    setFormData(prev => ({ ...prev, sku: randomSKU }));
+  };
+
+  const handlePrintBarcode = (sku: string, name: string) => {
+    if (!sku) {
+      toast.error("Primero ingresa o genera un SKU/Código");
+      return;
+    }
+    const printWindow = window.open('', '_blank', 'width=400,height=300');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Imprimir Código de Barras</title>
+          <style>
+            @page { size: auto; margin: 0mm; }
+            body { 
+              margin: 0; 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              justify-content: center; 
+              font-family: sans-serif;
+              text-align: center;
+              width: 100%;
+              height: 100vh;
+            }
+            .name { font-size: 14px; font-weight: bold; margin-bottom: 5px; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          </style>
+          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+        </head>
+        <body>
+          <div class="name">${name}</div>
+          <svg id="barcode"></svg>
+          <script>
+            window.onload = function() {
+              JsBarcode("#barcode", "${sku}", {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 50,
+                displayValue: true,
+                fontSize: 16
+              });
+              setTimeout(() => {
+                window.print();
+                window.close();
+              }, 500);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const handleEditClick = (prod: any) => {
     setEditingProductId(prod.id);
     const updatedFormData: ProductInputData = {
@@ -335,6 +393,13 @@ export default function InventoryPage() {
                       <td>
                         <div style={{ display: "flex", gap: "0.5rem" }}>
                           <button 
+                            onClick={() => handlePrintBarcode(prod.sku, prod.name)}
+                            style={{ color: "var(--color-text-muted)", padding: "0.5rem", cursor: "pointer", background: "transparent", border: "none" }}
+                            title="Imprimir Código de Barras"
+                          >
+                            <Printer size={18} />
+                          </button>
+                          <button 
                             onClick={() => handleEditClick(prod)}
                             style={{ color: "var(--color-secondary)", padding: "0.5rem", cursor: "pointer", background: "transparent", border: "none" }}
                             title="Editar Producto"
@@ -413,8 +478,18 @@ export default function InventoryPage() {
                       <input required type="text" className="input" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Breaker Termomagnético 1x20A" />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>SKU o Código de Barras *</label>
-                      <input required type="text" className="input" value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} placeholder="Ej: PRO-BRK-20A" />
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>SKU o Código de Barras *</span>
+                        <button type="button" onClick={() => handlePrintBarcode(formData.sku, formData.name || "Nuevo Producto")} style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "var(--color-primary)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                          <Printer size={14} /> Imprimir
+                        </button>
+                      </label>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <input required type="text" className="input" style={{ flex: 1 }} value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} placeholder="Ej: PRO-BRK-20A" />
+                        <button type="button" className="btn btn-outline" title="Generar Código Aleatorio" onClick={handleGenerateSKU} style={{ padding: "0 0.75rem" }}>
+                          <RefreshCw size={18} />
+                        </button>
+                      </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Categoría / Familia *</label>
