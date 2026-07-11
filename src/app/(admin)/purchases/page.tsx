@@ -223,8 +223,8 @@ export default function PurchasesPage() {
                             </div>
                           </div>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
-                            <span>Costo Unit: ${item.product.cost.toLocaleString('es-CO')}</span>
-                            <span style={{ fontWeight: 600, color: "var(--color-text)" }}>Subtotal: ${itemSubtotal.toLocaleString('es-CO')}</span>
+                            <span>Costo Unit: ${item.product.cost.toLocaleString('de-DE')}</span>
+                            <span style={{ fontWeight: 600, color: "var(--color-text)" }}>Subtotal: ${itemSubtotal.toLocaleString('de-DE')}</span>
                           </div>
                         </li>
                       );
@@ -238,7 +238,7 @@ export default function PurchasesPage() {
                 {/* Total de la Orden */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "var(--color-light-gray)", borderRadius: "var(--radius-md)", marginTop: "0.5rem" }}>
                   <span style={{ fontWeight: 600, color: "var(--color-text-muted)" }}>Total Estimado:</span>
-                  <span style={{ fontWeight: 700, fontSize: "1.2rem", color: "var(--color-primary)" }}>${orderTotal.toLocaleString('es-CO')}</span>
+                  <span style={{ fontWeight: 700, fontSize: "1.2rem", color: "var(--color-primary)" }}>${orderTotal.toLocaleString('de-DE')}</span>
                 </div>
 
                 {order.status === 'PENDING' && (

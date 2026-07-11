@@ -76,7 +76,7 @@ export default function PublicNavbar() {
                 </span>
               )}
             </div>
-            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>${totalPrice.toLocaleString('es-CO')}</span>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>${totalPrice.toLocaleString('de-DE')}</span>
           </div>
         </div>
       </div>

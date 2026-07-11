@@ -13,10 +13,10 @@ export default function CartSidebar() {
     let message = "Hola, me gustaría verificar la disponibilidad y los medios de pago para el siguiente pedido:\n\n";
     
     items.forEach((item, index) => {
-      message += `${index + 1}. ${item.name} (x${item.quantity}) - $${(item.price * item.quantity).toLocaleString('es-CO')}\n`;
+      message += `${index + 1}. ${item.name} (x${item.quantity}) - $${(item.price * item.quantity).toLocaleString('de-DE')}\n`;
     });
     
-    message += `\n*Total Estimado: $${totalPrice.toLocaleString('es-CO')}*`;
+    message += `\n*Total Estimado: $${totalPrice.toLocaleString('de-DE')}*`;
     
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
@@ -59,7 +59,7 @@ export default function CartSidebar() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: "0.95rem", lineHeight: 1.2, marginBottom: "0.5rem" }}>{item.name}</div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: 700, color: "var(--color-primary)" }}>${(item.price * item.quantity).toLocaleString('es-CO')}</span>
+                    <span style={{ fontWeight: 700, color: "var(--color-primary)" }}>${(item.price * item.quantity).toLocaleString('de-DE')}</span>
                     
                     {/* Quantity Controls */}
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", border: "1px solid var(--color-border)", borderRadius: "9999px", padding: "0.25rem 0.5rem" }}>
@@ -86,7 +86,7 @@ export default function CartSidebar() {
           <div style={{ padding: "1.5rem", borderTop: "1px solid var(--color-border)", backgroundColor: "var(--color-background)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", fontSize: "1.1rem" }}>
               <span style={{ fontWeight: 600, color: "var(--color-text-muted)" }}>Total Estimado:</span>
-              <span style={{ fontWeight: 800, color: "var(--color-primary)" }}>${totalPrice.toLocaleString('es-CO')}</span>
+              <span style={{ fontWeight: 800, color: "var(--color-primary)" }}>${totalPrice.toLocaleString('de-DE')}</span>
             </div>
             <button 
               onClick={handleWhatsAppCheckout}

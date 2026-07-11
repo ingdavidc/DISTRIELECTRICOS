@@ -182,7 +182,7 @@ export default function PaymentsPage() {
       const res = await processPayment(selectedOrder.id, paymentData, isPending ? editableItems : undefined);
       if (res.success) {
         if (amountToPay < currentBalance) {
-          toast.success(`Abono exitoso. Saldo pendiente: $${(currentBalance - amountToPay).toLocaleString('es-CO')}`, { id: tid });
+          toast.success(`Abono exitoso. Saldo pendiente: $${(currentBalance - amountToPay).toLocaleString('de-DE')}`, { id: tid });
         } else {
           toast.success("Pago total exitoso. Ticket cerrado.", { id: tid });
           setSelectedOrder(null);
@@ -313,13 +313,13 @@ export default function PaymentsPage() {
                     </div>
                     {order.amountPaid > 0 && (
                        <div style={{ fontSize: "0.85rem", color: "var(--color-secondary)", marginTop: "0.25rem", fontWeight: 600 }}>
-                         Abonado: ${order.amountPaid.toLocaleString('es-CO')}
+                         Abonado: ${order.amountPaid.toLocaleString('de-DE')}
                        </div>
                     )}
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", fontWeight: 600 }}>SALDO</div>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-primary)" }}>${balance.toLocaleString('es-CO')}</div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-primary)" }}>${balance.toLocaleString('de-DE')}</div>
                     {order.status === 'PENDING' && (
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleCancel(order.id); }}
@@ -401,7 +401,7 @@ export default function PaymentsPage() {
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "0.75rem", borderBottom: "1px dashed var(--color-border)" }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 500, color: isPending ? "inherit" : "var(--color-text-muted)" }}>{item.name}</div>
-                        <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.unitPrice.toLocaleString('es-CO')} c/u</div>
+                        <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.unitPrice.toLocaleString('de-DE')} c/u</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
                         
@@ -419,7 +419,7 @@ export default function PaymentsPage() {
                           <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-muted)" }}>{item.quantity} Und</div>
                         )}
 
-                        <div style={{ fontWeight: 600, width: "80px", textAlign: "right" }}>${(item.quantity * item.unitPrice).toLocaleString('es-CO')}</div>
+                        <div style={{ fontWeight: 600, width: "80px", textAlign: "right" }}>${(item.quantity * item.unitPrice).toLocaleString('de-DE')}</div>
                       </div>
                     </div>
                   ))}
@@ -433,7 +433,7 @@ export default function PaymentsPage() {
                   {selectedOrder.payments.map((p: any) => (
                     <div key={p.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "0.25rem", color: "var(--color-text-muted)" }}>
                       <span>{new Date(p.createdAt).toLocaleDateString()} - {p.method} {p.bank ? `(${p.bank})` : ""}</span>
-                      <span style={{ fontWeight: 600 }}>${p.amount.toLocaleString('es-CO')}</span>
+                      <span style={{ fontWeight: 600 }}>${p.amount.toLocaleString('de-DE')}</span>
                     </div>
                   ))}
                 </div>
@@ -474,7 +474,7 @@ export default function PaymentsPage() {
                     />
                   </div>
                   {amountToPay < currentBalance && (
-                    <span className="badge badge-warning">Quedará saldo de ${(currentBalance - amountToPay).toLocaleString('es-CO')}</span>
+                    <span className="badge badge-warning">Quedará saldo de ${(currentBalance - amountToPay).toLocaleString('de-DE')}</span>
                   )}
                 </div>
 
@@ -546,7 +546,7 @@ export default function PaymentsPage() {
             <div style={{ padding: "1.5rem", borderTop: "1px solid var(--color-border)", background: "var(--color-background)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 <span style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--color-text-muted)" }}>SALDO ACTUAL</span>
-                <span style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-main)" }}>${currentBalance.toLocaleString('es-CO')}</span>
+                <span style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-main)" }}>${currentBalance.toLocaleString('de-DE')}</span>
               </div>
               <button 
                 className="btn btn-primary" 
@@ -555,7 +555,7 @@ export default function PaymentsPage() {
                 disabled={isProcessing || (isPending && editableItems.length === 0)}
               >
                 <CheckCircle size={24} />
-                {isProcessing ? "Procesando..." : `RECAUDAR $${amountToPay.toLocaleString('es-CO')} Y GUARDAR`}
+                {isProcessing ? "Procesando..." : `RECAUDAR $${amountToPay.toLocaleString('de-DE')} Y GUARDAR`}
               </button>
             </div>
           </>
@@ -606,7 +606,7 @@ export default function PaymentsPage() {
                                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                                 <td>{getStatusBadge(order.status)}</td>
                                 <td>{order.receiptType || "N/A"}</td>
-                                <td style={{ fontWeight: 600 }}>${order.totalAmount.toLocaleString('es-CO')}</td>
+                                <td style={{ fontWeight: 600 }}>${order.totalAmount.toLocaleString('de-DE')}</td>
                               </tr>
                             ))}
                           </tbody>

@@ -297,7 +297,7 @@ export default function POSPage() {
                   </div>
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0.25rem 0", flex: 1 }}>{product.name}</h3>
                   <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)" }}>
-                    ${product.price.toLocaleString('es-CO')}
+                    ${product.price.toLocaleString('de-DE')}
                   </div>
                 </div>
               );
@@ -394,10 +394,10 @@ export default function POSPage() {
                 <div key={item.id} style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingBottom: "1rem", borderBottom: "1px dashed var(--color-border)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ fontWeight: 500, fontSize: "0.9rem", flex: 1 }}>{item.name}</div>
-                    <div style={{ fontWeight: 600 }}>${(item.price * item.cartQuantity).toLocaleString('es-CO')}</div>
+                    <div style={{ fontWeight: 600 }}>${(item.price * item.cartQuantity).toLocaleString('de-DE')}</div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.price.toLocaleString('es-CO')} c/u</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.price.toLocaleString('de-DE')} c/u</div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--color-background)", borderRadius: "var(--radius-md)", padding: "0.25rem" }}>
                       <button 
                         onClick={() => item.cartQuantity > 1 ? updateQuantity(item.id, -1) : removeFromCart(item.id)}
@@ -458,15 +458,15 @@ export default function POSPage() {
           
           <div style={{ display: "flex", justifyContent: "space-between", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>
             <span>Subtotal (Sin IVA)</span>
-            <span>${subtotal.toLocaleString('es-CO', {maximumFractionDigits:0})}</span>
+            <span>${subtotal.toLocaleString('de-DE', {maximumFractionDigits:0})}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>
             <span>Impuestos (IVA)</span>
-            <span>${taxes.toLocaleString('es-CO', {maximumFractionDigits:0})}</span>
+            <span>${taxes.toLocaleString('de-DE', {maximumFractionDigits:0})}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1.5rem", fontWeight: 700, color: "var(--color-primary)", marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "2px dashed var(--color-border)" }}>
             <span>TOTAL</span>
-            <span>${total.toLocaleString('es-CO')}</span>
+            <span>${total.toLocaleString('de-DE')}</span>
           </div>
 
           <button 
@@ -546,7 +546,7 @@ export default function POSPage() {
                               {getStatusBadge(order.status)}
                             </div>
                             <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                              <Package size={14} /> {order.items.reduce((acc: any, item: any) => acc + item.quantity, 0)} artículos • Total: ${order.totalAmount.toLocaleString('es-CO')}
+                              <Package size={14} /> {order.items.reduce((acc: any, item: any) => acc + item.quantity, 0)} artículos • Total: ${order.totalAmount.toLocaleString('de-DE')}
                             </div>
                           </div>
                         ))}
@@ -576,7 +576,7 @@ export default function POSPage() {
                                 <td style={{ fontWeight: 500 }}>#{order.id.slice(-6).toUpperCase()}</td>
                                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                                 <td>{getStatusBadge(order.status)}</td>
-                                <td style={{ fontWeight: 600 }}>${order.totalAmount.toLocaleString('es-CO')}</td>
+                                <td style={{ fontWeight: 600 }}>${order.totalAmount.toLocaleString('de-DE')}</td>
                               </tr>
                             ))}
                           </tbody>
