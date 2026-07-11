@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { authenticate } from "@/actions/auth";
-import { Zap, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
 
@@ -22,15 +22,10 @@ export default function LoginPage() {
     <div style={{ width: "100%", maxWidth: "400px" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "2rem" }}>
         <div style={{ 
-          width: "64px", height: "64px", 
-          backgroundColor: "var(--color-primary)", 
-          color: "white", 
-          borderRadius: "16px", 
-          display: "flex", alignItems: "center", justifyContent: "center", 
-          marginBottom: "1rem",
-          boxShadow: "0 10px 15px -3px rgba(32, 53, 98, 0.3)"
+          marginBottom: "1.5rem",
+          display: "flex", justifyContent: "center"
         }}>
-          <Zap size={32} />
+          <img src="/logo.png" alt="DistriEléctricos" style={{ width: "auto", height: "80px", objectFit: "contain" }} />
         </div>
         <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-primary)", margin: 0 }}>
           DistriEléctricos

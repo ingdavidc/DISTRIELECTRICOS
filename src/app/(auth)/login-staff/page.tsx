@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { authenticateStaff } from "@/actions/auth";
-import { Zap, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
+import { AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
 
@@ -22,17 +22,12 @@ export default function LoginStaffPage() {
     <div style={{ width: "100%", maxWidth: "400px" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "2rem" }}>
         <div style={{ 
-          width: "64px", height: "64px", 
-          backgroundColor: "var(--color-primary)", 
-          color: "white", 
-          borderRadius: "16px", 
-          display: "flex", alignItems: "center", justifyContent: "center", 
-          marginBottom: "1rem",
-          boxShadow: "0 10px 15px -3px rgba(32, 53, 98, 0.3)"
+          marginBottom: "1.5rem",
+          display: "flex", justifyContent: "center"
         }}>
-          <Zap size={32} />
+          <img src="/logo.png" alt="DistriEléctricos" style={{ width: "auto", height: "80px", objectFit: "contain" }} />
         </div>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-primary)", margin: 0, textAlign: "center" }}>
+        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-secondary)", margin: 0, textAlign: "center" }}>
           Acceso Operativo
         </h1>
         <p style={{ color: "var(--color-text-muted)", marginTop: "0.5rem", textAlign: "center", fontSize: "0.95rem" }}>
@@ -86,10 +81,12 @@ export default function LoginStaffPage() {
           <button
             type="submit"
             disabled={isPending}
-            className="btn btn-primary"
+            className="btn"
             style={{ 
               width: "100%", padding: "0.85rem", fontSize: "1rem", 
-              marginTop: "0.5rem", boxShadow: "0 4px 6px -1px rgba(32, 53, 98, 0.2)",
+              marginTop: "0.5rem", boxShadow: "0 4px 6px -1px rgba(243, 112, 33, 0.2)",
+              backgroundColor: "var(--color-secondary)",
+              color: "white",
               opacity: isPending ? 0.7 : 1
             }}
           >
