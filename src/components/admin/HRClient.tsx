@@ -9,6 +9,8 @@ type User = {
   id: string;
   name: string | null;
   email: string;
+  identification: string | null;
+  phone: string | null;
   role: string;
   createdAt: Date;
 };
@@ -23,6 +25,8 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    identification: "",
+    phone: "",
     role: "CASHIER",
     password: "",
   });
@@ -38,12 +42,14 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
       setFormData({
         name: user.name || "",
         email: user.email,
+        identification: user.identification || "",
+        phone: user.phone || "",
         role: user.role,
         password: "", // Empty so it's not changed unless typed
       });
     } else {
       setEditingUser(null);
-      setFormData({ name: "", email: "", role: "CASHIER", password: "" });
+      setFormData({ name: "", email: "", identification: "", phone: "", role: "CASHIER", password: "" });
     }
     setIsModalOpen(true);
   };
@@ -153,7 +159,9 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
             <thead>
               <tr>
                 <th>Nombre</th>
+                <th>Identificación</th>
                 <th>Email</th>
+                <th>Teléfono</th>
                 <th>Rol</th>
                 <th>Creado En</th>
                 <th>Acciones</th>
@@ -163,7 +171,9 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
               {filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td style={{ fontWeight: 500 }}>{user.name || "Sin nombre"}</td>
+                  <td>{user.identification || "-"}</td>
                   <td>{user.email}</td>
+                  <td>{user.phone || "-"}</td>
                   <td>
                     <span style={{ 
                       background: "var(--color-light-gray)", 
@@ -230,6 +240,24 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     disabled={editingUser?.email === "administracion@distrielectricoseyd.com"}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Identificación</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={formData.identification}
+                    onChange={(e) => setFormData({ ...formData, identification: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Teléfono</label>
+                  <input 
+                    type="tel" 
+                    className="form-input" 
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
                 <div className="form-group">

@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
-export async function createUser(data: { name: string; email: string; role: string; password?: string }) {
+export async function createUser(data: { name: string; email: string; role: string; password?: string; identification?: string; phone?: string; }) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     return { success: false, error: "Acceso denegado. Solo administradores pueden crear usuarios." };
@@ -20,12 +20,23 @@ export async function createUser(data: { name: string; email: string; role: stri
       return { success: false, error: "Ya existe un usuario con este correo electrónico." };
     }
 
+    if (data.identification) {
+      const existingId = await prisma.user.findUnique({
+        where: { identification: data.identification },
+      });
+      if (existingId) {
+        return { success: false, error: "Ya existe un usuario con esta identificación." };
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(data.password || "admin123", 10);
 
     const user = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
+        identification: data.identification || null,
+        phone: data.phone || null,
         password: hashedPassword,
         role: data.role as any,
       },
@@ -38,16 +49,27 @@ export async function createUser(data: { name: string; email: string; role: stri
   }
 }
 
-export async function updateUser(id: string, data: { name: string; email: string; role: string; password?: string }) {
+export async function updateUser(id: string, data: { name: string; email: string; role: string; password?: string; identification?: string; phone?: string; }) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     return { success: false, error: "Acceso denegado. Solo administradores pueden editar usuarios." };
   }
 
   try {
+    if (data.identification) {
+      const existingId = await prisma.user.findUnique({
+        where: { identification: data.identification },
+      });
+      if (existingId && existingId.id !== id) {
+        return { success: false, error: "Ya existe otro usuario con esta identificación." };
+      }
+    }
+
     const updateData: any = {
       name: data.name,
       email: data.email,
+      identification: data.identification || null,
+      phone: data.phone || null,
       role: data.role as any,
     };
 

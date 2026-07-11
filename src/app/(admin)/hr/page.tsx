@@ -10,6 +10,8 @@ export default async function HRPage() {
       id: true,
       name: true,
       email: true,
+      identification: true,
+      phone: true,
       role: true,
       createdAt: true,
     },
