@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Plus, Search, UserCheck, X, Edit, Trash2 } from "lucide-react";
 import { createUser, updateUser, deleteUser } from "@/actions/users";
 import toast from "react-hot-toast";
@@ -32,6 +32,8 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     password: "",
     modules: [] as string[],
   });
+  
+  const [initialFormData, setInitialFormData] = useState(formData);
 
   const filteredUsers = users.filter((u) =>
     (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
@@ -39,9 +41,10 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
   );
 
   const handleOpenModal = (user?: User) => {
+    const newFormData = { name: "", email: "", identification: "", phone: "", role: "CASHIER", password: "", modules: [] };
     if (user) {
       setEditingUser(user);
-      setFormData({
+      const updated = {
         name: user.name || "",
         email: user.email,
         identification: user.identification || "",
@@ -49,18 +52,37 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
         role: user.role,
         modules: user.modules || [],
         password: "", // Empty so it's not changed unless typed
-      });
+      };
+      setFormData(updated);
+      setInitialFormData(updated);
     } else {
       setEditingUser(null);
-      setFormData({ name: "", email: "", identification: "", phone: "", role: "CASHIER", password: "", modules: [] });
+      setFormData(newFormData);
+      setInitialFormData(newFormData);
     }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+    if (isDirty) {
+      if (!confirm("Tienes cambios sin guardar. ¿Estás seguro que deseas cerrar?")) {
+        return;
+      }
+    }
     setIsModalOpen(false);
     setEditingUser(null);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isModalOpen) {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen, formData, initialFormData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

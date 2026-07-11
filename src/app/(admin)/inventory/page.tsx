@@ -83,6 +83,7 @@ export default function InventoryPage() {
   };
   
   const [formData, setFormData] = useState<ProductInputData>(initialProductState);
+  const [initialFormData, setInitialFormData] = useState<ProductInputData>(initialProductState);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -138,6 +139,26 @@ export default function InventoryPage() {
     setFormData(prev => ({ ...prev, price: Math.ceil(finalPrice / 100) * 100 }));
   }, [formData.cost, formData.profitMargin, formData.tax]);
 
+  const handleCloseModal = () => {
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+    if (isDirty) {
+      if (!confirm("Tienes cambios sin guardar. ¿Estás seguro que deseas cerrar?")) {
+        return;
+      }
+    }
+    setIsModalOpen(false);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isModalOpen) {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen, formData, initialFormData]);
+
   const handleSaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.sku || !formData.categoryId) {
@@ -176,7 +197,9 @@ export default function InventoryPage() {
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
       cost: prod.cost, profitMargin: prod.profitMargin, tax: prod.tax, price: prod.price,
       supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || ""
-    });
+    };
+    setFormData(updatedFormData);
+    setInitialFormData(updatedFormData);
     setActiveTab(1);
     setIsModalOpen(true);
   };
@@ -209,7 +232,7 @@ export default function InventoryPage() {
             Gestiona stock, ficha técnica y configura compras automáticas.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingProductId(null); setFormData(initialProductState); setIsModalOpen(true); }}>
+        <button className="btn btn-primary" onClick={() => { setEditingProductId(null); setFormData(initialProductState); setInitialFormData(initialProductState); setIsModalOpen(true); }}>
           <Plus size={18} />
           Nuevo Producto
         </button>
@@ -330,7 +353,7 @@ export default function InventoryPage() {
               <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <Box size={24} /> {editingProductId ? "Editar Producto" : "Ficha Técnica del Producto"}
               </h2>
-              <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+              <button type="button" onClick={handleCloseModal} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
                 <X size={24} color="var(--color-text-muted)" />
               </button>
             </div>
@@ -547,7 +570,7 @@ export default function InventoryPage() {
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "1rem" }}>
-                  <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                  <button type="button" className="btn btn-outline" onClick={handleCloseModal}>Cancelar</button>
                   
                   {activeTab < 4 ? (
                     <button type="button" className="btn btn-primary" onClick={() => setActiveTab(activeTab + 1)}>Siguiente Pestaña</button>
