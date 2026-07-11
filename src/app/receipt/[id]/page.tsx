@@ -2,14 +2,18 @@ import { getPublicOrderReceipt } from "@/actions/public";
 import { Printer, MapPin, Phone, Mail } from "lucide-react";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ReceiptPage({ params }: { params: { id: string } }) {
   const order = await getPublicOrderReceipt(params.id);
 
-  if (!order) {
+  if (!order || (order as any).error) {
     return (
       <div style={{ padding: "3rem", textAlign: "center", color: "#666" }}>
-        <h2>Recibo no encontrado</h2>
-        <p>El código de orden proporcionado no existe.</p>
+        <h2>Recibo no encontrado o Error</h2>
+        <p>Buscando ID: {params.id}</p>
+        <p>{(order as any)?.error || "El código de orden proporcionado no existe."}</p>
       </div>
     );
   }

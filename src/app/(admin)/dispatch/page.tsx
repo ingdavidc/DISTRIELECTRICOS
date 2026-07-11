@@ -148,7 +148,7 @@ export default function DispatchPage() {
             
             {/* COUNTER REQUESTS ALERTS */}
             {counterRequests.length > 0 && (
-              <div style={{ border: "2px solid var(--color-danger)", borderRadius: "var(--radius-md)", overflow: "hidden", animation: "pulse 2s infinite" }}>
+              <div style={{ flexShrink: 0, border: "2px solid var(--color-danger)", borderRadius: "var(--radius-md)", overflow: "hidden", animation: "pulse 2s infinite" }}>
                 <div style={{ background: "var(--color-danger)", color: "white", padding: "0.5rem 1rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
                   <AlertTriangle size={18} />
                   🚨 SOLICITUDES A MOSTRADOR

@@ -15,7 +15,8 @@ export async function getPublicOrderReceipt(orderId: string) {
       }
     });
     return JSON.parse(JSON.stringify(order));
-  } catch (error) {
-    return null;
+  } catch (error: any) {
+    console.error("Error in getPublicOrderReceipt:", error);
+    return { error: error.message };
   }
 }
