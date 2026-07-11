@@ -20,7 +20,7 @@ export async function parsePdfInvoice(formData: FormData) {
     const base64Data = buffer.toString("base64");
 
     const prompt = [
-      "Eres un asistente experto en contabilidad e inventarios de una empresa llamada DISTRIELECTRICOS.",
+      "Eres un asistente experto en contabilidad e inventarios de una empresa llamada DISTRIELECTRICOS E&D.",
       "He adjuntado una factura de proveedor en formato PDF. Tu trabajo es extraer los datos clave para insertarlos en nuestro sistema ERP.",
       "",
       "Debes devolver UNICAMENTE un objeto JSON valido con esta estructura exacta, sin texto adicional, sin formato markdown:",
