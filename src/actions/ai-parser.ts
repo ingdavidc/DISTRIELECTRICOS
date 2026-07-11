@@ -1,7 +1,7 @@
 "use server";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-const pdf = require("pdf-parse");
+
 
 // Iniciar el cliente de Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -16,6 +16,12 @@ export async function parsePdfInvoice(formData: FormData) {
     if (!file) {
       return { success: false, error: "No se proporcionó ningún archivo." };
     }
+
+    // Polyfill DOMMatrix for Vercel Node environments before requiring pdf-parse
+    if (typeof global !== "undefined" && typeof (global as any).DOMMatrix === "undefined") {
+      (global as any).DOMMatrix = class DOMMatrix { constructor() {} };
+    }
+    const pdf = require("pdf-parse");
 
     // Convertir File a Buffer para pdf-parse
     const arrayBuffer = await file.arrayBuffer();
