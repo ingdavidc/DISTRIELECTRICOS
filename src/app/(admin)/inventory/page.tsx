@@ -151,13 +151,13 @@ export default function InventoryPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isModalOpen) {
-        handleCloseModal();
+      if (e.key === "Escape") {
+        document.getElementById("close-modal-btn")?.click();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, formData, initialFormData]);
+  }, []);
 
   const handleSaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -570,7 +570,7 @@ export default function InventoryPage() {
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "1rem" }}>
-                  <button type="button" className="btn btn-outline" onClick={handleCloseModal}>Cancelar</button>
+                  <button type="button" id="close-modal-btn" className="btn btn-outline" onClick={handleCloseModal}>Cancelar</button>
                   
                   {activeTab < 4 ? (
                     <button type="button" className="btn btn-primary" onClick={() => setActiveTab(activeTab + 1)}>Siguiente Pestaña</button>

@@ -76,13 +76,13 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isModalOpen) {
-        handleCloseModal();
+      if (e.key === "Escape") {
+        document.getElementById("close-hr-modal-btn")?.click();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, formData, initialFormData]);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -349,7 +349,7 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-outline" onClick={handleCloseModal} disabled={isPending}>
+                <button type="button" id="close-hr-modal-btn" className="btn btn-outline" onClick={handleCloseModal} disabled={isPending}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={isPending}>
