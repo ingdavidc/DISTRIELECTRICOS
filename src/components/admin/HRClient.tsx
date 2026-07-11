@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition, useEffect, useRef } from "react";
-import { Plus, Search, UserCheck, X, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, UserCheck, X, Edit, Trash2, History } from "lucide-react";
 import { createUser, updateUser, deleteUser } from "@/actions/users";
+import { getUserLogs } from "@/actions/logs";
 import toast from "react-hot-toast";
 
 type User = {
@@ -22,6 +23,11 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
+  const [selectedUserLogs, setSelectedUserLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -79,10 +85,29 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     handleCloseModalRef.current = handleCloseModal;
   }, [handleCloseModal]);
 
+  const handleViewLogs = async (user: User) => {
+    setViewingUser(user);
+    setIsLogsModalOpen(true);
+    setLoadingLogs(true);
+    const logs = await getUserLogs(user.id);
+    setSelectedUserLogs(logs);
+    setLoadingLogs(false);
+  };
+
+  const handleCloseLogsModal = () => {
+    setIsLogsModalOpen(false);
+    setViewingUser(null);
+    setSelectedUserLogs([]);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && document.querySelector(".modal-overlay")) {
-        handleCloseModalRef.current();
+      if (e.key === "Escape") {
+        if (document.querySelector(".logs-modal-overlay")) {
+          handleCloseLogsModal();
+        } else if (document.querySelector(".modal-overlay")) {
+          handleCloseModalRef.current();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -235,6 +260,9 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                   <td>
                     <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                      <button onClick={() => handleViewLogs(user)} style={{ color: "var(--color-text-muted)" }} title="Ver Historial de Acciones">
+                        <History size={16} />
+                      </button>
                       <button onClick={() => handleOpenModal(user)} style={{ color: "var(--color-secondary)" }} title="Editar">
                         <Edit size={16} />
                       </button>
@@ -366,6 +394,45 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {isLogsModalOpen && viewingUser && (
+        <div className="modal-overlay logs-modal-overlay" onClick={handleCloseLogsModal} style={{ zIndex: 1000 }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%" }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Historial de: {viewingUser.name || viewingUser.email}</h3>
+              <button type="button" className="btn-close" onClick={handleCloseLogsModal}><X size={24} /></button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: "60vh", overflowY: "auto", padding: "1.5rem" }}>
+              {loadingLogs ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-muted)" }}>
+                  Cargando historial...
+                </div>
+              ) : selectedUserLogs.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-muted)" }}>
+                  Este usuario no tiene acciones registradas aún.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  {selectedUserLogs.map((log: any) => (
+                    <div key={log.id} style={{ padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "var(--color-background)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                        <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>{log.action}</span>
+                        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                          {new Date(log.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      {log.details && (
+                        <div style={{ fontSize: "0.9rem", color: "var(--color-text-main)", whiteSpace: "pre-wrap" }}>
+                          {log.details}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

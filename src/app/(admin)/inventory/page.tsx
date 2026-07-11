@@ -37,40 +37,60 @@ export default function InventoryPage() {
   }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Check if adding these files would exceed 5 images
+    if ((formData.imageUrls?.length || 0) + files.length > 5) {
+      toast.error("Máximo 5 imágenes por producto");
+      return;
+    }
 
     try {
       setIsUploadingImage(true);
-      const tid = toast.loading("Optimizando y subiendo imagen...");
+      const tid = toast.loading(`Optimizando y subiendo ${files.length} imagen(es)...`);
 
-      // Comprimir
-      const options = {
-        maxSizeMB: 0.1, // Max 100KB
-        maxWidthOrHeight: 800,
-        useWebWorker: true,
-        fileType: "image/webp" as string,
-      };
-      const compressedFile = await imageCompression(file, options);
-
-      // Subir a Supabase
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       if (!supabaseUrl || !supabaseKey) throw new Error("Supabase no configurado");
-      
       const supabase = createClient(supabaseUrl, supabaseKey);
-      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, "_")}.webp`;
-      
-      const { error } = await supabase.storage
-        .from("products")
-        .upload(fileName, compressedFile, { contentType: "image/webp", upsert: true });
 
-      if (error) throw error;
+      const newUrls: string[] = [];
 
-      const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(fileName);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Comprimir
+        const options = {
+          maxSizeMB: 0.1, // Max 100KB
+          maxWidthOrHeight: 800,
+          useWebWorker: true,
+          fileType: "image/webp" as string,
+        };
+        const compressedFile = await imageCompression(file, options);
+  
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, "_")}.webp`;
+        
+        const { error } = await supabase.storage
+          .from("products")
+          .upload(fileName, compressedFile, { contentType: "image/webp", upsert: true });
+  
+        if (error) throw error;
+  
+        const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(fileName);
+        newUrls.push(publicUrl);
+      }
 
-      setFormData(prev => ({ ...prev, imageUrl: publicUrl }));
-      toast.success("Imagen subida con éxito", { id: tid });
+      setFormData(prev => {
+        const updatedUrls = [...(prev.imageUrls || []), ...newUrls];
+        return { 
+          ...prev, 
+          imageUrls: updatedUrls,
+          // Mantener la primera imagen como imageUrl principal para retrocompatibilidad
+          imageUrl: prev.imageUrl || updatedUrls[0] 
+        };
+      });
+      toast.success("Imágenes subidas con éxito", { id: tid });
     } catch (error: any) {
       console.error(error);
       toast.error("Error al subir: " + (error.message || "Revisa las políticas de Supabase"), { duration: 5000 });
@@ -79,11 +99,22 @@ export default function InventoryPage() {
     }
   };
 
+  const handleRemoveImage = (indexToRemove: number) => {
+    setFormData(prev => {
+      const newUrls = (prev.imageUrls || []).filter((_, index) => index !== indexToRemove);
+      return {
+        ...prev,
+        imageUrls: newUrls,
+        imageUrl: newUrls.length > 0 ? newUrls[0] : ""
+      };
+    });
+  };
+
   const initialProductState: ProductInputData = {
-    name: "", sku: "", description: "", brand: "", categoryId: "",
+    name: "", sku: "", commercialName: "", description: "", features: "", brand: "", categoryId: "",
     unit: "Und", stock: 0, minStockLimit: 10, maxStockLimit: 100, location: "",
     cost: 0, profitMargin: 30, freqClientDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
-    supplierId: "", altSupplierId: "", imageUrl: ""
+    supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: ""
   };
   
   const [formData, setFormData] = useState<ProductInputData>(initialProductState);
@@ -270,10 +301,10 @@ export default function InventoryPage() {
   const handleEditClick = (prod: any) => {
     setEditingProductId(prod.id);
     const updatedFormData: ProductInputData = {
-      name: prod.name, sku: prod.sku, description: prod.description || "", brand: prod.brand || "", categoryId: prod.categoryId,
+      name: prod.name, sku: prod.sku, commercialName: prod.commercialName || "", description: prod.description || "", features: prod.features || "", brand: prod.brand || "", categoryId: prod.categoryId,
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
       cost: prod.cost, profitMargin: prod.profitMargin, freqClientDiscount: prod.freqClientDiscount || 5, volumeDiscount: prod.volumeDiscount || 10, corporateDiscount: prod.corporateDiscount || 15, tax: prod.tax, price: prod.price,
-      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || ""
+      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || "", imageUrls: prod.imageUrls || [], technicalSheetUrl: prod.technicalSheetUrl || ""
     };
     setFormData(updatedFormData);
     setInitialFormData(updatedFormData);
@@ -486,6 +517,22 @@ export default function InventoryPage() {
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Nombre o Descripción del Producto *</label>
                       <input required type="text" className="input" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Breaker Termomagnético 1x20A" />
                     </div>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Nombre Comercial</label>
+                      <input type="text" className="input" value={formData.commercialName} onChange={(e) => setFormData({...formData, commercialName: e.target.value})} placeholder="Ej: Breaker 20A Residencial" />
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Características o Descripción Adicional</label>
+                      <textarea className="input" style={{ minHeight: "80px", resize: "vertical" }} value={formData.features} onChange={(e) => setFormData({...formData, features: e.target.value})} placeholder="Ej: 1 polo, 120/240V, Montaje enchufable..." />
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>URL Ficha Técnica (PDF/Web)</label>
+                      <input type="url" className="input" value={formData.technicalSheetUrl} onChange={(e) => setFormData({...formData, technicalSheetUrl: e.target.value})} placeholder="Ej: https://docs.schneider.com/breaker-20a.pdf" />
+                    </div>
+
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span>SKU o Código de Barras *</span>
@@ -656,31 +703,43 @@ export default function InventoryPage() {
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <ImageIcon size={18} /> Imagen del Producto
+                        <ImageIcon size={18} /> Imágenes del Producto (Máximo 5)
                       </label>
-                      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-                        {formData.imageUrl && (
-                          <div style={{ width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+                        {formData.imageUrls && formData.imageUrls.length > 0 ? (
+                          formData.imageUrls.map((url, idx) => (
+                            <div key={idx} style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={url} alt={`Preview ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              <button type="button" onClick={() => handleRemoveImage(idx)} style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(255,0,0,0.8)", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px" }}>
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))
+                        ) : formData.imageUrl ? (
+                          <div style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={formData.imageUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           </div>
-                        )}
-                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        ) : null}
+                        
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem", minWidth: "250px" }}>
                           {isMobile ? (
                             <div style={{ display: "flex", gap: "0.5rem" }}>
                               <label className="btn btn-outline" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", cursor: isUploadingImage ? "not-allowed" : "pointer", opacity: isUploadingImage ? 0.6 : 1, padding: "0.5rem", fontSize: "0.85rem" }}>
-                                📸 Cámara
-                                <input type="file" accept="image/*" capture="environment" onChange={handleImageUpload} disabled={isUploadingImage} style={{ display: "none" }} />
+                                📷 Cámara
+                                <input type="file" accept="image/*" multiple capture="environment" onChange={handleImageUpload} disabled={isUploadingImage} style={{ display: "none" }} />
                               </label>
                               <label className="btn btn-outline" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", cursor: isUploadingImage ? "not-allowed" : "pointer", opacity: isUploadingImage ? 0.6 : 1, padding: "0.5rem", fontSize: "0.85rem" }}>
                                 🖼️ Galería
-                                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} style={{ display: "none" }} />
+                                <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={isUploadingImage} style={{ display: "none" }} />
                               </label>
                             </div>
                           ) : (
                             <input 
                               type="file" 
                               accept="image/*" 
+                              multiple
                               onChange={handleImageUpload} 
                               disabled={isUploadingImage}
                               className="input" 
@@ -695,7 +754,7 @@ export default function InventoryPage() {
                             placeholder="O pega la URL de la imagen directamente..." 
                           />
                           <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                            * La imagen se comprimirá automáticamente a WebP (&lt;100KB) antes de subirse.
+                            * Las imágenes se comprimirán automáticamente a WebP (&lt;100KB) antes de subirse.
                           </span>
                         </div>
                       </div>

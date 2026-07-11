@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { logUserAction } from "./logs";
 
 export async function getPosProducts(query: string = "") {
   try {
@@ -87,6 +88,8 @@ export async function submitOrderToCashier(
       }
     });
 
+    await logUserAction("NUEVA_ORDEN_POS", `Monto total: $${serverTotalAmount.toFixed(2)} | Items: ${items.length} | Modalidad: ${deliveryType}`);
+    
     revalidatePath('/pos');
     revalidatePath('/payments'); // Nueva ruta de caja
     
@@ -117,6 +120,7 @@ export async function createSpecialProduct(name: string, price: number) {
         },
       }
     });
+    await logUserAction("CREAR_PRODUCTO_ESPECIAL", `Producto: ${name} | Precio: $${price.toFixed(2)}`);
     return { success: true, product };
   } catch (error: any) {
     console.error("Error creating special product:", error);

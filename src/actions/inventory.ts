@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { logUserAction } from './logs';
 
 export async function getInventoryProducts() {
   try {
@@ -27,13 +28,13 @@ export async function getCategories() {
 }
 
 export type ProductInputData = {
-  // Identificación
   sku: string;
   name: string;
+  commercialName?: string;
   description?: string;
+  features?: string;
   brand?: string;
   categoryId: string;
-  
   // Inventario
   unit: string;
   stock: number;
@@ -54,6 +55,8 @@ export type ProductInputData = {
   supplierId?: string;
   altSupplierId?: string;
   imageUrl?: string;
+  imageUrls?: string[];
+  technicalSheetUrl?: string;
 };
 
 export async function createProduct(data: ProductInputData) {
@@ -66,6 +69,9 @@ export async function createProduct(data: ProductInputData) {
         altSupplierId: data.altSupplierId || null,
       } 
     });
+    
+    await logUserAction("CREAR_PRODUCTO", `SKU: ${data.sku} | Nombre: ${data.name}`);
+    
     revalidatePath('/inventory');
     return { success: true, product };
   } catch (error) {
@@ -85,6 +91,9 @@ export async function updateProduct(id: string, data: ProductInputData) {
         altSupplierId: data.altSupplierId || null,
       } 
     });
+    
+    await logUserAction("ACTUALIZAR_PRODUCTO", `SKU: ${data.sku} | Nombre: ${data.name}`);
+    
     revalidatePath('/inventory');
     return { success: true, product };
   } catch (error) {

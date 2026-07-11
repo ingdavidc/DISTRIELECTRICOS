@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 // Enums
@@ -41,18 +41,19 @@ enum PurchaseOrderStatus {
 
 // Models
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name           String?
-  identification String?  @unique
-  phone          String?
-  password       String   // Hashed password
-  role           Role     @default(CUSTOMER)
-  modules        String[] @default([])
-  orders    Order[]
+  id              String           @id @default(uuid())
+  email           String           @unique
+  name            String?
+  identification  String?          @unique
+  phone           String?
+  password        String // Hashed password
+  role            Role             @default(CUSTOMER)
+  modules         String[]         @default([])
+  orders          Order[]
   counterRequests CounterRequest[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userLogs        UserLog[]
 }
 
 model PasswordResetToken {
@@ -73,29 +74,29 @@ model Category {
 }
 
 model Supplier {
-  id             String          @id @default(uuid())
-  name           String
-  nit            String?
-  contactName    String?
-  email          String?
-  phone          String?
-  address        String?
-  category       String?
-  paymentTerms   String?         @default("CONTADO") // Ej: CONTADO, CREDITO 30 DIAS
-  status         String          @default("ACTIVE") // ACTIVE / INACTIVE
+  id           String  @id @default(uuid())
+  name         String
+  nit          String?
+  contactName  String?
+  email        String?
+  phone        String?
+  address      String?
+  category     String?
+  paymentTerms String? @default("CONTADO") // Ej: CONTADO, CREDITO 30 DIAS
+  status       String  @default("ACTIVE") // ACTIVE / INACTIVE
 
   // 1. Datos fiscales y legales extra
-  taxRegime      String?         // Ej: Responsable IVA, Gran Contribuyente
+  taxRegime String? // Ej: Responsable IVA, Gran Contribuyente
 
   // 3. Información financiera y de pagos extra
-  bankDetails    String?         // JSON o texto: Banco, tipo, cuenta
-  paymentMethod  String?         // Ej: Transferencia, Cheque
-  creditLimit    Float?          @default(0) // Monto máximo de deuda
+  bankDetails   String? // JSON o texto: Banco, tipo, cuenta
+  paymentMethod String? // Ej: Transferencia, Cheque
+  creditLimit   Float?  @default(0) // Monto máximo de deuda
 
   // 4. Configuración contable interna
-  cxpAccount     String?         // Cuenta por pagar
-  expenseAccount String?         // Cuenta de gasto/costo
-  retentionCodes String?         // Códigos de retención a aplicar
+  cxpAccount     String? // Cuenta por pagar
+  expenseAccount String? // Cuenta de gasto/costo
+  retentionCodes String? // Códigos de retención a aplicar
 
   products       Product[]       @relation("MainSupplier")
   altProducts    Product[]       @relation("AltSupplier")
@@ -105,131 +106,144 @@ model Supplier {
 }
 
 model Product {
-  id             String   @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   // 1. Identificación
   sku            String   @unique
   name           String
+  commercialName String? // Nombre comercial
   description    String?
+  features       String? // Características o descripción complementaria
   brand          String?
   categoryId     String
   category       Category @relation(fields: [categoryId], references: [id])
-  
+
   // 2. Inventario y Medidas
-  unit           String   @default("Und")
-  stock          Int      @default(0)
-  minStockLimit  Int      @default(10)
-  maxStockLimit  Int?
-  location       String?  // Ej: Pasillo 3, Estante A
+  unit          String  @default("Und")
+  stock         Int     @default(0)
+  minStockLimit Int     @default(10)
+  maxStockLimit Int?
+  location      String? // Ej: Pasillo 3, Estante A
 
   // 3. Costos y Precios
-  cost               Float    @default(0)
-  profitMargin       Float    @default(30) // Porcentaje de ganancia, ej 30%
-  freqClientDiscount Float    @default(5)  // Descuento Cliente Frecuente
-  volumeDiscount     Float    @default(10) // Descuento por Volumen
-  corporateDiscount  Float    @default(15) // Descuento Corporativo
-  tax            Float    @default(19) // IVA, ej 19%
-  price          Float    // Precio Venta Público (PVP)
+  cost               Float @default(0)
+  profitMargin       Float @default(30) // Porcentaje de ganancia, ej 30%
+  freqClientDiscount Float @default(5) // Descuento Cliente Frecuente
+  volumeDiscount     Float @default(10) // Descuento por Volumen
+  corporateDiscount  Float @default(15) // Descuento Corporativo
+  tax                Float @default(19) // IVA, ej 19%
+  price              Float // Precio Venta Público (PVP)
 
   // 4. Proveedores e Imagen
-  supplierId     String?
-  supplier       Supplier? @relation("MainSupplier", fields: [supplierId], references: [id])
-  altSupplierId  String?
-  altSupplier    Supplier? @relation("AltSupplier", fields: [altSupplierId], references: [id])
-  imageUrl       String?
-  
+  supplierId        String?
+  supplier          Supplier? @relation("MainSupplier", fields: [supplierId], references: [id])
+  altSupplierId     String?
+  altSupplier       Supplier? @relation("AltSupplier", fields: [altSupplierId], references: [id])
+  imageUrl          String?
+  imageUrls         String[]  @default([]) // Múltiples imágenes (hasta 3 o más)
+  technicalSheetUrl String? // Ficha técnica URL
+
   // Relaciones históricas
-  orderItems     OrderItem[]
-  transactions   InventoryTransaction[]
-  purchaseItems  PurchaseOrderItem[]
+  orderItems      OrderItem[]
+  transactions    InventoryTransaction[]
+  purchaseItems   PurchaseOrderItem[]
   counterRequests CounterRequest[]
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String // Acción realizada (ej. "Creó un producto")
+  details   String? // Detalles adicionales o payload en texto
+  createdAt DateTime @default(now())
 }
 
 model InventoryTransaction {
-  id          String   @id @default(uuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  type        TransactionType
-  quantity    Int
-  reason      String?
-  createdAt   DateTime @default(now())
+  id        String          @id @default(uuid())
+  productId String
+  product   Product         @relation(fields: [productId], references: [id])
+  type      TransactionType
+  quantity  Int
+  reason    String?
+  createdAt DateTime        @default(now())
 }
 
 model Customer {
-  id             String    @id @default(uuid())
-  identification String    @unique // CC, NIT, etc.
+  id             String   @id @default(uuid())
+  identification String   @unique // CC, NIT, etc.
   name           String
   email          String?
   phone          String?
   address        String?
   orders         Order[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Order {
-  id          String   @id @default(uuid())
-  userId      String?  // Cajero que procesó la venta
-  user        User?    @relation(fields: [userId], references: [id])
-  
-  customerId  String?  // Cliente que compró
-  customer    Customer? @relation(fields: [customerId], references: [id])
+  id     String  @id @default(uuid())
+  userId String? // Cajero que procesó la venta
+  user   User?   @relation(fields: [userId], references: [id])
 
-  status      OrderStatus @default(PENDING)
-  totalAmount Float
-  notes       String?
-  deliveryType String   @default("RETIRO") // RETIRO, DOMICILIO
-  
+  customerId String? // Cliente que compró
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  status       OrderStatus @default(PENDING)
+  totalAmount  Float
+  notes        String?
+  deliveryType String      @default("RETIRO") // RETIRO, DOMICILIO
+
   // Datos Financieros (Caja)
-  amountPaid  Float    @default(0)
-  receiptType String?  // FACTURA, VOUCHER
+  amountPaid  Float   @default(0)
+  receiptType String? // FACTURA, VOUCHER
 
-  items       OrderItem[]
-  payments    OrderPayment[]
+  items    OrderItem[]
+  payments OrderPayment[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model OrderPayment {
-  id             String   @id @default(uuid())
-  orderId        String
-  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
+  id      String @id @default(uuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
   amount         Float
-  method         String   // EFECTIVO, TARJETA, TRANSFERENCIA, CREDITO
+  method         String // EFECTIVO, TARJETA, TRANSFERENCIA, CREDITO
   bank           String?
   transactionId  String?
   creditProvider String?
   creditDays     Int?
-  
-  createdAt      DateTime @default(now())
+
+  createdAt DateTime @default(now())
 }
 
 model OrderItem {
-  id          String   @id @default(uuid())
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id])
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  quantity    Int
-  unitPrice   Float
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
 }
 
 model PurchaseOrder {
-  id          String              @id @default(uuid())
-  supplierId  String
-  supplier    Supplier            @relation(fields: [supplierId], references: [id])
-  status      PurchaseOrderStatus @default(DRAFT)
-  notes       String?
-  
-  items       PurchaseOrderItem[]
+  id         String              @id @default(uuid())
+  supplierId String
+  supplier   Supplier            @relation(fields: [supplierId], references: [id])
+  status     PurchaseOrderStatus @default(DRAFT)
+  notes      String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  items PurchaseOrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PurchaseOrderItem {
@@ -254,12 +268,12 @@ model SpecialRequest {
 }
 
 model CounterRequest {
-  id          String   @id @default(uuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  status      String   @default("PENDING") // PENDING, DELIVERED, RETURNED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  status    String   @default("PENDING") // PENDING, DELIVERED, RETURNED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
