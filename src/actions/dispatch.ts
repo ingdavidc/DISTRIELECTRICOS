@@ -79,7 +79,7 @@ export async function getAverageDispatchTime() {
     const minTime = Math.max(5, avgMinutes);
     const maxTime = minTime + 5;
     
-    return "${minTime} a ${maxTime} min";
+    return `${minTime} a ${maxTime} min`;
   } catch (error) {
     return "15-20 min";
   }
