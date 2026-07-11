@@ -5,10 +5,11 @@ import { revalidatePath } from 'next/cache';
 
 export async function getInventoryProducts() {
   try {
-    return await prisma.product.findMany({
+    const data = await prisma.product.findMany({
       include: { category: true, supplier: true, altSupplier: true },
       orderBy: { createdAt: 'desc' }
     });
+    return JSON.parse(JSON.stringify(data));
   } catch (error) {
     console.error("Error fetching inventory products:", error);
     return [];
@@ -17,7 +18,8 @@ export async function getInventoryProducts() {
 
 export async function getCategories() {
   try {
-    return await prisma.category.findMany({ orderBy: { name: 'asc' } });
+    const data = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+    return JSON.parse(JSON.stringify(data));
   } catch (error) {
     console.error("Error fetching categories:", error);
     return [];
