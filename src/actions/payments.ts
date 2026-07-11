@@ -1,4 +1,5 @@
 "use server";
+// Rebuild trigger to clear Vercel DB connections
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
