@@ -1,14 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import { authenticate } from "@/actions/auth";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { authenticateStaff } from "@/actions/auth";
+import { AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
 
-export default function LoginPage() {
+export default function LoginStaffPage() {
   const [errorMessage, dispatch, isPending] = useActionState(
-    authenticate,
+    authenticateStaff,
     undefined
   );
 
@@ -27,11 +27,11 @@ export default function LoginPage() {
         }}>
           <img src="/logo.png" alt="DistriEléctricos" style={{ width: "auto", height: "80px", objectFit: "contain" }} />
         </div>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-primary)", margin: 0 }}>
-          DistriEléctricos
+        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-secondary)", margin: 0, textAlign: "center" }}>
+          Acceso Operativo
         </h1>
         <p style={{ color: "var(--color-text-muted)", marginTop: "0.5rem", textAlign: "center", fontSize: "0.95rem" }}>
-          Ingresa tus credenciales para acceder al sistema ERP
+          Ingresa tu documento de identidad para acceder al Punto de Venta, Bodega o Caja/Pagos
         </p>
       </div>
 
@@ -39,28 +39,23 @@ export default function LoginPage() {
         <form action={dispatch} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
           <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Correo Electrónico
+            <label htmlFor="identification" className="form-label">
+              Documento de Identidad
             </label>
             <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="correo@ejemplo.com"
+              id="identification"
+              type="tel"
+              name="identification"
+              placeholder="Ej. 123456789"
               required
               className="input"
             />
           </div>
 
           <div className="form-group">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <label htmlFor="password" className="form-label" style={{ marginBottom: 0 }}>
-                Contraseña
-              </label>
-              <a href="/forgot-password" style={{ fontSize: "0.85rem", color: "var(--color-primary)", textDecoration: "none", fontWeight: 500 }}>
-                ¿Olvidaste tu contraseña?
-              </a>
-            </div>
+            <label htmlFor="password" className="form-label">
+              Contraseña
+            </label>
             <input
               id="password"
               type="password"
@@ -86,10 +81,12 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isPending}
-            className="btn btn-primary"
+            className="btn"
             style={{ 
               width: "100%", padding: "0.85rem", fontSize: "1rem", 
-              marginTop: "0.5rem", boxShadow: "0 4px 6px -1px rgba(32, 53, 98, 0.2)",
+              marginTop: "0.5rem", boxShadow: "0 4px 6px -1px rgba(243, 112, 33, 0.2)",
+              backgroundColor: "var(--color-secondary)",
+              color: "white",
               opacity: isPending ? 0.7 : 1
             }}
           >
@@ -99,23 +96,23 @@ export default function LoginPage() {
                 Ingresando...
               </>
             ) : (
-              "Ingresar al ERP"
+              "Ingresar al Sistema"
             )}
           </button>
-          
+
           <div style={{ textAlign: "center", marginTop: "0.5rem" }}>
-            <a href="/login-staff" style={{ 
+            <a href="/login-erp" style={{ 
               display: "inline-flex", alignItems: "center", gap: "0.5rem", 
               color: "var(--color-text-muted)", fontSize: "0.9rem", textDecoration: "none", fontWeight: 500 
             }}>
-              Acceso Operativo (POS / Bodega / Caja)
+              Acceso Administrativo / ERP
             </a>
           </div>
         </form>
       </div>
       
       <div style={{ marginTop: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
-        &copy; {new Date().getFullYear()} DistriEléctricos E&D.<br/>Todos los derechos reservados.
+        &copy; {new Date().getFullYear()} DistriEléctricos E&D.
       </div>
     </div>
   );
