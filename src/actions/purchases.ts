@@ -21,7 +21,12 @@ export async function getPurchaseOrders() {
 }
 
 export async function getSuppliers() {
-  return await prisma.supplier.findMany({ orderBy: { name: 'asc' } });
+  try {
+    return await prisma.supplier.findMany({ orderBy: { name: 'asc' } });
+  } catch (error) {
+    console.error("Error fetching suppliers:", error);
+    return [];
+  }
 }
 
 export async function createSupplier(data: { name: string, email?: string, phone?: string }) {

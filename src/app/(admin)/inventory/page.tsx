@@ -96,8 +96,9 @@ export default function InventoryPage() {
       setProducts(prods);
       setSuppliers(sups);
       setCategories(cats);
-    } catch (error) {
-      toast.error("Error al cargar datos. ¿Reiniciaste el servidor?");
+    } catch (error: any) {
+      console.error("loadData error:", error);
+      toast.error(`Error al cargar datos: ${error.message || "Fallo de conexión"}`);
     } finally {
       setIsLoading(false);
     }

@@ -16,7 +16,12 @@ export async function getInventoryProducts() {
 }
 
 export async function getCategories() {
-  return await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  try {
+    return await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
 }
 
 export type ProductInputData = {
