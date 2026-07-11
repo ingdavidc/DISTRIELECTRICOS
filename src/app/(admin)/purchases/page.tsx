@@ -17,9 +17,6 @@ export default function PurchasesPage() {
   
   // Special Requests
   const [specialRequests, setSpecialRequests] = useState<any[]>([]);
-  
-  // Special Requests
-  const [specialRequests, setSpecialRequests] = useState<any[]>([]);
 
   // Estado local para editar cantidades: { orderId: [items] }
   const [draftItems, setDraftItems] = useState<Record<string, { id: string, quantityNeeded: number }[]>>({});

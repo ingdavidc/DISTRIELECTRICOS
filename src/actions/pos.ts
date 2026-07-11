@@ -85,6 +85,12 @@ export async function createSpecialProduct(name: string, price: number) {
         tax: 0,
         profitMargin: 0,
         unit: "UNIDAD",
+        category: {
+          connectOrCreate: {
+            where: { name: "Especiales" },
+            create: { name: "Especiales", description: "Productos solicitados ad-hoc" }
+          }
+        },
       }
     });
     return { success: true, product };
