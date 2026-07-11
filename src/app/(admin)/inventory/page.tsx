@@ -201,7 +201,7 @@ export default function InventoryPage() {
   };
 
   const handleGenerateSKU = () => {
-    const randomSKU = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    const randomSKU = "DE-" + Math.floor(100000 + Math.random() * 900000).toString();
     setFormData(prev => ({ ...prev, sku: randomSKU }));
   };
 
@@ -228,12 +228,15 @@ export default function InventoryPage() {
               text-align: center;
               width: 100%;
               height: 100vh;
+              background: white;
             }
-            .name { font-size: 14px; font-weight: bold; margin-bottom: 5px; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .logo { height: 20px; object-fit: contain; margin-bottom: 2px; }
+            .name { font-size: 12px; font-weight: bold; margin-bottom: 2px; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           </style>
           <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
         </head>
         <body>
+          <img src="${window.location.origin}/logo.png" class="logo" />
           <div class="name">${name}</div>
           <svg id="barcode"></svg>
           <script>
@@ -242,9 +245,10 @@ export default function InventoryPage() {
                 format: "CODE128",
                 lineColor: "#000",
                 width: 2,
-                height: 50,
+                height: 40,
                 displayValue: true,
-                fontSize: 16
+                fontSize: 14,
+                margin: 2
               });
               setTimeout(() => {
                 window.print();
