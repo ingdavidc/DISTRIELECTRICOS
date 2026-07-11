@@ -91,12 +91,14 @@ export async function processAutoPurchase(tx: any, productId: string) {
 
 import { sendPurchaseOrderEmail } from './email';
 
+import { auth } from "@/auth";
+
 export async function approvePurchaseOrder(
   orderId: string, 
-  updatedItems: { id: string, quantityNeeded: number }[],
-  userRole: string
+  updatedItems: { id: string, quantityNeeded: number }[]
 ) {
-  if (userRole !== 'ADMIN') {
+  const session = await auth();
+  if (session?.user?.role !== 'ADMIN') {
     return { success: false, error: 'Acceso denegado. Solo un Administrador puede aprobar órdenes de compra.' };
   }
 

@@ -29,29 +29,36 @@ export async function getPosProducts(query: string = "") {
 
 export async function submitOrderToCashier(items: { productId: string, quantity: number, unitPrice: number }[], totalAmount: number, customerId?: string, notes?: string, deliveryType: string = "RETIRO") {
   try {
-    // 1. Validar que al menos haya stock suficiente al momento de tomar el pedido
-    // (El descuento real se hace en Caja, pero evitamos enviar basura a caja)
+    let serverTotalAmount = 0;
+    const itemsWithServerPrice = [];
+
+    // 1. Validar stock y recalcular precio real desde BD
     for (const item of items) {
       const product = await prisma.product.findUnique({ where: { id: item.productId } });
       if (!product || (product.stock < item.quantity && !product.sku.startsWith("ESP-"))) {
         return { success: false, error: `Stock insuficiente para el producto ${product?.name || item.productId}` };
       }
+      
+      const realUnitPrice = product.price;
+      serverTotalAmount += realUnitPrice * item.quantity;
+      
+      itemsWithServerPrice.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: realUnitPrice
+      });
     }
 
-    // 2. Crear la Orden (Estado PENDING - Esperando Pago)
+    // 2. Crear la Orden (Estado PENDING - Esperando Pago) con el precio verificado
     const order = await prisma.order.create({
       data: {
         status: 'PENDING',
-        totalAmount,
+        totalAmount: serverTotalAmount,
         customer: customerId ? { connect: { id: customerId } } : undefined,
         notes,
         deliveryType,
         items: {
-          create: items.map((item: any) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice
-          }))
+          create: itemsWithServerPrice
         }
       }
     });

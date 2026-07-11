@@ -18,8 +18,8 @@ export default function PurchasesPage() {
   // Special Requests
   const [specialRequests, setSpecialRequests] = useState<any[]>([]);
   
-  // Simulador de Rol (ya que no hay login aún)
-  const [simulatedRole, setSimulatedRole] = useState<"ADMIN" | "WAREHOUSE">("ADMIN");
+  // Special Requests
+  const [specialRequests, setSpecialRequests] = useState<any[]>([]);
 
   // Estado local para editar cantidades: { orderId: [items] }
   const [draftItems, setDraftItems] = useState<Record<string, { id: string, quantityNeeded: number }[]>>({});
@@ -68,10 +68,6 @@ export default function PurchasesPage() {
   };
 
   const handleApprove = async (orderId: string) => {
-    if (simulatedRole !== 'ADMIN') {
-      toast.error("Acceso Denegado: Solo los administradores pueden aprobar compras.");
-      return;
-    }
 
     const itemsToSave = draftItems[orderId];
     if (!itemsToSave) return;
@@ -79,7 +75,7 @@ export default function PurchasesPage() {
     setIsApproving(orderId);
     const toastId = toast.loading("Verificando permisos y enviando correo...");
 
-    const result = await approvePurchaseOrder(orderId, itemsToSave, simulatedRole);
+    const result = await approvePurchaseOrder(orderId, itemsToSave);
     
     if (result.success) {
       toast.success(result.message || "Orden aprobada con éxito", { id: toastId });
@@ -112,19 +108,6 @@ export default function PurchasesPage() {
           </p>
         </div>
         
-        {/* Simulador de Rol */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "white", padding: "0.5rem 1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-          <UserCog size={18} color="var(--color-primary)" />
-          <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>Simular Rol:</span>
-          <select 
-            value={simulatedRole} 
-            onChange={(e) => setSimulatedRole(e.target.value as any)}
-            style={{ padding: "0.25rem", borderRadius: "4px", border: "1px solid #ccc" }}
-          >
-            <option value="ADMIN">Administrador</option>
-            <option value="WAREHOUSE">Bodeguero</option>
-          </select>
-        </div>
       </div>
 
       {/* SPECIAL REQUESTS SECTION */}
@@ -287,7 +270,7 @@ export default function PurchasesPage() {
                       disabled={isApproving === order.id}
                     >
                       {isApproving === order.id ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle size={16} />}
-                      {simulatedRole === 'ADMIN' ? 'Aprobar & Enviar' : <><ShieldAlert size={16}/> Solo Admin</>}
+                      Aprobar & Enviar
                     </button>
                   </div>
                 )}
