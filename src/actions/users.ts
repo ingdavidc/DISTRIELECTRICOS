@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
-export async function createUser(data: { name: string; email: string; role: string; password?: string; identification?: string; phone?: string; }) {
+export async function createUser(data: { name: string; email: string; role: string; password?: string; identification?: string; phone?: string; modules?: string[]; }) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     return { success: false, error: "Acceso denegado. Solo administradores pueden crear usuarios." };
@@ -39,6 +39,7 @@ export async function createUser(data: { name: string; email: string; role: stri
         phone: data.phone || null,
         password: hashedPassword,
         role: data.role as any,
+        modules: data.modules || [],
       },
     });
 
@@ -49,7 +50,7 @@ export async function createUser(data: { name: string; email: string; role: stri
   }
 }
 
-export async function updateUser(id: string, data: { name: string; email: string; role: string; password?: string; identification?: string; phone?: string; }) {
+export async function updateUser(id: string, data: { name: string; email: string; role: string; password?: string; identification?: string; phone?: string; modules?: string[]; }) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") {
     return { success: false, error: "Acceso denegado. Solo administradores pueden editar usuarios." };
@@ -71,6 +72,7 @@ export async function updateUser(id: string, data: { name: string; email: string
       identification: data.identification || null,
       phone: data.phone || null,
       role: data.role as any,
+      modules: data.modules || [],
     };
 
     if (data.password && data.password.trim() !== "") {

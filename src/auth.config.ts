@@ -23,6 +23,7 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.role = (user as any).role;
         token.id = user.id;
+        token.modules = (user as any).modules || [];
       }
       return token;
     },
@@ -30,6 +31,7 @@ export const authConfig: NextAuthConfig = {
       if (token && session.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        (session.user as any).modules = token.modules || [];
       }
       return session;
     },

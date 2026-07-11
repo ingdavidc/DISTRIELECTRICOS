@@ -13,6 +13,7 @@ export default async function HRPage() {
       identification: true,
       phone: true,
       role: true,
+      modules: true,
       createdAt: true,
     },
   });

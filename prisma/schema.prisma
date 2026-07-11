@@ -12,6 +12,7 @@ enum Role {
   CASHIER
   WAREHOUSE
   FINANCE
+  OPERATIVE
   CUSTOMER
 }
 
@@ -47,6 +48,7 @@ model User {
   phone          String?
   password       String   // Hashed password
   role           Role     @default(CUSTOMER)
+  modules        String[] @default([])
   orders    Order[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

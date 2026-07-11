@@ -16,7 +16,10 @@ export default async function AdminLayout({
 
   return (
     <div className="dashboard-layout">
-      <Sidebar role={(session.user as any).role || "ADMIN"} />
+      <Sidebar 
+        role={(session.user as any).role || "ADMIN"} 
+        modules={(session.user as any).modules || []}
+      />
       <div className="main-content">
         <Navbar user={session.user} />
         <main className="page-container">

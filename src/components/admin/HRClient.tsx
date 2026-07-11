@@ -12,6 +12,7 @@ type User = {
   identification: string | null;
   phone: string | null;
   role: string;
+  modules: string[];
   createdAt: Date;
 };
 
@@ -29,6 +30,7 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     phone: "",
     role: "CASHIER",
     password: "",
+    modules: [] as string[],
   });
 
   const filteredUsers = users.filter((u) =>
@@ -45,11 +47,12 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
         identification: user.identification || "",
         phone: user.phone || "",
         role: user.role,
+        modules: user.modules || [],
         password: "", // Empty so it's not changed unless typed
       });
     } else {
       setEditingUser(null);
-      setFormData({ name: "", email: "", identification: "", phone: "", role: "CASHIER", password: "" });
+      setFormData({ name: "", email: "", identification: "", phone: "", role: "CASHIER", password: "", modules: [] });
     }
     setIsModalOpen(true);
   };
@@ -108,8 +111,20 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     CASHIER: "Cajero POS",
     WAREHOUSE: "Bodega",
     FINANCE: "Caja/Pagos",
+    OPERATIVE: "Operativo",
     CUSTOMER: "Cliente",
   };
+
+  const availableModules = [
+    { id: "/pos", label: "Punto de Venta" },
+    { id: "/payments", label: "Caja / Pagos" },
+    { id: "/customers", label: "Clientes" },
+    { id: "/inventory", label: "Inventario" },
+    { id: "/dispatch", label: "Despachos" },
+    { id: "/quotes", label: "Cotizaciones" },
+    { id: "/purchases", label: "Órdenes de Compra" },
+    { id: "/suppliers", label: "Proveedores" },
+  ];
 
   return (
     <>
@@ -272,9 +287,34 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
                     <option value="CASHIER">Cajero POS</option>
                     <option value="WAREHOUSE">Bodega</option>
                     <option value="FINANCE">Caja/Pagos</option>
+                    <option value="OPERATIVE">Operativo (Personalizado)</option>
                     <option value="ADMIN">Administrador</option>
                   </select>
                 </div>
+
+                {formData.role === "OPERATIVE" && (
+                  <div className="form-group" style={{ background: "var(--color-light-gray)", padding: "1rem", borderRadius: "var(--radius-md)" }}>
+                    <label className="form-label" style={{ marginBottom: "0.5rem" }}>Accesos Permitidos</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                      {availableModules.map(mod => (
+                        <label key={mod.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", cursor: "pointer" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={formData.modules.includes(mod.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({ ...formData, modules: [...formData.modules, mod.id] });
+                              } else {
+                                setFormData({ ...formData, modules: formData.modules.filter(m => m !== mod.id) });
+                              }
+                            }}
+                          />
+                          {mod.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Contraseña {editingUser && "(Dejar en blanco para no cambiar)"}</label>
                   <input 

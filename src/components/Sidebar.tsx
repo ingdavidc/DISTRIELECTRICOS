@@ -4,23 +4,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Package, Users, LayoutDashboard, ShoppingCart, Truck, FileText, ClipboardList, Building2, Banknote } from "lucide-react";
 
-export default function Sidebar({ role }: { role: string }) {
+export default function Sidebar({ role, modules = [] }: { role: string; modules?: string[] }) {
   const pathname = usePathname();
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN"] },
-    { name: "Punto de Venta", href: "/pos", icon: ShoppingCart, roles: ["ADMIN", "CASHIER"] },
-    { name: "Caja / Pagos", href: "/payments", icon: Banknote, roles: ["ADMIN", "FINANCE"] },
-    { name: "Clientes", href: "/customers", icon: Users, roles: ["ADMIN", "CASHIER"] },
-    { name: "Inventario", href: "/inventory", icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
-    { name: "Despachos", href: "/dispatch", icon: Truck, roles: ["ADMIN", "WAREHOUSE"] },
-    { name: "Cotizaciones", href: "/quotes", icon: FileText, roles: ["ADMIN"] },
-    { name: "Órdenes de Compra", href: "/purchases", icon: ClipboardList, roles: ["ADMIN"] },
-    { name: "Proveedores", href: "/suppliers", icon: Building2, roles: ["ADMIN"] },
+    { name: "Punto de Venta", href: "/pos", icon: ShoppingCart, roles: ["ADMIN", "CASHIER", "OPERATIVE"] },
+    { name: "Caja / Pagos", href: "/payments", icon: Banknote, roles: ["ADMIN", "FINANCE", "OPERATIVE"] },
+    { name: "Clientes", href: "/customers", icon: Users, roles: ["ADMIN", "CASHIER", "OPERATIVE"] },
+    { name: "Inventario", href: "/inventory", icon: Package, roles: ["ADMIN", "WAREHOUSE", "OPERATIVE"] },
+    { name: "Despachos", href: "/dispatch", icon: Truck, roles: ["ADMIN", "WAREHOUSE", "OPERATIVE"] },
+    { name: "Cotizaciones", href: "/quotes", icon: FileText, roles: ["ADMIN", "OPERATIVE"] },
+    { name: "Órdenes de Compra", href: "/purchases", icon: ClipboardList, roles: ["ADMIN", "OPERATIVE"] },
+    { name: "Proveedores", href: "/suppliers", icon: Building2, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Recursos Humanos", href: "/hr", icon: Users, roles: ["ADMIN"] },
   ];
 
-  const filteredNavItems = navItems.filter((item) => item.roles.includes(role));
+  const filteredNavItems = navItems.filter((item) => {
+    if (role === "OPERATIVE") {
+      return item.roles.includes("OPERATIVE") && modules.includes(item.href);
+    }
+    return item.roles.includes(role);
+  });
 
   return (
     <aside className="sidebar">

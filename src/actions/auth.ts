@@ -68,6 +68,7 @@ export async function authenticateStaff(
       else if (user.role === "WAREHOUSE") redirectTo = "/dispatch";
       else if (user.role === "FINANCE") redirectTo = "/payments";
       else if (user.role === "ADMIN") redirectTo = "/dashboard";
+      else if (user.role === "OPERATIVE" && user.modules.length > 0) redirectTo = user.modules[0];
     }
 
     await signIn("credentials", {
