@@ -47,6 +47,21 @@ export default function DispatchPage() {
     const res = await markOrderAsReady(selectedOrder.id);
     if (res.success) {
       toast.success("Pedido listo para entrega", { id: tid });
+      
+      const customer = selectedOrder.customer;
+      if (customer?.phone) {
+        let text = `Hola ${customer.name}, tu pedido #${selectedOrder.id.slice(0,8).toUpperCase()} en DISTRIELECTRICOS ya está listo en bodega para que pases a recogerlo.`;
+        if (selectedOrder.deliveryType === 'DOMICILIO') {
+           const { getAverageDispatchTime } = await import('@/actions/dispatch');
+           const avg = await getAverageDispatchTime();
+           text = `Hola ${customer.name}, tu pedido #${selectedOrder.id.slice(0,8).toUpperCase()} en DISTRIELECTRICOS ya salió de bodega y va en camino a tu domicilio. Tiempo promedio estimado: ${avg}.`;
+        }
+        const cleanPhone = customer.phone.replace(/\D/g, '');
+        const phonePrefix = cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`;
+        const waUrl = `https://wa.me/${phonePrefix}?text=${encodeURIComponent(text)}`;
+        window.open(waUrl, '_blank');
+      }
+
       loadOrders();
     } else {
       toast.error(res.error || "Error", { id: tid });

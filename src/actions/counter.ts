@@ -20,6 +20,23 @@ export async function requestToCounter(productId: string, userId?: string) {
   }
 }
 
+export async function requestMultipleToCounter(productIds: string[], userId?: string) {
+  try {
+    const data = productIds.map(productId => ({
+      productId,
+      userId,
+      status: "PENDING",
+    }));
+    await prisma.counterRequest.createMany({ data });
+    
+    revalidatePath("/pos");
+    revalidatePath("/dispatch");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function getPendingCounterRequests() {
   try {
     const requests = await prisma.counterRequest.findMany({

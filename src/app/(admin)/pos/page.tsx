@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
 import { createSpecialRequest } from "@/actions/requests";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
-import { requestToCounter } from "@/actions/counter";
+import { requestMultipleToCounter } from "@/actions/counter";
 import { getAverageDispatchTime } from "@/actions/dispatch";
 
 import { Product } from "@prisma/client";
@@ -43,6 +43,7 @@ export default function POSPage() {
   const [specialProduct, setSpecialProduct] = useState({ name: "", quantity: "1", customerName: "", customerPhone: "" });
 
   const [avgTime, setAvgTime] = useState("Calculando...");
+  const [counterQueue, setCounterQueue] = useState<string[]>([]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,13 +53,19 @@ export default function POSPage() {
     searchInputRef.current?.focus();
   }, []);
 
-  const handleRequestToCounter = async (productId: string) => {
-    const tid = toast.loading("Enviando solicitud a bodega...");
-    const res = await requestToCounter(productId);
+  const toggleCounterQueue = (productId: string) => {
+    setCounterQueue(prev => prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]);
+  };
+
+  const handleSendCounterQueue = async () => {
+    if (counterQueue.length === 0) return;
+    const tid = toast.loading(`Enviando ${counterQueue.length} solicitudes a bodega...`);
+    const res = await requestMultipleToCounter(counterQueue);
     if (res.success) {
-      toast.success("Producto solicitado a mostrador. Bodega alertada.", { id: tid });
+      toast.success("Productos solicitados a mostrador. Bodega alertada.", { id: tid });
+      setCounterQueue([]);
     } else {
-      toast.error(res.error || "Error al solicitar producto", { id: tid });
+      toast.error(res.error || "Error al solicitar productos", { id: tid });
     }
   };
 
@@ -269,6 +276,17 @@ export default function POSPage() {
               />
             </div>
           </div>
+          
+          {/* FLOTANTE DE COUNTER QUEUE */}
+          {counterQueue.length > 0 && (
+            <div style={{ position: "fixed", bottom: "2rem", left: "2rem", zIndex: 100, background: "white", padding: "1rem 1.5rem", borderRadius: "100px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", display: "flex", alignItems: "center", gap: "1rem", border: "2px solid var(--color-danger)" }}>
+              <span style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{counterQueue.length} {counterQueue.length === 1 ? 'producto seleccionado' : 'productos seleccionados'} para mostrar al cliente</span>
+              <button onClick={handleSendCounterQueue} className="btn btn-primary" style={{ backgroundColor: "var(--color-danger)", borderColor: "var(--color-danger)" }}>
+                Enviar a Bodega
+              </button>
+            </div>
+          )}
+
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", alignContent: "start", gap: "1rem", paddingRight: "0.5rem" }}>
@@ -310,10 +328,15 @@ export default function POSPage() {
                         {hasStock && (
                           <button 
                             type="button"
-                            onClick={(e) => { e.stopPropagation(); handleRequestToCounter(product.id); }}
+                            onClick={(e) => { e.stopPropagation(); toggleCounterQueue(product.id); }}
                             className="btn-icon"
-                            style={{ padding: "0.2rem", color: "var(--color-primary)" }}
-                            title="Solicitar Muestra a Mostrador (Prioridad)"
+                            style={{ 
+                              padding: "0.2rem", 
+                              color: counterQueue.includes(product.id) ? "white" : "var(--color-primary)",
+                              backgroundColor: counterQueue.includes(product.id) ? "var(--color-danger)" : "transparent",
+                              borderRadius: "4px"
+                            }}
+                            title="Seleccionar para Solicitar a Mostrador"
                           >
                             <Eye size={16} />
                           </button>
