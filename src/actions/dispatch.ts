@@ -15,7 +15,10 @@ export async function getOrdersForDispatch() {
           include: { product: true }
         }
       },
-      orderBy: { createdAt: 'asc' }
+      orderBy: [
+        { deliveryType: 'desc' }, // 'RETIRO' comes before 'DOMICILIO' alphabetically
+        { createdAt: 'asc' }
+      ]
     });
     return orders;
   } catch (error) {
@@ -50,5 +53,34 @@ export async function markOrderAsDelivered(orderId: string) {
     return { success: true };
   } catch (error) {
     return { success: false, error: "Error al actualizar estado" };
+  }
+}
+
+export async function getAverageDispatchTime() {
+  try {
+    const recentOrders = await prisma.order.findMany({
+      where: {
+        status: { in: ['READY', 'DELIVERED'] },
+        updatedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      },
+      select: { createdAt: true, updatedAt: true }
+    });
+    
+    if (recentOrders.length === 0) return "15-20 min";
+
+    const totalDiff = recentOrders.reduce((sum, order) => {
+      return sum + (order.updatedAt.getTime() - order.createdAt.getTime());
+    }, 0);
+
+    const avgMs = totalDiff / recentOrders.length;
+    const avgMinutes = Math.round(avgMs / 60000);
+    
+    // Para que sea realista e incluya la preparacion, calculamos un rango
+    const minTime = Math.max(5, avgMinutes);
+    const maxTime = minTime + 5;
+    
+    return "${minTime} a ${maxTime} min";
+  } catch (error) {
+    return "15-20 min";
   }
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Truck, Store, MapPin, Package, Clock, CheckCircle, Printer, CheckSquare, Search, Phone } from "lucide-react";
+import { Truck, Store, MapPin, Package, Clock, CheckCircle, Printer, CheckSquare, Search, Phone, AlertTriangle, Eye, CornerDownLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { getOrdersForDispatch, markOrderAsReady, markOrderAsDelivered } from "@/actions/dispatch";
+import { getPendingCounterRequests, markCounterRequestDelivered, markCounterRequestReturned } from "@/actions/counter";
 
 type Order = Awaited<ReturnType<typeof getOrdersForDispatch>>[0];
 
@@ -13,11 +14,14 @@ export default function DispatchPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [counterRequests, setCounterRequests] = useState<any[]>([]);
 
   const loadOrders = async () => {
     try {
       const data = await getOrdersForDispatch();
       setOrders(data);
+      const reqs = await getPendingCounterRequests();
+      setCounterRequests(reqs);
       if (selectedOrder) {
         const stillExists = data.find((o: any) => o.id === selectedOrder.id);
         if (!stillExists) setSelectedOrder(null);
@@ -67,6 +71,28 @@ export default function DispatchPage() {
     setIsProcessing(false);
   };
 
+  const handleCounterDelivered = async (id: string) => {
+    const tid = toast.loading("Marcando entregado a mostrador...");
+    const res = await markCounterRequestDelivered(id);
+    if (res.success) {
+      toast.success("Marcado como entregado", { id: tid });
+      loadOrders();
+    } else {
+      toast.error(res.error || "Error", { id: tid });
+    }
+  };
+
+  const handleCounterReturned = async (id: string) => {
+    const tid = toast.loading("Retornando al inventario...");
+    const res = await markCounterRequestReturned(id);
+    if (res.success) {
+      toast.success("Retornado a bodega", { id: tid });
+      loadOrders();
+    } else {
+      toast.error(res.error || "Error", { id: tid });
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -104,6 +130,52 @@ export default function DispatchPage() {
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            
+            {/* COUNTER REQUESTS ALERTS */}
+            {counterRequests.length > 0 && (
+              <div style={{ border: "2px solid var(--color-danger)", borderRadius: "var(--radius-md)", overflow: "hidden", animation: "pulse 2s infinite" }}>
+                <div style={{ background: "var(--color-danger)", color: "white", padding: "0.5rem 1rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}>
+                  <AlertTriangle size={18} />
+                  🚨 SOLICITUDES A MOSTRADOR
+                </div>
+                <div style={{ background: "#fff", padding: "0.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {counterRequests.map((req: any) => (
+                    <div key={req.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem", borderBottom: "1px solid #eee" }}>
+                      <div>
+                        <div style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{req.product.sku}</div>
+                        <div style={{ fontSize: "0.85rem" }}>{req.product.name}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                          {req.status === "PENDING" ? "Esperando envío a mostrador..." : "En mostrador"}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        {req.status === "PENDING" && (
+                          <button onClick={() => handleCounterDelivered(req.id)} className="btn btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}>
+                            <CheckCircle size={14} style={{ marginRight: "0.25rem" }} /> Entregado
+                          </button>
+                        )}
+                        {req.status === "DELIVERED" && (
+                          <button onClick={() => handleCounterReturned(req.id)} className="btn btn-outline" style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem", color: "var(--color-danger)" }}>
+                            <CornerDownLeft size={14} style={{ marginRight: "0.25rem" }} /> Devuelto
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <style>
+              {`
+                @keyframes pulse {
+                  0% { box-shadow: 0 0 0 0 rgba(235, 45, 52, 0.4); }
+                  70% { box-shadow: 0 0 0 10px rgba(235, 45, 52, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(235, 45, 52, 0); }
+                }
+              `}
+            </style>
+
             {isLoading ? (
                <div style={{ textAlign: "center", padding: "3rem", color: "var(--color-text-muted)" }}>Cargando cola...</div>
             ) : filteredOrders.length === 0 ? (

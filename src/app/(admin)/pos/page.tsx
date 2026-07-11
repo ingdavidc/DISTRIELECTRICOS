@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
 import { createSpecialRequest } from "@/actions/requests";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
+import { requestToCounter } from "@/actions/counter";
+import { getAverageDispatchTime } from "@/actions/dispatch";
 
 import { Product } from "@prisma/client";
 type Customer = Awaited<ReturnType<typeof searchCustomers>>[0];
@@ -40,12 +42,25 @@ export default function POSPage() {
   const [isSpecialModalOpen, setIsSpecialModalOpen] = useState(false);
   const [specialProduct, setSpecialProduct] = useState({ name: "", quantity: "1", customerName: "", customerPhone: "" });
 
+  const [avgTime, setAvgTime] = useState("Calculando...");
+
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProducts("");
+    getAverageDispatchTime().then(setAvgTime);
     searchInputRef.current?.focus();
   }, []);
+
+  const handleRequestToCounter = async (productId: string) => {
+    const tid = toast.loading("Enviando solicitud a bodega...");
+    const res = await requestToCounter(productId);
+    if (res.success) {
+      toast.success("Producto solicitado a mostrador. Bodega alertada.", { id: tid });
+    } else {
+      toast.error(res.error || "Error al solicitar producto", { id: tid });
+    }
+  };
 
   const fetchProducts = async (query: string) => {
     setIsLoading(true);
@@ -289,12 +304,25 @@ export default function POSPage() {
                   onMouseOver={(e) => hasStock && (e.currentTarget.style.borderColor = "var(--color-primary)", e.currentTarget.style.boxShadow = "var(--shadow-sm)")}
                   onMouseOut={(e) => hasStock && (e.currentTarget.style.borderColor = "var(--color-border)", e.currentTarget.style.boxShadow = "none")}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 600 }}>{product.sku}</span>
-                    <span className={`badge ${badgeClass}`}>
-                      {hasStock ? `${product.stock} ${product.unit}` : "Agotado"}
-                    </span>
-                  </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 600 }}>{product.sku}</span>
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        {hasStock && (
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleRequestToCounter(product.id); }}
+                            className="btn-icon"
+                            style={{ padding: "0.2rem", color: "var(--color-primary)" }}
+                            title="Solicitar Muestra a Mostrador (Prioridad)"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        )}
+                        <span className={`badge ${badgeClass}`}>
+                          {hasStock ? `${product.stock} ${product.unit}` : "Agotado"}
+                        </span>
+                      </div>
+                    </div>
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0.25rem 0", flex: 1 }}>{product.name}</h3>
                   <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)" }}>
                     ${product.price.toLocaleString('de-DE')}
@@ -422,8 +450,11 @@ export default function POSPage() {
 
         {/* Tipo de Entrega */}
         <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
-          <label style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "block" }}>Tipo de Entrega</label>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <label style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between" }}>
+              <span>Tipo de Entrega</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--color-secondary)" }}>⏳ Promedio Bodega: {avgTime}</span>
+            </label>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
             <button 
               className={`btn ${deliveryType === "RETIRO" ? "btn-primary" : "btn-outline"}`} 
               style={{ flex: 1 }}
