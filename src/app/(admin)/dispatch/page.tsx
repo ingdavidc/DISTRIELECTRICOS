@@ -157,7 +157,14 @@ export default function DispatchPage() {
                   {counterRequests.map((req: any) => (
                     <div key={req.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem", borderBottom: "1px solid #eee" }}>
                       <div>
-                        <div style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{req.product.sku}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.15rem" }}>
+                          <div style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{req.product.sku}</div>
+                          {req.user && (
+                            <div style={{ fontSize: "0.7rem", background: "#f3f4f6", padding: "2px 6px", borderRadius: "12px", color: "#555", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                              <span>👤</span> {req.user.name?.split(' ')[0] || req.user.email || "Caja"}
+                            </div>
+                          )}
+                        </div>
                         <div style={{ fontSize: "0.85rem", marginBottom: "0.25rem" }}>{req.product.name}</div>
                         
                         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>

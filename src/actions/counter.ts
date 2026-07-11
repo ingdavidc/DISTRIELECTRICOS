@@ -1,14 +1,16 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
 export async function requestToCounter(productId: string, userId?: string) {
   try {
+    const session = await auth();
     const req = await prisma.counterRequest.create({
       data: {
         productId,
-        userId,
+        userId: userId || session?.user?.id,
         status: "PENDING",
       },
     });
@@ -22,9 +24,12 @@ export async function requestToCounter(productId: string, userId?: string) {
 
 export async function requestMultipleToCounter(productIds: string[], userId?: string) {
   try {
+    const session = await auth();
+    const activeUserId = userId || session?.user?.id;
+    
     const data = productIds.map(productId => ({
       productId,
-      userId,
+      userId: activeUserId,
       status: "PENDING",
     }));
     await prisma.counterRequest.createMany({ data });
