@@ -51,7 +51,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               name="email"
-              placeholder="administracion@distrielectricoseyd.com"
+              placeholder="correo@ejemplo.com"
               required
               className="input"
             />
