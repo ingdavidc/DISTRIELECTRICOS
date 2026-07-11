@@ -2,8 +2,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
-// Iniciar el cliente de Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function parsePdfInvoice(formData: FormData) {
@@ -17,81 +15,66 @@ export async function parsePdfInvoice(formData: FormData) {
       return { success: false, error: "No se proporcionó ningún archivo." };
     }
 
-    // Polyfill DOMMatrix for Vercel Node environments before requiring pdf-parse
-    if (typeof global !== "undefined" && typeof (global as any).DOMMatrix === "undefined") {
-      (global as any).DOMMatrix = class DOMMatrix { constructor() {} };
-    }
-    const pdf = require("pdf-parse");
-
-    // Convertir File a Buffer para pdf-parse
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    const base64Data = buffer.toString("base64");
 
-    // Extraer texto del PDF
-    let pdfText = "";
-    try {
-      const data = await pdf(buffer);
-      pdfText = data.text;
-    } catch (err) {
-      console.error("Error extrayendo texto del PDF:", err);
-      return { success: false, error: "No se pudo leer el contenido del PDF. Asegúrate de que no esté encriptado." };
-    }
+    const prompt = [
+      "Eres un asistente experto en contabilidad e inventarios de una empresa llamada DISTRIELECTRICOS.",
+      "He adjuntado una factura de proveedor en formato PDF. Tu trabajo es extraer los datos clave para insertarlos en nuestro sistema ERP.",
+      "",
+      "Debes devolver UNICAMENTE un objeto JSON valido con esta estructura exacta, sin texto adicional, sin formato markdown:",
+      "{",
+      "  \"supplier\": {",
+      "    \"name\": \"Nombre de la empresa proveedora\",",
+      "    \"identification\": \"NIT o RUT (solo numeros)\",",
+      "    \"email\": \"correo si aparece\",",
+      "    \"phone\": \"telefono si aparece\"",
+      "  },",
+      "  \"products\": [",
+      "    {",
+      "      \"sku\": \"Codigo del producto si aparece, o genera uno corto basado en el nombre\",",
+      "      \"name\": \"Nombre descriptivo del producto\",",
+      "      \"quantity\": 10,",
+      "      \"cost\": 15000.50,",
+      "      \"tax\": 19",
+      "    }",
+      "  ]",
+      "}",
+      "",
+      "Reglas:",
+      "1. El 'cost' debe ser numerico sin simbolos de moneda.",
+      "2. El 'tax' debe ser numerico (ej: 19 o 5), si no se menciona asume 19.",
+      "3. Extrae TODOS los productos de la factura.",
+      "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible."
+    ].join("\n");
 
-    if (!pdfText || pdfText.trim() === "") {
-      return { success: false, error: "El PDF parece estar vacío o es una imagen escaneada sin texto." };
-    }
-
-    // Preparar el modelo Gemini (usamos 1.5 flash por ser rápido y barato)
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `
-      Eres un asistente experto en contabilidad e inventarios. 
-      A continuación te proporcionaré el texto extraído de una factura PDF de un proveedor.
-      Tu trabajo es analizar la factura y extraer la información en el siguiente formato JSON estricto.
-      No agregues explicaciones, markdown ni ningún otro texto, SOLO devuelve el JSON válido.
-
-      Formato JSON esperado:
+    const result = await model.generateContent([
+      prompt,
       {
-        "supplier": {
-          "name": "Nombre o Razón Social del Proveedor",
-          "identification": "NIT o Documento del proveedor (solo números y guiones si los hay)",
-          "email": "Correo electrónico si aparece, si no, string vacío",
-          "phone": "Teléfono si aparece, si no, string vacío"
-        },
-        "products": [
-          {
-            "sku": "Código de barras, código interno o referencia del producto",
-            "name": "Descripción completa del producto",
-            "quantity": Cantidad facturada (número entero o decimal),
-            "cost": Costo unitario antes de impuestos (número, sin separadores de miles),
-            "tax": Porcentaje de IVA o impuesto (ej: 19 si es 19%, 0 si es exento. Si no especifica, asume 19)
-          }
-        ]
+        inlineData: {
+          data: base64Data,
+          mimeType: "application/pdf"
+        }
       }
+    ]);
 
-      Texto de la factura:
-      """
-      ${pdfText.substring(0, 30000)} // Limitamos por si es extremadamente largo
-      """
-    `;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
+    const responseText = result.response.text();
     
-    // Limpiar posible markdown (```json ... ```)
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const cleanedJson = responseText.replace(/```json\n?|```/g, "").trim();
 
     try {
-      const parsedData = JSON.parse(text);
+      const parsedData = JSON.parse(cleanedJson);
       return { success: true, data: parsedData };
     } catch (parseError) {
-      console.error("Error parseando JSON de Gemini:", text);
-      return { success: false, error: "La IA no pudo estructurar correctamente los datos de esta factura." };
+      console.error("Error parseando JSON de Gemini:", responseText);
+      return { success: false, error: "La IA no devolvio un formato valido. Intenta de nuevo." };
     }
 
   } catch (error: any) {
     console.error("Error en parsePdfInvoice:", error);
-    return { success: false, error: "Ocurrió un error inesperado al procesar la factura: " + error.message };
+    return { success: false, error: "Error de conexion con la IA o procesamiento del archivo." };
   }
 }
