@@ -305,8 +305,8 @@ export default function InventoryPage() {
                         <div style={{ fontWeight: 600 }}>{prod.name}</div>
                         <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>{prod.brand || 'Sin marca'} | {prod.category?.name}</div>
                       </td>
-                      <td style={{ color: "var(--color-text-muted)" }}>${prod.cost?.toLocaleString() || 0}</td>
-                      <td style={{ fontWeight: 700, color: "var(--color-secondary)" }}>${prod.price?.toLocaleString()}</td>
+                      <td style={{ color: "var(--color-text-muted)" }}>${prod.cost?.toLocaleString('es-CO') || 0}</td>
+                      <td style={{ fontWeight: 700, color: "var(--color-secondary)" }}>${prod.price?.toLocaleString('es-CO')}</td>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <span style={{ fontWeight: 700, fontSize: "1.1rem", color: stockColor }}>
@@ -454,7 +454,7 @@ export default function InventoryPage() {
                     <DollarSign size={40} color="var(--color-secondary)" />
                     <div>
                       <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>Precio de Venta al Público (PVP) Sugerido</p>
-                      <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>${formData.price.toLocaleString()}</h2>
+                      <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>${formData.price.toLocaleString('es-CO')}</h2>
                       <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>Calculado automáticamente según costo, utilidad e impuestos.</p>
                     </div>
                   </div>
