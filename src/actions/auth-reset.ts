@@ -35,7 +35,7 @@ export async function requestPasswordReset(email: string) {
 
     if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "[Pega-Aqui-Tu-LLave-Resend]") {
       await resend.emails.send({
-        from: "DistriEléctricos <onboarding@resend.dev>", // Or a verified domain if available
+        from: "DistriEléctricos <soporte@distrielectricoseyd.com>",
         to: email,
         subject: "Recuperación de Contraseña - DistriEléctricos",
         html: `
