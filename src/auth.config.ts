@@ -13,6 +13,7 @@ export const authConfig: NextAuthConfig = {
         nextUrl.pathname.startsWith("/login") ||
         nextUrl.pathname.startsWith("/forgot-password") ||
         nextUrl.pathname.startsWith("/reset-password") ||
+        nextUrl.pathname.startsWith("/receipt") ||
         nextUrl.pathname.startsWith("/api/auth");
 
       if (isPublicRoute) return true;
