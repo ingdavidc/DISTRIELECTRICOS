@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon } from "lucide-react";
 import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, ProductInputData } from "@/actions/inventory";
 import { getSuppliers } from "@/actions/purchases";
@@ -8,6 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import toast from "react-hot-toast";
 import { Trash2, Edit } from "lucide-react";
 import imageCompression from "browser-image-compression";
+import { NumericFormat } from "react-number-format";
 
 import { Product } from "@prisma/client";
 type Supplier = Awaited<ReturnType<typeof getSuppliers>>[0];
@@ -149,10 +150,15 @@ export default function InventoryPage() {
     setIsModalOpen(false);
   };
 
+  const handleCloseModalRef = useRef(handleCloseModal);
+  useEffect(() => {
+    handleCloseModalRef.current = handleCloseModal;
+  }, [handleCloseModal]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        document.getElementById("close-modal-btn")?.click();
+      if (e.key === "Escape" && document.querySelector(".modal-overlay")) {
+        handleCloseModalRef.current();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -464,7 +470,14 @@ export default function InventoryPage() {
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Costo de Adquisición (Sin IVA)</label>
                       <div style={{ position: "relative" }}>
                         <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }}>$</span>
-                        <input type="number" min="0" className="input" style={{ paddingLeft: "30px" }} value={formData.cost} onChange={(e) => setFormData({...formData, cost: parseFloat(e.target.value) || 0})} />
+                        <NumericFormat 
+                          className="input" 
+                          style={{ paddingLeft: "30px" }} 
+                          value={formData.cost} 
+                          thousandSeparator="." 
+                          decimalSeparator="," 
+                          onValueChange={(values) => setFormData({...formData, cost: values.floatValue || 0})} 
+                        />
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -485,7 +498,14 @@ export default function InventoryPage() {
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Ajuste Manual de PVP</label>
                       <div style={{ position: "relative" }}>
                         <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }}>$</span>
-                        <input type="number" min="0" className="input" style={{ paddingLeft: "30px" }} value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value) || 0})} />
+                        <NumericFormat 
+                          className="input" 
+                          style={{ paddingLeft: "30px" }} 
+                          value={formData.price} 
+                          thousandSeparator="." 
+                          decimalSeparator="," 
+                          onValueChange={(values) => setFormData({...formData, price: values.floatValue || 0})} 
+                        />
                       </div>
                       <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Puedes sobreescribir el precio sugerido aquí.</span>
                     </div>

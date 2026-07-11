@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { Plus, Search, UserCheck, X, Edit, Trash2 } from "lucide-react";
 import { createUser, updateUser, deleteUser } from "@/actions/users";
 import toast from "react-hot-toast";
@@ -74,10 +74,15 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     setEditingUser(null);
   };
 
+  const handleCloseModalRef = useRef(handleCloseModal);
+  useEffect(() => {
+    handleCloseModalRef.current = handleCloseModal;
+  }, [handleCloseModal]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        document.getElementById("close-hr-modal-btn")?.click();
+      if (e.key === "Escape" && document.querySelector(".modal-overlay")) {
+        handleCloseModalRef.current();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
