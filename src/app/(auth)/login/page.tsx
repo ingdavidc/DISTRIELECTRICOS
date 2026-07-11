@@ -19,70 +19,83 @@ export default function LoginPage() {
   }, [errorMessage]);
 
   return (
-    <div className="w-full max-w-md">
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-16 h-16 bg-[var(--primary)] text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-orange-500/20">
+    <div style={{ width: "100%", maxWidth: "400px" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "2rem" }}>
+        <div style={{ 
+          width: "64px", height: "64px", 
+          backgroundColor: "var(--color-primary)", 
+          color: "white", 
+          borderRadius: "16px", 
+          display: "flex", alignItems: "center", justifyContent: "center", 
+          marginBottom: "1rem",
+          boxShadow: "0 10px 15px -3px rgba(32, 53, 98, 0.3)"
+        }}>
           <Zap size={32} />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">DistriEléctricos</h1>
-        <p className="text-gray-500 mt-2 text-center">
+        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-primary)", margin: 0 }}>
+          DistriEléctricos
+        </h1>
+        <p style={{ color: "var(--color-text-muted)", marginTop: "0.5rem", textAlign: "center", fontSize: "0.95rem" }}>
           Ingresa tus credenciales para acceder al sistema ERP
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-        <form action={dispatch} className="space-y-6">
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+      <div className="card" style={{ padding: "2rem" }}>
+        <form action={dispatch} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
               Correo Electrónico
             </label>
             <input
               id="email"
               type="email"
               name="email"
-              placeholder="admin@ejemplo.com"
+              placeholder="administracion@distrielectricoseyd.com"
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[var(--primary)] focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+              className="input"
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Contraseña
-              </label>
-            </div>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              Contraseña
+            </label>
             <input
               id="password"
               type="password"
               name="password"
               placeholder="••••••••"
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[var(--primary)] focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+              className="input"
             />
           </div>
 
           {errorMessage && (
-            <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg text-sm">
+            <div style={{ 
+              display: "flex", alignItems: "center", gap: "0.5rem", 
+              color: "var(--color-danger)", backgroundColor: "#fef2f2", 
+              padding: "0.75rem", borderRadius: "var(--radius-md)", 
+              fontSize: "0.85rem", border: "1px solid #fecaca" 
+            }}>
               <AlertCircle size={16} />
-              <p>{errorMessage}</p>
+              <p style={{ margin: 0 }}>{errorMessage}</p>
             </div>
           )}
 
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white py-3 px-4 rounded-xl font-medium transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center disabled:opacity-70"
+            className="btn btn-primary"
+            style={{ 
+              width: "100%", padding: "0.85rem", fontSize: "1rem", 
+              marginTop: "0.5rem", boxShadow: "0 4px 6px -1px rgba(32, 53, 98, 0.2)",
+              opacity: isPending ? 0.7 : 1
+            }}
           >
             {isPending ? (
               <>
-                <Loader2 size={20} className="animate-spin mr-2" />
+                <Loader2 size={20} className="animate-spin" />
                 Ingresando...
               </>
             ) : (
@@ -92,8 +105,8 @@ export default function LoginPage() {
         </form>
       </div>
       
-      <div className="mt-8 text-center text-sm text-gray-500">
-        &copy; {new Date().getFullYear()} DistriEléctricos E&D. Todos los derechos reservados.
+      <div style={{ marginTop: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
+        &copy; {new Date().getFullYear()} DistriEléctricos E&D.<br/>Todos los derechos reservados.
       </div>
     </div>
   );
