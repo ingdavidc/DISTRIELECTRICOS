@@ -31,7 +31,7 @@ export default function LoginStaffPage() {
           Acceso Operativo
         </h1>
         <p style={{ color: "var(--color-text-muted)", marginTop: "0.5rem", textAlign: "center", fontSize: "0.95rem" }}>
-          Ingresa tu documento de identidad para acceder al Punto de Venta o Bodega
+          Ingresa tu documento de identidad para acceder al Punto de Venta, Bodega o Caja/Pagos
         </p>
       </div>
 

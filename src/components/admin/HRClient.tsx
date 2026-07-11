@@ -107,6 +107,7 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     ADMIN: "Administrador",
     CASHIER: "Cajero POS",
     WAREHOUSE: "Bodega",
+    FINANCE: "Caja/Pagos",
     CUSTOMER: "Cliente",
   };
 
@@ -270,6 +271,7 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
                   >
                     <option value="CASHIER">Cajero POS</option>
                     <option value="WAREHOUSE">Bodega</option>
+                    <option value="FINANCE">Caja/Pagos</option>
                     <option value="ADMIN">Administrador</option>
                   </select>
                 </div>

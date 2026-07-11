@@ -108,7 +108,7 @@ export default function LoginPage() {
               display: "inline-flex", alignItems: "center", gap: "0.5rem", 
               color: "var(--color-text-muted)", fontSize: "0.9rem", textDecoration: "none", fontWeight: 500 
             }}>
-              Acceso Operativo (POS / Bodega)
+              Acceso Operativo (POS / Bodega / Caja)
             </a>
           </div>
         </form>

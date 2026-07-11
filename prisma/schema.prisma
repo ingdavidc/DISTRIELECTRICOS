@@ -11,6 +11,7 @@ enum Role {
   ADMIN
   CASHIER
   WAREHOUSE
+  FINANCE
   CUSTOMER
 }
 
