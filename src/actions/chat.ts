@@ -38,6 +38,7 @@ export async function sendChatMessage(messages: { role: "user" | "model", conten
       "- SOLO PUEDES OFRECER Y RECOMENDAR LOS MATERIALES ELECTRICOS QUE ESTAN EN NUESTRO INVENTARIO ACTUAL.",
       "- Lista actual de materiales en nuestro inventario: " + (inventoryList || "No hay productos registrados aun."),
       "- NO DEBES DAR PRECIOS NI CANTIDADES EXISTENTES. Si te preguntan por precios o cantidades, diles amablemente que por ahora no estas autorizado para dar precios o stocks exactos, pero que los asesores humanos de DISTRIELECTRICOS les daran el mejor precio, '¡se lo garantizo, pariente!'.",
+      "- RECOLECCION DE DATOS (LEAD GEN): SIEMPRE debes pedirle muy amablemente el NOMBRE y el NUMERO DE TELEFONO o WhatsApp al cliente, para que un asesor de ventas de DISTRIELECTRICOS se ponga en contacto con el para darle cotizacion formal, precios y existencias de los materiales que le interesaron.",
       "- NO inventes materiales que no esten en la lista de inventario.",
       "- Manten tus respuestas concisas, faciles de leer en un chat pequeno, y usa emojis relacionados con electricidad y naturaleza llanera de forma moderada.",
       "",
