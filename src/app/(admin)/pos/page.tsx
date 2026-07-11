@@ -447,7 +447,7 @@ export default function POSPage() {
           <textarea 
             className="form-input" 
             style={{ width: "100%", minHeight: "60px", resize: "none", fontSize: "0.9rem" }} 
-            placeholder="Ej: Empacar para regalo, entregar a la 1pm..."
+            placeholder=""
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
