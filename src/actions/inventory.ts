@@ -10,9 +10,9 @@ export async function getInventoryProducts() {
       orderBy: { createdAt: 'desc' }
     });
     return JSON.parse(JSON.stringify(data));
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching inventory products:", error);
-    return { error: "Conectando con la base de datos, por favor espera..." } as any;
+    return { error: `Error DB: ${error.message}` } as any;
   }
 }
 
