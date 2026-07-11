@@ -143,9 +143,19 @@ export default function DispatchPage() {
                     <div key={req.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem", borderBottom: "1px solid #eee" }}>
                       <div>
                         <div style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{req.product.sku}</div>
-                        <div style={{ fontSize: "0.85rem" }}>{req.product.name}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                          {req.status === "PENDING" ? "Esperando envío a mostrador..." : "En mostrador"}
+                        <div style={{ fontSize: "0.85rem", marginBottom: "0.25rem" }}>{req.product.name}</div>
+                        
+                        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                          <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                            {req.status === "PENDING" ? "⏳ Esperando envío..." : "✅ En mostrador"}
+                          </div>
+                          
+                          {req.product.location && (
+                            <div style={{ fontSize: "0.75rem", color: "var(--color-navy)", display: "flex", alignItems: "center", gap: "0.25rem", background: "rgba(32,53,98,0.1)", padding: "2px 6px", borderRadius: "4px", fontWeight: 600 }}>
+                              <MapPin size={12} />
+                              Ubic: {req.product.location}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "0.5rem" }}>
