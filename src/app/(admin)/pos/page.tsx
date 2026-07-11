@@ -23,17 +23,6 @@ export default function POSPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [notes, setNotes] = useState("");
   const [deliveryType, setDeliveryType] = useState("RETIRO");
-  const [priceTier, setPriceTier] = useState<"NORMAL"|"FRECUENTE"|"VOLUMEN"|"CORPORATIVO">("NORMAL");
-
-  const getPriceForTier = (product: any, tier: string) => {
-    if (product.sku?.startsWith("ESP-")) return product.price;
-    const basePrice = product.price;
-    let finalPrice = basePrice;
-    if (tier === "FRECUENTE") finalPrice = basePrice - (basePrice * (product.freqClientDiscount ?? 5) / 100);
-    else if (tier === "VOLUMEN") finalPrice = basePrice - (basePrice * (product.volumeDiscount ?? 10) / 100);
-    else if (tier === "CORPORATIVO") finalPrice = basePrice - (basePrice * (product.corporateDiscount ?? 15) / 100);
-    return Math.round(finalPrice);
-  };
 
   // Customer State
   const [customerQuery, setCustomerQuery] = useState("");
@@ -132,8 +121,8 @@ export default function POSPage() {
     setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const subtotal = cart.reduce((sum: any, item: any) => sum + (getPriceForTier(item, priceTier) * item.cartQuantity / (1 + (item.tax / 100))), 0);
-  const total = cart.reduce((sum: any, item: any) => sum + (getPriceForTier(item, priceTier) * item.cartQuantity), 0);
+  const subtotal = cart.reduce((sum: any, item: any) => sum + (item.price * item.cartQuantity / (1 + (item.tax / 100))), 0);
+  const total = cart.reduce((sum: any, item: any) => sum + (item.price * item.cartQuantity), 0);
   const taxes = total - subtotal;
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
@@ -161,10 +150,10 @@ export default function POSPage() {
       const items = cart.map((item: any) => ({
         productId: item.id,
         quantity: item.cartQuantity,
-        unitPrice: getPriceForTier(item, priceTier)
+        unitPrice: item.price
       }));
 
-      const res = await submitOrderToCashier(items, total, selectedCustomer?.id, notes, deliveryType, priceTier);
+      const res = await submitOrderToCashier(items, total, selectedCustomer?.id, notes, deliveryType);
       
       if (res.success) {
         toast.success(`Orden #${res.orderId} enviada a caja.`, { id: tid });
@@ -174,7 +163,6 @@ export default function POSPage() {
         setCustomerQuery("");
         setNotes("");
         setDeliveryType("RETIRO");
-        setPriceTier("NORMAL");
         fetchProducts(""); 
         searchInputRef.current?.focus();
       } else {
@@ -406,10 +394,10 @@ export default function POSPage() {
                 <div key={item.id} style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingBottom: "1rem", borderBottom: "1px dashed var(--color-border)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ fontWeight: 500, fontSize: "0.9rem", flex: 1 }}>{item.name}</div>
-                    <div style={{ fontWeight: 600 }}>${(getPriceForTier(item, priceTier) * item.cartQuantity).toLocaleString('de-DE')}</div>
+                    <div style={{ fontWeight: 600 }}>${(item.price * item.cartQuantity).toLocaleString('de-DE')}</div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${getPriceForTier(item, priceTier).toLocaleString('de-DE')} c/u</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.price.toLocaleString('de-DE')} c/u</div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--color-background)", borderRadius: "var(--radius-md)", padding: "0.25rem" }}>
                       <button 
                         onClick={() => item.cartQuantity > 1 ? updateQuantity(item.id, -1) : removeFromCart(item.id)}
@@ -430,22 +418,6 @@ export default function POSPage() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Tipo de Precio */}
-        <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
-          <label style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "block" }}>Lista de Precios</label>
-          <select 
-            className="form-input" 
-            value={priceTier} 
-            onChange={(e) => setPriceTier(e.target.value as any)}
-            style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)" }}
-          >
-            <option value="NORMAL">Precio Público (Normal)</option>
-            <option value="FRECUENTE">Cliente Frecuente</option>
-            <option value="VOLUMEN">Precio Volumen</option>
-            <option value="CORPORATIVO">Precio Corporativo</option>
-          </select>
         </div>
 
         {/* Tipo de Entrega */}

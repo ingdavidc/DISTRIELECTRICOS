@@ -30,6 +30,32 @@ export default function PaymentsPage() {
   const [creditDays, setCreditDays] = useState(30);
   const [receiptType, setReceiptType] = useState("VOUCHER"); // FACTURA, VOUCHER
   const [amountToPay, setAmountToPay] = useState(0);
+  const [priceTier, setPriceTier] = useState<"NORMAL" | "FRECUENTE" | "VOLUMEN" | "CORPORATIVO">("NORMAL");
+
+  const handlePriceTierChange = (newTier: string) => {
+    setPriceTier(newTier as any);
+    if (!selectedOrder) return;
+
+    setEditableItems(prev => prev.map((item: any) => {
+      const original = selectedOrder.items.find((i: any) => i.id === item.id);
+      if (!original) return item;
+      
+      let finalPrice = original.product.price;
+      if (!original.product.sku.startsWith("ESP-")) {
+        const freq = original.product.freqClientDiscount ?? 5;
+        const vol = original.product.volumeDiscount ?? 10;
+        const corp = original.product.corporateDiscount ?? 15;
+        
+        if (newTier === "FRECUENTE") finalPrice = finalPrice - (finalPrice * freq / 100);
+        else if (newTier === "VOLUMEN") finalPrice = finalPrice - (finalPrice * vol / 100);
+        else if (newTier === "CORPORATIVO") finalPrice = finalPrice - (finalPrice * corp / 100);
+      } else {
+        finalPrice = original.unitPrice;
+      }
+
+      return { ...item, unitPrice: Math.round(finalPrice) };
+    }));
+  };
 
   // History Modal State
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -109,6 +135,7 @@ export default function PaymentsPage() {
     setCreditProvider("");
     setCreditDays(30);
     setReceiptType(order.receiptType || "VOUCHER");
+    setPriceTier("NORMAL");
     const balance = order.totalAmount - order.amountPaid;
     setAmountToPay(balance);
   };
@@ -393,9 +420,28 @@ export default function PaymentsPage() {
 
               {/* Items List (Editable only if PENDING) */}
               <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border)" }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--color-primary)" }}>
-                  {isPending ? "Auditoría de Artículos" : "Artículos Despachados"}
-                </h3>
+                
+                {/* Selector de Precios (NUEVO) */}
+                {isPending && (
+                  <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "var(--color-background)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+                    <label style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "block" }}>Aplicar Lista de Precios</label>
+                    <select 
+                      className="form-input" 
+                      value={priceTier} 
+                      onChange={(e) => handlePriceTierChange(e.target.value)}
+                      style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)" }}
+                    >
+                      <option value="NORMAL">Precio Público (Normal)</option>
+                      <option value="FRECUENTE">Cliente Frecuente</option>
+                      <option value="VOLUMEN">Precio Volumen</option>
+                      <option value="CORPORATIVO">Precio Corporativo</option>
+                    </select>
+                  </div>
+                )}
+
+                  <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--color-primary)" }}>
+                    {isPending ? "Auditoría de Artículos" : "Artículos Despachados"}
+                  </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                   {editableItems.map((item: any) => (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "0.75rem", borderBottom: "1px dashed var(--color-border)" }}>
