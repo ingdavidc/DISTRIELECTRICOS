@@ -112,7 +112,11 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
             setUsers((prev) => [...prev, res.user as User]);
           }
         }
-        handleCloseModal();
+        // Reset form to avoid dirty check warning on success
+        setFormData({ name: "", email: "", identification: "", phone: "", role: "Asesor", password: "", modules: [] });
+        setInitialFormData({ name: "", email: "", identification: "", phone: "", role: "Asesor", password: "", modules: [] });
+        setIsModalOpen(false);
+        setEditingUser(null);
       } else {
         toast.error(res.error);
       }
