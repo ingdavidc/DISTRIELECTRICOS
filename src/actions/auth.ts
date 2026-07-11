@@ -27,7 +27,7 @@ export async function authenticate(
       return "Credenciales inválidas.";
     }
 
-    cookies().set("show_welcome", "true", { path: "/" });
+    cookies().set("show_welcome", "true", { path: "/", httpOnly: false });
     await signIn("credentials", {
       username: parsed.data.email, // Mapeado a username para auth.ts
       password: parsed.data.password,
@@ -73,7 +73,7 @@ export async function authenticateStaff(
       else if (user.role === "OPERATIVE" && user.modules.length > 0) redirectTo = user.modules[0];
     }
 
-    cookies().set("show_welcome", "true", { path: "/" });
+    cookies().set("show_welcome", "true", { path: "/", httpOnly: false });
     await signIn("credentials", {
       username: parsed.data.identification,
       password: parsed.data.password,
