@@ -93,7 +93,12 @@ export default function InventoryPage() {
     setIsLoading(true);
     try {
       const [prods, sups, cats] = await Promise.all([getInventoryProducts(), getSuppliers(), getCategories()]);
-      setProducts(prods);
+      
+      if (prods && (prods as any).error) {
+        throw new Error((prods as any).error);
+      }
+
+      setProducts(prods as any[]);
       setSuppliers(sups);
       setCategories(cats);
     } catch (error: any) {

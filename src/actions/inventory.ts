@@ -12,7 +12,7 @@ export async function getInventoryProducts() {
     return JSON.parse(JSON.stringify(data));
   } catch (error) {
     console.error("Error fetching inventory products:", error);
-    throw new Error("Conectando con la base de datos, por favor espera...");
+    return { error: "Conectando con la base de datos, por favor espera..." } as any;
   }
 }
 
