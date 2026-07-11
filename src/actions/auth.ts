@@ -2,6 +2,7 @@
 
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
+import { cookies } from "next/headers";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -26,6 +27,7 @@ export async function authenticate(
       return "Credenciales inválidas.";
     }
 
+    cookies().set("show_welcome", "true", { path: "/" });
     await signIn("credentials", {
       username: parsed.data.email, // Mapeado a username para auth.ts
       password: parsed.data.password,
@@ -71,6 +73,7 @@ export async function authenticateStaff(
       else if (user.role === "OPERATIVE" && user.modules.length > 0) redirectTo = user.modules[0];
     }
 
+    cookies().set("show_welcome", "true", { path: "/" });
     await signIn("credentials", {
       username: parsed.data.identification,
       password: parsed.data.password,

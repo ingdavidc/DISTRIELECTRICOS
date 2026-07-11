@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
+import WelcomeToast from "@/components/WelcomeToast";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
@@ -16,6 +17,7 @@ export default async function AdminLayout({
 
   return (
     <div className="dashboard-layout">
+      <WelcomeToast userName={session.user.name || ""} />
       <Sidebar 
         role={(session.user as any).role || "ADMIN"} 
         modules={(session.user as any).modules || []}
