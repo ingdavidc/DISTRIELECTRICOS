@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { authConfig } from "./auth.config";
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  username: z.string().min(1),
   password: z.string().min(1),
 });
 
@@ -18,14 +18,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
+        const { username, password } = parsed.data;
+
+        // Búsqueda por email o por identificación
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: username },
+              { identification: username },
+            ],
+          },
         });
 
         if (!user || !user.password) return null;
 
         const passwordsMatch = await bcrypt.compare(
-          parsed.data.password,
+          password,
           user.password
         );
         if (!passwordsMatch) return null;
