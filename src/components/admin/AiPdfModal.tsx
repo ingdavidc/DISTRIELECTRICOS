@@ -1,0 +1,204 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { UploadCloud, FileText, CheckCircle, AlertTriangle, Loader2, X } from "lucide-react";
+import { parsePdfInvoice } from "@/actions/ai-parser";
+import { importAiData, AiImportData } from "@/actions/inventory";
+import toast from "react-hot-toast";
+
+export default function AiPdfModal({ 
+  isOpen, 
+  onClose,
+  onSingleProductFill 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void;
+  onSingleProductFill?: (data: AiImportData["products"][0], supplierId?: string) => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [parsedData, setParsedData] = useState<AiImportData | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  if (!isOpen) return null;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+    if (selected.type !== "application/pdf") {
+      toast.error("Por favor selecciona un archivo PDF.");
+      return;
+    }
+
+    setFile(selected);
+    setIsProcessing(true);
+    setParsedData(null);
+
+    const formData = new FormData();
+    formData.append("file", selected);
+
+    try {
+      const res = await parsePdfInvoice(formData);
+      if (res.success && res.data) {
+        setParsedData(res.data);
+        toast.success("Factura procesada con éxito por la IA.");
+      } else {
+        toast.error(res.error || "Error al procesar la factura.");
+        setFile(null);
+      }
+    } catch (err: any) {
+      toast.error("Error inesperado: " + err.message);
+      setFile(null);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!parsedData) return;
+    
+    // Si estamos en modo llenado de un solo producto (desde la ficha técnica)
+    if (onSingleProductFill) {
+      if (parsedData.products.length === 0) {
+        toast.error("No se encontraron productos en la factura.");
+        return;
+      }
+      // Llenamos con el primer producto
+      onSingleProductFill(parsedData.products[0]);
+      onClose();
+      return;
+    }
+
+    // Modo Importación Masiva
+    setIsProcessing(true);
+    try {
+      const res = await importAiData(parsedData);
+      if (res.success) {
+        toast.success("Importación masiva completada con éxito.");
+        onClose();
+        setParsedData(null);
+        setFile(null);
+      } else {
+        toast.error(res.error || "Error al guardar en base de datos.");
+      }
+    } catch (err: any) {
+      toast.error("Error al guardar: " + err.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const closeModal = () => {
+    setFile(null);
+    setParsedData(null);
+    onClose();
+  };
+
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
+      <div className="card" style={{ width: "100%", maxWidth: "900px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", background: "#fff" }}>
+        
+        <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <FileText size={24} /> 
+            {onSingleProductFill ? "Autocompletar con IA" : "Importación Inteligente de Facturas"}
+          </h2>
+          <button type="button" onClick={closeModal} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+            <X size={24} color="var(--color-text-muted)" />
+          </button>
+        </div>
+
+        <div style={{ padding: "1.5rem", overflowY: "auto", flex: 1 }}>
+          {!file && !isProcessing && (
+            <div 
+              style={{ border: "2px dashed var(--color-primary)", borderRadius: "8px", padding: "3rem", textAlign: "center", cursor: "pointer", background: "rgba(37, 99, 235, 0.05)" }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadCloud size={48} color="var(--color-primary)" style={{ margin: "0 auto 1rem" }} />
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>Sube tu factura PDF</h3>
+              <p style={{ color: "var(--color-text-muted)" }}>La Inteligencia Artificial extraerá los productos, cantidades, costos y el proveedor automáticamente.</p>
+              <input type="file" accept="application/pdf" ref={fileInputRef} style={{ display: "none" }} onChange={handleFileChange} />
+            </div>
+          )}
+
+          {isProcessing && (
+            <div style={{ textAlign: "center", padding: "3rem 0" }}>
+              <Loader2 size={48} className="spin" color="var(--color-primary)" style={{ margin: "0 auto 1rem" }} />
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 600 }}>La Inteligencia Artificial está leyendo...</h3>
+              <p style={{ color: "var(--color-text-muted)" }}>Esto puede tardar unos 10 a 20 segundos dependiendo del tamaño del PDF.</p>
+            </div>
+          )}
+
+          {parsedData && !isProcessing && (
+            <div>
+              <div style={{ background: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.3)", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem", display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+                <CheckCircle size={24} color="var(--color-success)" style={{ flexShrink: 0 }} />
+                <div>
+                  <h4 style={{ fontWeight: 700, color: "var(--color-success)" }}>Lectura Exitosa</h4>
+                  <p style={{ fontSize: "0.9rem", marginTop: "0.25rem" }}>Revisa los datos extraídos antes de confirmar la importación.</p>
+                </div>
+              </div>
+
+              {parsedData.supplier && (
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <h4 style={{ fontWeight: 600, borderBottom: "1px solid var(--color-border)", paddingBottom: "0.5rem", marginBottom: "1rem" }}>Datos del Proveedor</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div><span style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>Razón Social</span><p style={{ fontWeight: 600 }}>{parsedData.supplier.name || "No detectado"}</p></div>
+                    <div><span style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>NIT/Identificación</span><p style={{ fontWeight: 600 }}>{parsedData.supplier.identification || "No detectado"}</p></div>
+                  </div>
+                </div>
+              )}
+
+              <h4 style={{ fontWeight: 600, borderBottom: "1px solid var(--color-border)", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
+                Productos Detectados ({parsedData.products.length})
+              </h4>
+              
+              <div style={{ overflowX: "auto" }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>SKU</th>
+                      <th>Descripción</th>
+                      <th>Cant.</th>
+                      <th>Costo Unit.</th>
+                      <th>IVA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedData.products.map((p, i) => (
+                      <tr key={i}>
+                        <td style={{ fontWeight: 600 }}>{p.sku || "Generar"}</td>
+                        <td>{p.name}</td>
+                        <td>{p.quantity}</td>
+                        <td>${p.cost?.toLocaleString('de-DE')}</td>
+                        <td>{p.tax}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {onSingleProductFill && parsedData.products.length > 1 && (
+                <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", color: "var(--color-warning)", alignItems: "center", background: "rgba(234, 179, 8, 0.1)", padding: "0.75rem", borderRadius: "8px" }}>
+                  <AlertTriangle size={20} />
+                  <span style={{ fontSize: "0.9rem" }}>Al autocompletar un solo producto, solo se usarán los datos del <b>primer</b> producto de la lista.</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: "1.5rem", borderTop: "1px solid var(--color-border)", display: "flex", justifyContent: "flex-end", gap: "1rem", background: "var(--color-bg)" }}>
+          <button type="button" className="btn btn-outline" onClick={closeModal} disabled={isProcessing}>
+            Cancelar
+          </button>
+          {parsedData && !isProcessing && (
+            <button type="button" className="btn btn-primary" onClick={handleConfirmImport}>
+              {onSingleProductFill ? "Llenar Formulario" : "Importar y Guardar en BD"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

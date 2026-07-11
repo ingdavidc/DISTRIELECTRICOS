@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles } from "lucide-react";
 import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, ProductInputData } from "@/actions/inventory";
 import { getSuppliers } from "@/actions/purchases";
+import AiPdfModal from "@/components/admin/AiPdfModal";
 import { createClient } from "@supabase/supabase-js";
 import toast from "react-hot-toast";
 import { Trash2, Edit } from "lucide-react";
@@ -23,6 +24,8 @@ export default function InventoryPage() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiFillMode, setAiFillMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(1);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -198,7 +201,7 @@ export default function InventoryPage() {
 
   const handleEditClick = (prod: Product) => {
     setEditingProductId(prod.id);
-    setFormData({
+    const updatedFormData = {
       name: prod.name, sku: prod.sku, description: prod.description || "", brand: prod.brand || "", categoryId: prod.categoryId,
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
       cost: prod.cost, profitMargin: prod.profitMargin, tax: prod.tax, price: prod.price,
@@ -234,14 +237,20 @@ export default function InventoryPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Inventario y Abastecimiento</h1>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", marginTop: "0.25rem" }}>
+          <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem", maxWidth: "600px", marginTop: "0.5rem" }}>
             Gestiona stock, ficha técnica y configura compras automáticas.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingProductId(null); setFormData(initialProductState); setInitialFormData(initialProductState); setIsModalOpen(true); }}>
-          <Plus size={18} />
-          Nuevo Producto
-        </button>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button className="btn btn-outline" style={{ borderColor: "var(--color-secondary)", color: "var(--color-secondary)", display: "flex", alignItems: "center", gap: "0.5rem" }} onClick={() => { setAiFillMode(false); setIsAiModalOpen(true); }}>
+            <Sparkles size={18} />
+            Importar PDF con IA
+          </button>
+          <button className="btn btn-primary" onClick={() => { setEditingProductId(null); setFormData(initialProductState); setInitialFormData(initialProductState); setIsModalOpen(true); }}>
+            <Plus size={18} />
+            Nuevo Producto
+          </button>
+        </div>
       </div>
 
       <div className="card" style={{ padding: "0" }}>
@@ -370,7 +379,8 @@ export default function InventoryPage() {
                 { id: 1, label: "1. Identificación" },
                 { id: 2, label: "2. Inventario" },
                 { id: 3, label: "3. Costos y Precios" },
-                { id: 4, label: "4. Proveedores" }
+                { id: 4, label: "4. Proveedores" },
+                { id: 5, label: "5. IA" }
               ].map((tab: any) => (
                 <button
                   key={tab.id}
@@ -379,12 +389,12 @@ export default function InventoryPage() {
                   style={{
                     flex: 1, padding: "1rem", background: "transparent", border: "none", cursor: "pointer",
                     fontWeight: activeTab === tab.id ? 700 : 500,
-                    color: activeTab === tab.id ? "var(--color-primary)" : "var(--color-text-muted)",
-                    borderBottom: activeTab === tab.id ? "3px solid var(--color-secondary)" : "3px solid transparent",
+                    color: activeTab === tab.id ? (tab.id === 5 ? "var(--color-secondary)" : "var(--color-primary)") : "var(--color-text-muted)",
+                    borderBottom: activeTab === tab.id ? `3px solid ${tab.id === 5 ? "var(--color-secondary)" : "var(--color-primary)"}` : "3px solid transparent",
                     transition: "all 0.2s"
                   }}
                 >
-                  {tab.label}
+                  {tab.id === 5 ? <><Sparkles size={16} style={{ display: "inline", marginRight: "6px", verticalAlign: "text-bottom" }}/> IA</> : tab.label}
                 </button>
               ))}
             </div>
@@ -580,10 +590,21 @@ export default function InventoryPage() {
                   </div>
                 </div>
 
+                {/* TAB 5: IA */}
+                {activeTab === 5 && (
+                  <div style={{ padding: "2rem", textAlign: "center" }}>
+                    <Sparkles size={48} color="var(--color-secondary)" style={{ margin: "0 auto 1rem" }} />
+                    <h3 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "0.5rem" }}>Auto-llenado Inteligente</h3>
+                    <p style={{ color: "var(--color-text-muted)", marginBottom: "1.5rem" }}>¿Tienes la factura PDF de este producto? Súbela y la Inteligencia Artificial llenará la Ficha Técnica por ti (Nombres, Costos e Impuestos).</p>
+                    <button type="button" className="btn btn-outline" style={{ borderColor: "var(--color-secondary)", color: "var(--color-secondary)" }} onClick={() => { setAiFillMode(true); setIsAiModalOpen(true); }}>
+                      Abrir Asistente PDF
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Modal Footer */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem", borderTop: "1px solid var(--color-border)", background: "var(--color-background)" }}>
+              <div style={{ padding: "1.5rem", borderTop: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-background)" }}>
                 <div>
                   {activeTab > 1 && (
                     <button type="button" className="btn btn-outline" onClick={() => setActiveTab(activeTab - 1)}>Anterior</button>
@@ -592,11 +613,12 @@ export default function InventoryPage() {
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <button type="button" id="close-modal-btn" className="btn btn-outline" onClick={handleCloseModal}>Cancelar</button>
                   
-                  {activeTab < 4 ? (
+                  {activeTab < 5 ? (
                     <button type="button" className="btn btn-primary" onClick={() => setActiveTab(activeTab + 1)}>Siguiente Pestaña</button>
                   ) : (
                     <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                      {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Guardar Producto Final
+                      {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} 
+                      {editingProductId ? "Guardar Cambios" : "Guardar Producto"}
                     </button>
                   )}
                 </div>
@@ -606,6 +628,22 @@ export default function InventoryPage() {
         </div>
       )}
 
+      {/* MODAL DE IA */}
+      <AiPdfModal 
+        isOpen={isAiModalOpen} 
+        onClose={() => setIsAiModalOpen(false)}
+        onSingleProductFill={aiFillMode ? (parsedProd: any, suppId?: string) => {
+          setFormData(prev => ({
+            ...prev,
+            sku: parsedProd.sku || prev.sku,
+            name: parsedProd.name || prev.name,
+            cost: parsedProd.cost || prev.cost,
+            tax: parsedProd.tax || prev.tax,
+            supplierId: suppId || prev.supplierId
+          }));
+          setActiveTab(3); // Saltar a la pestaña de costos
+        } : undefined}
+      />
     </>
   );
 }

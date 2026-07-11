@@ -96,3 +96,114 @@ export async function deleteProduct(id: string) {
     return { success: false, error: "No se puede eliminar porque tiene historial de compras o ventas asociado." };
   }
 }
+
+export type AiImportData = {
+  supplier: { name: string; identification: string; email: string; phone: string; };
+  products: { sku: string; name: string; quantity: number; cost: number; tax: number; }[];
+};
+
+export async function importAiData(data: AiImportData) {
+  try {
+    let supplierId: string | null = null;
+    
+    // 1. Manejar Proveedor
+    if (data.supplier && data.supplier.name) {
+      let supplier = await prisma.supplier.findFirst({
+        where: {
+          OR: [
+            { nit: data.supplier.identification || "___" },
+            { name: { contains: data.supplier.name, mode: "insensitive" } }
+          ]
+        }
+      });
+      if (!supplier) {
+        supplier = await prisma.supplier.create({
+          data: {
+            name: data.supplier.name,
+            nit: data.supplier.identification || "S/N",
+            email: data.supplier.email || null,
+            phone: data.supplier.phone || null,
+            contactName: "Auto-creado por IA",
+          }
+        });
+      }
+      supplierId = supplier.id;
+    }
+
+    // 2. Buscar categoría general o crearla
+    let category = await prisma.category.findFirst({ where: { name: "General" } });
+    if (!category) {
+      category = await prisma.category.create({ data: { name: "General" } });
+    }
+
+    // 3. Procesar Productos
+    for (const item of data.products) {
+      if (!item.sku || !item.name) continue;
+
+      let product = await prisma.product.findUnique({ where: { sku: item.sku } });
+
+      // Calcular precio de venta (PVP) sugerido basado en costo + 30% utilidad + IVA
+      const profitMargin = 30; // 30% por defecto
+      const subtotal = item.cost * (1 + (profitMargin / 100));
+      const calculatedPrice = subtotal * (1 + ((item.tax || 19) / 100));
+      const roundedPrice = Math.ceil(calculatedPrice / 100) * 100;
+
+      if (product) {
+        // Actualizar existente
+        await prisma.product.update({
+          where: { id: product.id },
+          data: {
+            stock: product.stock + (item.quantity || 0),
+            cost: item.cost || product.cost,
+            supplierId: supplierId || product.supplierId
+          }
+        });
+
+        // Registrar entrada de inventario
+        if (item.quantity && item.quantity > 0) {
+          await prisma.inventoryTransaction.create({
+            data: {
+              productId: product.id,
+              type: "IN",
+              quantity: item.quantity,
+              reason: "Importación automática Factura PDF"
+            }
+          });
+        }
+      } else {
+        // Crear nuevo
+        const newProduct = await prisma.product.create({
+          data: {
+            sku: item.sku,
+            name: item.name,
+            categoryId: category.id,
+            cost: item.cost || 0,
+            tax: item.tax || 19,
+            profitMargin,
+            price: roundedPrice,
+            stock: item.quantity || 0,
+            unit: "Und",
+            supplierId: supplierId
+          }
+        });
+
+        if (item.quantity && item.quantity > 0) {
+          await prisma.inventoryTransaction.create({
+            data: {
+              productId: newProduct.id,
+              type: "IN",
+              quantity: item.quantity,
+              reason: "Importación inicial Factura PDF"
+            }
+          });
+        }
+      }
+    }
+
+    revalidatePath("/inventory");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error importing AI data:", error);
+    return { success: false, error: error.message };
+  }
+}
