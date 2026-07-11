@@ -111,8 +111,24 @@ export default function AiAssistant() {
               </div>
             ))}
             {isLoading && (
-              <div style={{ background: "white", padding: "0.85rem 1rem", borderRadius: "var(--radius-lg)", borderBottomLeftRadius: "0", boxShadow: "var(--shadow-sm)", maxWidth: "50%", alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-muted)" }}>
-                <Loader2 size={16} className="spin" /> Escribiendo...
+              <div style={{ background: "white", padding: "0.85rem 1.2rem", borderRadius: "var(--radius-lg)", borderBottomLeftRadius: "0", boxShadow: "var(--shadow-sm)", maxWidth: "30%", alignSelf: "flex-start", display: "flex", alignItems: "center" }}>
+                <style>
+                  {`
+                    @keyframes typing-dot {
+                      0%, 100% { transform: translateY(0); opacity: 0.4; }
+                      50% { transform: translateY(-4px); opacity: 1; }
+                    }
+                    .typing-indicator { display: flex; gap: 4px; align-items: center; height: 16px; }
+                    .typing-dot { width: 6px; height: 6px; background-color: var(--color-primary); border-radius: 50%; animation: typing-dot 1.2s infinite ease-in-out both; }
+                    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+                    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+                  `}
+                </style>
+                <div className="typing-indicator">
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />
