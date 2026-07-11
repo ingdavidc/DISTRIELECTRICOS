@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Rápido del Operador - DC TELEMÁTICA</title>
+    <style>
+        :root {
+            --color-red: #eb2d34;
+            --color-navy: #292f56;
+            --color-gray: #f4f5f7;
+            --color-text: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 40px;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--color-red);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 200px;
+        }
+        h1 {
+            color: var(--color-navy);
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+        h2 {
+            color: var(--color-red);
+            border-left: 4px solid var(--color-navy);
+            padding-left: 10px;
+            margin-top: 40px;
+            font-size: 20px;
+        }
+        h3 {
+            color: var(--color-navy);
+            font-size: 16px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        p {
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        .box {
+            background-color: var(--color-gray);
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: var(--color-red);
+        }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background-color: var(--color-navy);
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .btn-mock {
+            display: inline-block;
+            background-color: var(--color-navy);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .btn-mock-red {
+            background-color: var(--color-red);
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        @media print {
+            body { background: white; }
+            .container { padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <img src="/dc-telematica.png" alt="Logo DC Telemática" class="logo" onerror="this.src='/logo.png'">
+        <h1>Manual del Operador</h1>
+    </header>
+
+    <p>Bienvenido al manual rápido de operación. Aquí aprenderás a manejar los módulos esenciales de <strong>Inventario</strong> y <strong>Proveedores</strong> del sistema.</p>
+
+    <!-- MÓDULO PROVEEDORES -->
+    <h2>1. Módulo de Proveedores</h2>
+    <p>Antes de registrar productos, es recomendable registrar a los proveedores que te surten la mercancía.</p>
+
+    <div class="box">
+        <h3><span class="step-number">1</span> ¿Cómo crear un Proveedor?</h3>
+        <ul>
+            <li>Dirígete al menú lateral y haz clic en <strong>Proveedores</strong>.</li>
+            <li>Haz clic en el botón superior derecho <span class="btn-mock">+ Nuevo Proveedor</span>.</li>
+            <li>Llena los datos básicos: <strong>Nombre/Razón Social</strong>, <strong>NIT/RUT</strong> y <strong>Contacto Principal</strong>.</li>
+            <li>Presiona <span class="btn-mock">Guardar</span>. ¡Listo, ya podrás asociarle compras o productos a este proveedor!</li>
+        </ul>
+    </div>
+
+    <!-- MÓDULO INVENTARIO -->
+    <h2>2. Módulo de Inventario</h2>
+    <p>En este módulo controlas todos los artículos, códigos de barras, precios y descuentos para tus clientes.</p>
+
+    <div class="box">
+        <h3><span class="step-number">1</span> Crear un Producto con Inteligencia Artificial</h3>
+        <p>Si tu proveedor te envía facturas en formato PDF, puedes usar a nuestro asistente <strong>Capi 🦦</strong> para extraer todos los datos sin digitar nada.</p>
+        <ul>
+            <li>En la pantalla de Inventario, presiona el botón <span class="btn-mock btn-mock-red">🦦 Llenar con PDF</span>.</li>
+            <li>Sube el PDF de la factura y selecciona los artículos que deseas importar. Capi detectará los precios y descripciones automáticamente.</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <h3><span class="step-number">2</span> Crear un Producto Manualmente</h3>
+        <ul>
+            <li>Presiona el botón <span class="btn-mock">+ Nuevo Producto</span>.</li>
+            <li>Llena el <strong>Nombre</strong> y la <strong>Categoría</strong>.</li>
+            <li><strong>SKU o Código de Barras:</strong> Si el producto no tiene código de fábrica, haz clic en el botón de <strong>Recargar 🔄</strong> para que el sistema genere uno aleatorio (Ej: <span class="highlight">DE-123456</span>).</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <h3><span class="step-number">3</span> Generar e Imprimir Códigos de Barras</h3>
+        <p>Una vez creado el producto, puedes imprimir etiquetas para pegarlas en la mercancía y usar tu pistola lectora en la Caja.</p>
+        <ul>
+            <li>Desde el listado de inventario, busca el producto y en la columna de Acciones haz clic en el ícono de la <strong>Impresora 🖨️</strong>.</li>
+            <li>También puedes hacerlo editando el producto, pulsando el texto azul <strong>🖨️ Imprimir</strong> junto al código.</li>
+            <li>Se abrirá una ventana de impresión con tu logotipo, el nombre del producto y el código de barras listo para la impresora térmica.</li>
+        </ul>
+    </div>
+
+    <div class="box">
+        <h3><span class="step-number">4</span> Configurar Descuentos por Cliente</h3>
+        <p>Al editar o crear un producto (Pestaña de Precios y Costos), podrás definir qué porcentaje de descuento se aplica automáticamente en la Caja según el tipo de cliente.</p>
+        <ul>
+            <li><strong>Cliente Frecuente:</strong> (Sugerido 5%)</li>
+            <li><strong>Precio Volumen:</strong> (Sugerido 10%)</li>
+            <li><strong>Precio Corporativo:</strong> (Sugerido 15%)</li>
+        </ul>
+        <p><em>Nota: Estos descuentos solo los puede aplicar el Cajero al momento de recibir el pago en el módulo de CAJA/PAGOS.</em></p>
+    </div>
+
+    <div class="footer">
+        © DISTRIELECTRICOS E&D / DC TELEMÁTICA - Plataforma Administrativa ERP
+    </div>
+</div>
+
+</body>
+</html>
