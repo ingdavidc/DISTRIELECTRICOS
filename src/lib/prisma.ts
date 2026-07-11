@@ -7,7 +7,8 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Ensure we have a database URL
-const connectionString = process.env.DATABASE_URL;
+// Use DIRECT_URL to avoid prepared statement clashes with pg pool and Supavisor
+const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
 // Initialize the Prisma Pg adapter
 const pool = connectionString ? new Pool({ connectionString }) : null;
