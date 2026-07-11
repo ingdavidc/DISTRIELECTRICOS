@@ -1,11 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, MessageSquare, Send } from "lucide-react";
+import { X, MessageSquare, Send, Loader2 } from "lucide-react";
+import { sendChatMessage } from "@/actions/chat";
+
+type Message = {
+  role: "user" | "model";
+  content: string;
+};
 
 export default function AiAssistant() {
   const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: "model", content: "¡Hola, camarita! 🤠 Soy Capi ⚡ ¿En qué te puedo ayudar hoy? ¿Necesitas calcular los materiales para tu proyecto o buscas algún repuesto en específico?" }
+  ]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, isOpen]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = input.trim();
+    setInput("");
+    
+    // Add user message to UI immediately
+    const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
+    setMessages(newMessages);
+    setIsLoading(true);
+
+    try {
+      const result = await sendChatMessage(newMessages);
+      if (result.success && result.text) {
+        setMessages([...newMessages, { role: "model", content: result.text }]);
+      } else {
+        setMessages([...newMessages, { role: "model", content: "¡Caracha! Tuve un problemita técnico y no pude responderte. 🔌 ¿Me lo repites, pariente?" }]);
+      }
+    } catch (error) {
+      setMessages([...newMessages, { role: "model", content: "¡Caracha! Hubo un corto circuito. Intenta de nuevo." }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSend();
+    }
+  };
 
   return (
     <div style={{ position: "fixed", bottom: "2rem", right: "2rem", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
@@ -37,19 +90,50 @@ export default function AiAssistant() {
 
           {/* Chat Body */}
           <div style={{ flex: 1, background: "var(--color-background)", padding: "1rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ background: "white", padding: "1rem", borderRadius: "var(--radius-lg)", borderBottomLeftRadius: "0", boxShadow: "var(--shadow-sm)", maxWidth: "85%", fontSize: "0.95rem" }}>
-              ¡Hola! Soy Capi 🦦⚡️ ¿En qué te puedo ayudar hoy? ¿Necesitas calcular los materiales para tu proyecto o buscas algún repuesto en específico?
-            </div>
+            {messages.map((msg, index) => (
+              <div 
+                key={index} 
+                style={{ 
+                  background: msg.role === "model" ? "white" : "var(--color-primary)", 
+                  color: msg.role === "model" ? "var(--color-text)" : "white",
+                  padding: "0.85rem 1rem", 
+                  borderRadius: "var(--radius-lg)", 
+                  borderBottomLeftRadius: msg.role === "model" ? "0" : "var(--radius-lg)", 
+                  borderBottomRightRadius: msg.role === "user" ? "0" : "var(--radius-lg)", 
+                  boxShadow: "var(--shadow-sm)", 
+                  maxWidth: "85%", 
+                  fontSize: "0.95rem",
+                  alignSelf: msg.role === "model" ? "flex-start" : "flex-end",
+                  lineHeight: "1.4"
+                }}
+              >
+                {msg.content}
+              </div>
+            ))}
+            {isLoading && (
+              <div style={{ background: "white", padding: "0.85rem 1rem", borderRadius: "var(--radius-lg)", borderBottomLeftRadius: "0", boxShadow: "var(--shadow-sm)", maxWidth: "50%", alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-muted)" }}>
+                <Loader2 size={16} className="spin" /> Escribiendo...
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
           <div style={{ padding: "1rem", background: "white", borderTop: "1px solid var(--color-border)", display: "flex", gap: "0.5rem" }}>
             <input 
               type="text" 
-              placeholder="Escribe tu consulta aquí..." 
+              placeholder="Escribe tu mensaje, camarita..." 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isLoading}
               style={{ flex: 1, padding: "0.75rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
             />
-            <button style={{ background: "var(--color-secondary)", color: "white", padding: "0.75rem", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <button 
+              onClick={handleSend}
+              disabled={isLoading || !input.trim()}
+              style={{ background: input.trim() && !isLoading ? "var(--color-secondary)" : "var(--color-text-muted)", color: "white", padding: "0.75rem", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", cursor: input.trim() && !isLoading ? "pointer" : "default", border: "none", transition: "background 0.2s" }}
+            >
               <Send size={18} />
             </button>
           </div>
@@ -79,7 +163,7 @@ export default function AiAssistant() {
             transformOrigin: "bottom right",
             animation: "popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
           }}>
-            👋 Hola, estoy aquí para ayudarte
+            ¡Pija, camarita! Estoy aquí pa' ayudarte 🤠
             <div style={{
               position: "absolute",
               bottom: "-6px",
