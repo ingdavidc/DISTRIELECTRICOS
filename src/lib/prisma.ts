@@ -10,8 +10,13 @@ const globalForPrisma = globalThis as unknown as {
 // Use DIRECT_URL to avoid prepared statement clashes with pg pool and Supavisor
 const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
-// Initialize the Prisma Pg adapter
-const pool = connectionString ? new Pool({ connectionString }) : null;
+// Initialize the Prisma Pg adapter with Serverless-friendly settings
+const pool = connectionString ? new Pool({ 
+  connectionString,
+  max: 2, // Límite estricto por instancia para no saturar Supabase Free
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+}) : null;
 const adapter = pool ? new PrismaPg(pool) : undefined;
 
 export const prisma =
