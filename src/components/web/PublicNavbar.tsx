@@ -26,7 +26,7 @@ export default function PublicNavbar() {
         {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <img 
-            src="/logo.jpeg" 
+            src="/logo.png" 
             alt="Logo" 
             className="logo-electric"
             style={{ height: "45px", width: "45px", objectFit: "contain" }}
