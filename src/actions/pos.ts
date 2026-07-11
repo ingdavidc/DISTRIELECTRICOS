@@ -27,7 +27,14 @@ export async function getPosProducts(query: string = "") {
   }
 }
 
-export async function submitOrderToCashier(items: { productId: string, quantity: number, unitPrice: number }[], totalAmount: number, customerId?: string, notes?: string, deliveryType: string = "RETIRO") {
+export async function submitOrderToCashier(
+  items: { productId: string, quantity: number, unitPrice: number }[], 
+  totalAmount: number, 
+  customerId?: string, 
+  notes?: string, 
+  deliveryType: string = "RETIRO",
+  priceTier: string = "NORMAL"
+) {
   try {
     let serverTotalAmount = 0;
     const itemsWithServerPrice = [];
@@ -39,7 +46,24 @@ export async function submitOrderToCashier(items: { productId: string, quantity:
         return { success: false, error: `Stock insuficiente para el producto ${product?.name || item.productId}` };
       }
       
-      const realUnitPrice = product.price;
+      let realUnitPrice = product.price;
+      if (!product.sku.startsWith("ESP-")) {
+        // @ts-ignore - Prisma types might not be perfectly synced yet
+        const freqDcto = product.freqClientDiscount ?? 5;
+        // @ts-ignore
+        const volDcto = product.volumeDiscount ?? 10;
+        // @ts-ignore
+        const corpDcto = product.corporateDiscount ?? 15;
+
+        if (priceTier === "FRECUENTE") realUnitPrice = product.price - (product.price * freqDcto / 100);
+        else if (priceTier === "VOLUMEN") realUnitPrice = product.price - (product.price * volDcto / 100);
+        else if (priceTier === "CORPORATIVO") realUnitPrice = product.price - (product.price * corpDcto / 100);
+        
+        realUnitPrice = Math.round(realUnitPrice);
+      } else {
+        realUnitPrice = item.unitPrice; // Para productos especiales, confiar en el frontend
+      }
+
       serverTotalAmount += realUnitPrice * item.quantity;
       
       itemsWithServerPrice.push({

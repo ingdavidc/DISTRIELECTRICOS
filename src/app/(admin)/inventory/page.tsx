@@ -82,7 +82,7 @@ export default function InventoryPage() {
   const initialProductState: ProductInputData = {
     name: "", sku: "", description: "", brand: "", categoryId: "",
     unit: "Und", stock: 0, minStockLimit: 10, maxStockLimit: 100, location: "",
-    cost: 0, profitMargin: 30, tax: 19, price: 0,
+    cost: 0, profitMargin: 30, freqClientDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
     supplierId: "", altSupplierId: "", imageUrl: ""
   };
   
@@ -200,12 +200,12 @@ export default function InventoryPage() {
     setIsSaving(false);
   };
 
-  const handleEditClick = (prod: Product) => {
+  const handleEditClick = (prod: any) => {
     setEditingProductId(prod.id);
-    const updatedFormData = {
+    const updatedFormData: ProductInputData = {
       name: prod.name, sku: prod.sku, description: prod.description || "", brand: prod.brand || "", categoryId: prod.categoryId,
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
-      cost: prod.cost, profitMargin: prod.profitMargin, tax: prod.tax, price: prod.price,
+      cost: prod.cost, profitMargin: prod.profitMargin, freqClientDiscount: prod.freqClientDiscount || 5, volumeDiscount: prod.volumeDiscount || 10, corporateDiscount: prod.corporateDiscount || 15, tax: prod.tax, price: prod.price,
       supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || ""
     };
     setFormData(updatedFormData);
@@ -505,6 +505,34 @@ export default function InventoryPage() {
                         <span style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", fontWeight: 600 }}>%</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Fila de Descuentos (Multi-tier Pricing) */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Dcto. Cliente Frecuente</label>
+                      <div style={{ position: "relative" }}>
+                        <input type="number" min="0" max="100" className="input" value={formData.freqClientDiscount} onChange={(e) => setFormData({...formData, freqClientDiscount: parseFloat(e.target.value) || 0})} />
+                        <span style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", fontWeight: 600 }}>%</span>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Dcto. Volumen</label>
+                      <div style={{ position: "relative" }}>
+                        <input type="number" min="0" max="100" className="input" value={formData.volumeDiscount} onChange={(e) => setFormData({...formData, volumeDiscount: parseFloat(e.target.value) || 0})} />
+                        <span style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", fontWeight: 600 }}>%</span>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Dcto. Corporativo</label>
+                      <div style={{ position: "relative" }}>
+                        <input type="number" min="0" max="100" className="input" value={formData.corporateDiscount} onChange={(e) => setFormData({...formData, corporateDiscount: parseFloat(e.target.value) || 0})} />
+                        <span style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", fontWeight: 600 }}>%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem", marginTop: "1rem" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Ajuste Manual de PVP</label>
                       <div style={{ position: "relative" }}>
