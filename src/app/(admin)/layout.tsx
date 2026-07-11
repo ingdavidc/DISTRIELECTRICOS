@@ -16,7 +16,7 @@ export default async function AdminLayout({
 
   return (
     <div className="dashboard-layout">
-      <Sidebar />
+      <Sidebar role={(session.user as any).role || "ADMIN"} />
       <div className="main-content">
         <Navbar user={session.user} />
         <main className="page-container">
