@@ -10,7 +10,7 @@ export async function sendChatMessage(messages: { role: "user" | "model", conten
       return { success: false, error: "La llave de Gemini no está configurada." };
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     // Construir el prompt del sistema (contexto)
     const systemPrompt = `
