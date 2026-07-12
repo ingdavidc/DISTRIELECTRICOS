@@ -1,5 +1,5 @@
 import { getPublicOrderReceipt } from "@/actions/public";
-import { MapPin, Phone } from "lucide-react";
+import { MapPin, Phone, Globe } from "lucide-react";
 import PrintButton from "@/components/ui/PrintButton";
 
 export const dynamic = "force-dynamic";
@@ -27,11 +27,12 @@ export default async function ReceiptPage(props: { params: Promise<{ id: string 
         
         {/* Encabezado */}
         <div style={{ textAlign: "center", borderBottom: "2px dashed #eee", paddingBottom: "1.5rem", marginBottom: "1.5rem" }}>
-          <h1 style={{ color: "#203562", margin: "0 0 0.5rem 0", fontSize: "1.5rem" }}>DISTRIELECTRICOS</h1>
+          <img src="/logo.png" alt="DISTRIELECTRICOS E&D" style={{ maxHeight: "80px", margin: "0 auto 0.5rem auto", display: "block" }} />
           <p style={{ margin: "0.2rem 0", fontSize: "0.85rem", color: "#666" }}>IDEAS CON ENERGÍA</p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "0.5rem", fontSize: "0.75rem", color: "#888" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><MapPin size={12}/> Bogotá, DC</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Phone size={12}/> +57 300 000 0000</span>
+          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "0.5rem", fontSize: "0.75rem", color: "#888", flexWrap: "wrap", lineHeight: "1.4" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><MapPin size={12} style={{ flexShrink: 0 }}/> CALLE 25 # 12-55 (Pasos Abajo Del Campeón; Antiguo Casa Grande)</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Phone size={12} style={{ flexShrink: 0 }}/> +57 313 223 9174</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Globe size={12} style={{ flexShrink: 0 }}/> distrielectricoseyd.com</span>
           </div>
         </div>
 
@@ -83,9 +84,29 @@ export default async function ReceiptPage(props: { params: Promise<{ id: string 
             <span>${order.totalAmount.toLocaleString('de-DE')}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", marginTop: "0.5rem", color: "#666" }}>
-            <span>Abonado:</span>
+            <span>Monto Pagado:</span>
             <span>${order.amountPaid.toLocaleString('de-DE')}</span>
           </div>
+          {order.totalAmount > order.amountPaid && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", marginTop: "0.25rem", color: "#d93025", fontWeight: "bold" }}>
+              <span>Saldo Pendiente:</span>
+              <span>${(order.totalAmount - order.amountPaid).toLocaleString('de-DE')}</span>
+            </div>
+          )}
+          
+          {order.payments && order.payments.length > 0 && (
+            <div style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#555", backgroundColor: "#f9f9f9", padding: "0.75rem", borderRadius: "6px", border: "1px solid #eaeaea" }}>
+              <strong style={{ display: "block", marginBottom: "0.25rem" }}>Medios de Pago:</strong>
+              <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
+                {order.payments.map((p: any) => (
+                  <li key={p.id}>
+                    {p.method} {p.bank ? `(${p.bank})` : ""} - <strong>${p.amount.toLocaleString('de-DE')}</strong>
+                    {p.transactionId ? ` (Ref: ${p.transactionId})` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Botón de Imprimir */}
