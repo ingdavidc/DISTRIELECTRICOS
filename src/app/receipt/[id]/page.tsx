@@ -5,7 +5,8 @@ import Image from "next/image";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function ReceiptPage({ params }: { params: { id: string } }) {
+export default async function ReceiptPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const order = await getPublicOrderReceipt(params.id);
 
   if (!order || (order as any).error) {
