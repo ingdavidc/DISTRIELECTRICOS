@@ -29,10 +29,10 @@ export default async function ReceiptPage(props: { params: Promise<{ id: string 
         <div style={{ textAlign: "center", borderBottom: "2px dashed #eee", paddingBottom: "1.5rem", marginBottom: "1.5rem" }}>
           <img src="/logo.png" alt="DISTRIELECTRICOS E&D" style={{ maxHeight: "80px", margin: "0 auto 0.5rem auto", display: "block" }} />
           <p style={{ margin: "0.2rem 0", fontSize: "0.85rem", color: "#666" }}>IDEAS CON ENERGÍA</p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "0.5rem", fontSize: "0.75rem", color: "#888", flexWrap: "wrap", lineHeight: "1.4" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><MapPin size={12} style={{ flexShrink: 0 }}/> CALLE 25 # 12-55 (Pasos Abajo Del Campeón; Antiguo Casa Grande)</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Phone size={12} style={{ flexShrink: 0 }}/> +57 313 223 9174</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Globe size={12} style={{ flexShrink: 0 }}/> distrielectricoseyd.com</span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem", marginTop: "0.8rem", fontSize: "0.8rem", color: "#666" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Phone size={14} style={{ flexShrink: 0 }}/> +57 313 223 9174</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Globe size={14} style={{ flexShrink: 0 }}/> www.distrielectricoseyd.com</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><MapPin size={14} style={{ flexShrink: 0 }}/> CALLE 25 # 12-55, Saravena - Arauca</span>
           </div>
         </div>
 
