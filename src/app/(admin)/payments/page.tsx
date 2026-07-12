@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store } from "lucide-react";
+import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment } from "@/actions/payments";
 import { getCustomerOrders } from "@/actions/customers";
