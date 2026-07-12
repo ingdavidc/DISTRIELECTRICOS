@@ -514,15 +514,10 @@ export default function InventoryPage() {
                   <h3 style={{ marginBottom: "1.5rem", color: "var(--color-text-muted)", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "1px" }}>Información General y de Identificación</h3>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
-                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Nombre o Descripción del Producto *</label>
-                      <input required type="text" className="input" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Breaker Termomagnético 1x20A" />
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Nombre Comercial *</label>
+                      <input required type="text" className="input" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Breaker 20A Residencial" />
                     </div>
                     
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
-                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Nombre Comercial</label>
-                      <input type="text" className="input" value={formData.commercialName} onChange={(e) => setFormData({...formData, commercialName: e.target.value})} placeholder="Ej: Breaker 20A Residencial" />
-                    </div>
-
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Características o Descripción Adicional</label>
                       <textarea className="input" style={{ minHeight: "80px", resize: "vertical" }} value={formData.features} onChange={(e) => setFormData({...formData, features: e.target.value})} placeholder="Ej: 1 polo, 120/240V, Montaje enchufable..." />
