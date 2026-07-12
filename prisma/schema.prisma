@@ -160,6 +160,9 @@ model UserLog {
   action    String // Acción realizada (ej. "Creó un producto")
   details   String? // Detalles adicionales o payload en texto
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model InventoryTransaction {
@@ -206,6 +209,11 @@ model Order {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([customerId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model OrderPayment {

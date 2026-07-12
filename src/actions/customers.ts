@@ -1,20 +1,36 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+// ── Auth guard ─────────────────────────────────────────────────────────────────
+async function requireSession() {
+  const session = await auth();
+  if (!session?.user) throw new Error("NO_AUTH");
+  return session;
+}
+
+// ── Validation schemas ─────────────────────────────────────────────────────────
+const customerSchema = z.object({
+  identification: z.string().min(3).max(30).regex(/^[a-zA-Z0-9\-\.]+$/, "Solo alfanumérico"),
+  name: z.string().min(2).max(120).trim(),
+  phone: z.string().max(20).optional().nullable(),
+  email: z.string().email().max(120).optional().nullable(),
+  address: z.string().max(250).optional().nullable(),
+});
 
 export async function getCustomers() {
   try {
+    await requireSession();
     const customers = await prisma.customer.findMany({
-      orderBy: { name: 'asc' },
-      include: {
-        _count: {
-          select: { orders: true }
-        }
-      }
+      orderBy: { name: "asc" },
+      include: { _count: { select: { orders: true } } }
     });
     return customers;
   } catch (error) {
+    if ((error as Error).message === "NO_AUTH") return [];
     console.error("Error fetching customers:", error);
     return [];
   }
@@ -23,54 +39,84 @@ export async function getCustomers() {
 export async function searchCustomers(query: string) {
   if (!query) return [];
   try {
+    await requireSession();
+    // Sanitize: limit length and strip non-printable
+    const q = String(query).slice(0, 60).trim();
     const customers = await prisma.customer.findMany({
       where: {
         OR: [
-          { identification: { contains: query } },
-          { name: { contains: query, mode: 'insensitive' } },
+          { identification: { contains: q } },
+          { name: { contains: q, mode: "insensitive" } },
         ]
       },
       take: 5
     });
     return customers;
   } catch (error) {
+    if ((error as Error).message === "NO_AUTH") return [];
     console.error("Error searching customers:", error);
     return [];
   }
 }
 
-export async function createCustomer(data: { identification: string, name: string, phone?: string, email?: string, address?: string }) {
+export async function createCustomer(data: unknown) {
   try {
-    const existing = await prisma.customer.findUnique({
-      where: { identification: data.identification }
-    });
-
-    if (existing) {
-      return { success: false, error: "Ya existe un cliente con esta identificación" };
+    await requireSession();
+    const parsed = customerSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: "Datos del cliente inválidos: " + parsed.error.issues[0].message };
     }
+    const safe = parsed.data;
+
+    const existing = await prisma.customer.findUnique({ where: { identification: safe.identification } });
+    if (existing) return { success: false, error: "Ya existe un cliente con esta identificación" };
 
     const customer = await prisma.customer.create({
-      data
+      data: {
+        identification: safe.identification,
+        name: safe.name,
+        phone: safe.phone || null,
+        email: safe.email || null,
+        address: safe.address || null,
+      }
     });
-    
-    revalidatePath('/customers');
-    revalidatePath('/pos');
+
+    revalidatePath("/customers");
+    revalidatePath("/pos");
     return { success: true, customer };
   } catch (error: any) {
+    if (error.message === "NO_AUTH") return { success: false, error: "No autorizado" };
     console.error("Error creating customer:", error);
-    return { success: false, error: error.message || "Error al registrar cliente" };
+    return { success: false, error: "Error al registrar cliente" };
   }
 }
 
-export async function updateCustomer(id: string, data: any) {
+export async function updateCustomer(id: string, data: unknown) {
   try {
+    await requireSession();
+    if (!id || typeof id !== "string") return { success: false, error: "ID inválido" };
+
+    const parsed = customerSchema.partial().safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: "Datos inválidos: " + parsed.error.issues[0].message };
+    }
+    const safe = parsed.data;
+
+    // Explicit field whitelist — never pass raw data to Prisma
     const customer = await prisma.customer.update({
       where: { id },
-      data
+      data: {
+        ...(safe.name !== undefined && { name: safe.name }),
+        ...(safe.identification !== undefined && { identification: safe.identification }),
+        ...(safe.phone !== undefined && { phone: safe.phone }),
+        ...(safe.email !== undefined && { email: safe.email }),
+        ...(safe.address !== undefined && { address: safe.address }),
+      }
     });
-    revalidatePath('/customers');
+    revalidatePath("/customers");
     return { success: true, customer };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === "NO_AUTH") return { success: false, error: "No autorizado" };
     console.error("Error updating customer:", error);
     return { success: false, error: "Error al actualizar cliente" };
   }
@@ -78,21 +124,26 @@ export async function updateCustomer(id: string, data: any) {
 
 export async function deleteCustomer(id: string) {
   try {
+    const session = await requireSession();
+    if ((session.user as any).role !== "ADMIN") {
+      return { success: false, error: "Solo administradores pueden eliminar clientes" };
+    }
+    if (!id || typeof id !== "string") return { success: false, error: "ID inválido" };
+
     const customer = await prisma.customer.findUnique({
       where: { id },
       include: { _count: { select: { orders: true } } }
     });
-
     if (!customer) return { success: false, error: "Cliente no encontrado" };
-
     if (customer._count.orders > 0) {
       return { success: false, error: `No se puede eliminar. El cliente tiene ${customer._count.orders} compras registradas.` };
     }
 
     await prisma.customer.delete({ where: { id } });
-    revalidatePath('/customers');
+    revalidatePath("/customers");
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === "NO_AUTH") return { success: false, error: "No autorizado" };
     console.error("Error deleting customer:", error);
     return { success: false, error: "Error interno al eliminar" };
   }
@@ -100,18 +151,20 @@ export async function deleteCustomer(id: string) {
 
 export async function getCustomerOrders(customerId: string) {
   try {
+    await requireSession();
+    if (!customerId || typeof customerId !== "string") return [];
+
     const orders = await prisma.order.findMany({
       where: { customerId },
       include: {
-        items: {
-          include: { product: true }
-        },
+        items: { include: { product: true } },
         payments: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" }
     });
     return orders;
   } catch (error) {
+    if ((error as Error).message === "NO_AUTH") return [];
     console.error("Error fetching customer orders:", error);
     return [];
   }

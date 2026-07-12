@@ -3,26 +3,36 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logUserAction } from "./logs";
+import { auth } from "@/auth";
+
+async function requireSession() {
+  const session = await auth();
+  if (!session?.user) throw new Error("NO_AUTH");
+  return session;
+}
 
 export async function getPosProducts(query: string = "") {
   try {
+    await requireSession();
+    const q = String(query).slice(0, 100).trim();
     const products = await prisma.product.findMany({
-      where: query ? {
+      where: q ? {
         OR: [
-          { sku: { contains: query, mode: 'insensitive' } },
-          { name: { contains: query, mode: 'insensitive' } },
-          { brand: { contains: query, mode: 'insensitive' } },
+          { sku: { contains: q, mode: 'insensitive' } },
+          { name: { contains: q, mode: 'insensitive' } },
+          { brand: { contains: q, mode: 'insensitive' } },
         ]
       } : undefined,
       take: 50,
-      orderBy: query ? { name: 'asc' } : {
+      orderBy: q ? { name: 'asc' } : {
         orderItems: {
           _count: 'desc'
         }
       }
     });
     return products;
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'NO_AUTH') return [];
     console.error("Error fetching POS products:", error);
     return [];
   }
@@ -37,6 +47,7 @@ export async function submitOrderToCashier(
   priceTier: string = "NORMAL"
 ) {
   try {
+    await requireSession();
     let serverTotalAmount = 0;
     const itemsWithServerPrice = [];
 

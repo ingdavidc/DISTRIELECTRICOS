@@ -15,7 +15,16 @@ export async function parsePdfInvoice(formData: FormData) {
       return { success: false, error: "No se proporcionó ningún archivo." };
     }
 
-    const arrayBuffer = await file.arrayBuffer();
+    // ── File validation ──────────────────────────────────────────────────────
+    const MAX_SIZE_MB = 10;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      return { success: false, error: `El archivo no puede superar ${MAX_SIZE_MB} MB.` };
+    }
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      return { success: false, error: "Solo se permiten archivos PDF o imágenes (JPG, PNG, WEBP)." };
+    }
+    const mimeType = file.type as "application/pdf" | "image/jpeg" | "image/png" | "image/webp";
     const buffer = Buffer.from(arrayBuffer);
     const base64Data = buffer.toString("base64");
 
@@ -49,14 +58,14 @@ export async function parsePdfInvoice(formData: FormData) {
       "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible."
     ].join("\n");
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const result = await model.generateContent([
       prompt,
       {
         inlineData: {
           data: base64Data,
-          mimeType: "application/pdf"
+          mimeType
         }
       }
     ]);

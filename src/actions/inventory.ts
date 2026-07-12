@@ -3,17 +3,26 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { logUserAction } from './logs';
+import { auth } from '@/auth';
+
+async function requireSession() {
+  const session = await auth();
+  if (!session?.user) throw new Error('NO_AUTH');
+  return session;
+}
 
 export async function getInventoryProducts() {
   try {
+    await requireSession();
     const data = await prisma.product.findMany({
       include: { category: true, supplier: true, altSupplier: true },
       orderBy: { createdAt: 'desc' }
     });
     return JSON.parse(JSON.stringify(data));
   } catch (error: any) {
-    console.error("Error fetching inventory products:", error);
-    return { error: `Error DB: ${error.message}` } as any;
+    if (error.message === 'NO_AUTH') return { error: 'No autorizado' } as any;
+    console.error('Error fetching inventory products:', error);
+    return { error: 'Error al cargar productos' } as any;
   }
 }
 

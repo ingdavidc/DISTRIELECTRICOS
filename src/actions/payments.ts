@@ -1,12 +1,33 @@
-"use server";
-// Rebuild trigger to clear Vercel DB connections
+'use server';
 
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { triggerN8nWebhook } from "@/lib/n8n";
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
+
+// ── Shared guard ──────────────────────────────────────────────────────────────
+async function requireSession() {
+  const session = await auth();
+  if (!session?.user) throw new Error('NO_AUTH');
+  return session;
+}
+
+// ── Allowed sets for validated enum fields ────────────────────────────────────
+const ALLOWED_METHODS = new Set(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'CREDITO', 'OTRO']);
+const ALLOWED_RECEIPT_TYPES = new Set(['FACTURA', 'VOUCHER']);
+
+// ── Input sanitizer (escapes HTML special chars) ───────────────────────────────
+function escapeHtml(str: string) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 export async function getPendingOrders() {
   try {
+    await requireSession();
     const orders = await prisma.order.findMany({
       where: { status: 'PENDING' },
       include: {
@@ -18,16 +39,20 @@ export async function getPendingOrders() {
     });
     return orders;
   } catch (error) {
-    console.error("Error fetching pending orders:", error);
+    if ((error as Error).message === 'NO_AUTH') return [];
+    console.error('Error fetching pending orders:', error);
     return [];
   }
 }
 
 export async function searchCustomerOrdersForPayment(identification: string) {
   try {
-    const customer = await prisma.customer.findUnique({
-      where: { identification }
-    });
+    await requireSession();
+    // Sanitize: only allow alphanumeric + common ID chars
+    const cleanId = String(identification).replace(/[^a-zA-Z0-9\-\.]/g, '').slice(0, 20);
+    if (!cleanId) return [];
+
+    const customer = await prisma.customer.findUnique({ where: { identification: cleanId } });
     if (!customer) return [];
 
     return await prisma.order.findMany({
@@ -43,18 +68,19 @@ export async function searchCustomerOrdersForPayment(identification: string) {
       orderBy: { createdAt: 'desc' }
     });
   } catch (error) {
+    if ((error as Error).message === 'NO_AUTH') return [];
     return [];
   }
 }
 
 interface PaymentData {
   amount: number;
-  method: string; 
+  method: string;
   bank?: string;
   transactionId?: string;
   creditProvider?: string;
   creditDays?: number;
-  receiptType: string; // FACTURA o VOUCHER
+  receiptType: string;
 }
 
 interface ModifiedItem {
@@ -65,27 +91,46 @@ interface ModifiedItem {
 
 export async function processPayment(orderId: string, paymentData: PaymentData, modifiedItems?: ModifiedItem[]) {
   try {
+    await requireSession();
+
+    // ── Server-side validation of all payment fields ───────────────────────────
+    if (!orderId || typeof orderId !== 'string') return { success: false, error: 'Orden inválida' };
+    if (!isFinite(paymentData.amount) || paymentData.amount <= 0) {
+      return { success: false, error: 'Monto de pago inválido' };
+    }
+    if (!ALLOWED_METHODS.has(paymentData.method)) {
+      return { success: false, error: 'Método de pago inválido' };
+    }
+    if (!ALLOWED_RECEIPT_TYPES.has(paymentData.receiptType)) {
+      return { success: false, error: 'Tipo de recibo inválido' };
+    }
+
     const result = await prisma.$transaction(async (tx: any) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: { items: true, payments: true }
       });
 
-      if (!order) throw new Error("Orden no encontrada");
+      if (!order) throw new Error('Orden no encontrada');
       if (order.status !== 'PENDING' && order.status !== 'OPEN_INVOICE') {
-        throw new Error("Esta orden ya no admite abonos");
+        throw new Error('Esta orden ya no admite abonos');
+      }
+
+      // ── Server-side amount validation against real balance ──────────────────
+      const alreadyPaid = order.payments.reduce((s: number, p: any) => s + p.amount, 0);
+      const outstanding = order.totalAmount - alreadyPaid;
+      if (paymentData.amount > outstanding + 0.01) {
+        throw new Error(`El monto (${paymentData.amount}) supera el saldo pendiente (${outstanding})`);
       }
 
       let finalItems = order.items.map((i: any) => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice }));
       let finalTotal = order.totalAmount;
       const isFirstPayment = order.status === 'PENDING';
 
-      // Si es el primer pago (estaba en PENDING), permitimos auditar el pedido y descontamos stock
       if (isFirstPayment) {
         if (modifiedItems && modifiedItems.length > 0) {
           finalItems = modifiedItems;
           finalTotal = modifiedItems.reduce((acc: any, item: any) => acc + (item.quantity * item.unitPrice), 0);
-
           await tx.orderItem.deleteMany({ where: { orderId } });
           await tx.orderItem.createMany({
             data: modifiedItems.map((item: any) => ({
@@ -97,17 +142,15 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
           });
         }
 
-        // Descontar inventario
+        // ── Atomic stock decrement (prevents race conditions) ─────────────────
         for (const item of finalItems) {
-          const product = await tx.product.findUnique({ where: { id: item.productId } });
-          if (!product) throw new Error(`Producto no encontrado`);
-          if (product.stock < item.quantity) throw new Error(`Stock insuficiente para el producto`);
-
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stock: product.stock - item.quantity }
+          const updated = await tx.product.updateMany({
+            where: { id: item.productId, stock: { gte: item.quantity } },
+            data: { stock: { decrement: item.quantity } }
           });
-
+          if (updated.count === 0) {
+            throw new Error(`Stock insuficiente para uno o más productos`);
+          }
           await tx.inventoryTransaction.create({
             data: {
               productId: item.productId,
@@ -119,38 +162,29 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
         }
       }
 
-      // Registrar el nuevo Abono
       await tx.orderPayment.create({
         data: {
           orderId,
           amount: paymentData.amount,
           method: paymentData.method,
-          bank: paymentData.bank,
-          transactionId: paymentData.transactionId,
-          creditProvider: paymentData.creditProvider,
-          creditDays: paymentData.creditDays
+          bank: paymentData.bank || null,
+          transactionId: paymentData.transactionId || null,
+          creditProvider: paymentData.creditProvider || null,
+          creditDays: paymentData.creditDays || null
         }
       });
 
-      // Calcular nuevo balance
-      const totalPaidSoFar = order.amountPaid + paymentData.amount;
-      
+      const totalPaidSoFar = alreadyPaid + paymentData.amount;
       let newStatus: any = order.status;
       if (isFirstPayment) {
-        // Al pagar por primera vez, pasa a bodega o se cierra si no manejamos entrega separada.
-        // Como el sistema pasa a bodega (PREPARING) o OPEN_INVOICE
         newStatus = (totalPaidSoFar < finalTotal) ? 'OPEN_INVOICE' : 'PREPARING';
       } else {
-        // Si ya estaba en OPEN_INVOICE y pagó todo, puede pasar a DELIVERED o mantenerse si manejamos la entrega separado
-        if (totalPaidSoFar >= finalTotal) {
-           newStatus = 'DELIVERED'; // O mantener READY si es el caso, pero simplificamos.
-        }
+        if (totalPaidSoFar >= finalTotal) newStatus = 'DELIVERED';
       }
 
-      // Actualizar Orden
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
-        data: { 
+        data: {
           status: newStatus as any,
           totalAmount: finalTotal,
           amountPaid: totalPaidSoFar,
@@ -162,36 +196,51 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
     });
 
     revalidatePath('/payments');
-    revalidatePath('/dispatch'); 
+    revalidatePath('/dispatch');
     revalidatePath('/inventory');
     revalidatePath('/dashboard');
-    
-    // Trigger n8n webhook con los datos del pago
-    triggerN8nWebhook("new-sale", {
-      orderId: result.id,
-      amountPaid: paymentData.amount,
-      totalAmount: result.totalAmount,
-      method: paymentData.method,
-      status: result.status,
-      receiptType: paymentData.receiptType
-    });
-    
+
+    // Trigger n8n (fire-and-forget, never expose webhook errors to client)
+    try {
+      const { triggerN8nWebhook } = await import('@/lib/n8n');
+      triggerN8nWebhook('new-sale', {
+        orderId: result.id,
+        amountPaid: paymentData.amount,
+        totalAmount: result.totalAmount,
+        method: paymentData.method,
+        status: result.status,
+        receiptType: paymentData.receiptType
+      });
+    } catch { /* webhook errors are non-fatal */ }
+
     return { success: true, orderId: result.id };
   } catch (error: any) {
-    console.error("Error procesando pago:", error);
-    return { success: false, error: error.message || "Error interno al aprobar" };
+    if (error.message === 'NO_AUTH') return { success: false, error: 'No autorizado' };
+    console.error('Error procesando pago:', error);
+    return { success: false, error: error.message || 'Error interno al aprobar' };
   }
 }
 
 export async function cancelOrder(orderId: string) {
-    try {
-        await prisma.order.update({
-            where: { id: orderId },
-            data: { status: 'CANCELLED' }
-        });
-        revalidatePath('/payments');
-        return { success: true };
-    } catch (error: any) {
-        return { success: false, error: "Error al cancelar la orden" };
+  try {
+    const session = await requireSession();
+    // Only ADMIN and CASHIER roles can cancel orders
+    const role = (session.user as any).role;
+    if (!['ADMIN', 'CASHIER'].includes(role)) {
+      return { success: false, error: 'No autorizado' };
     }
+    if (!orderId || typeof orderId !== 'string') return { success: false, error: 'ID inválido' };
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'CANCELLED' }
+    });
+    revalidatePath('/payments');
+    return { success: true };
+  } catch (error: any) {
+    if (error.message === 'NO_AUTH') return { success: false, error: 'No autorizado' };
+    return { success: false, error: 'Error al cancelar la orden' };
+  }
 }
+
+export { escapeHtml };

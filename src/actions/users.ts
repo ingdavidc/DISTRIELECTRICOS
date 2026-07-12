@@ -29,7 +29,11 @@ export async function createUser(data: { name: string; email: string; role: stri
       }
     }
 
-    const hashedPassword = await bcrypt.hash(data.password || "admin123", 10);
+    // Password is required — never silently fallback to a default
+    if (!data.password || data.password.trim().length < 6) {
+      return { success: false, error: "La contraseña es requerida y debe tener al menos 6 caracteres." };
+    }
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = await prisma.user.create({
       data: {
