@@ -1,6 +1,6 @@
 import { getPublicOrderReceipt } from "@/actions/public";
-import { Printer, MapPin, Phone, Mail } from "lucide-react";
-import Image from "next/image";
+import { MapPin, Phone } from "lucide-react";
+import PrintButton from "@/components/ui/PrintButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -90,24 +90,7 @@ export default async function ReceiptPage(props: { params: Promise<{ id: string 
 
         {/* Botón de Imprimir */}
         <div className="no-print" style={{ marginTop: "2rem", textAlign: "center" }}>
-          <button 
-            onClick={() => window.print()}
-            style={{ 
-              backgroundColor: "#203562", 
-              color: "white", 
-              border: "none", 
-              padding: "0.75rem 1.5rem", 
-              borderRadius: "4px", 
-              fontSize: "1rem", 
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem"
-            }}
-          >
-            <Printer size={18} />
-            Descargar PDF / Imprimir
-          </button>
+          <PrintButton />
         </div>
 
       </div>
