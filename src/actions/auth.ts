@@ -1,9 +1,10 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { signIn, signOut, auth } from "@/auth";
 import { AuthError } from "next-auth";
 import { cookies } from "next/headers";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -93,5 +94,19 @@ export async function authenticateStaff(
 }
 
 export async function logOut() {
+  const session = await auth();
+  if (session?.user?.id) {
+    try {
+      await prisma.userLog.create({
+        data: {
+          userId: session.user.id,
+          action: "LOGOUT",
+          details: "Cerró sesión en el sistema",
+        }
+      });
+    } catch (e) {
+      console.error("Error logging out", e);
+    }
+  }
   await signOut({ redirectTo: "/login" });
 }

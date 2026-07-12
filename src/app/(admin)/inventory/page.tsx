@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles, Barcode, Printer, RefreshCw } from "lucide-react";
-import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, ProductInputData } from "@/actions/inventory";
+import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, createCategory, deleteCategory, ProductInputData } from "@/actions/inventory";
 import { getSuppliers } from "@/actions/purchases";
 import AiPdfModal from "@/components/admin/AiPdfModal";
 import { createClient } from "@supabase/supabase-js";
@@ -31,6 +31,11 @@ export default function InventoryPage() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Category Modal State
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -179,6 +184,38 @@ export default function InventoryPage() {
     
     setFormData(prev => ({ ...prev, price: Math.ceil(finalPrice / 100) * 100 }));
   }, [formData.cost, formData.profitMargin, formData.tax]);
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    setIsSavingCategory(true);
+    const tid = toast.loading("Creando categoría...");
+    try {
+      const res = await createCategory(newCategoryName);
+      if (res.error) throw new Error(res.error);
+      toast.success("Categoría creada", { id: tid });
+      setNewCategoryName("");
+      const cats = await getCategories();
+      setCategories(cats);
+    } catch (error: any) {
+      toast.error(error.message, { id: tid });
+    } finally {
+      setIsSavingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("¿Eliminar esta categoría?")) return;
+    const tid = toast.loading("Eliminando...");
+    try {
+      const res = await deleteCategory(id);
+      if (res.error) throw new Error(res.error);
+      toast.success("Categoría eliminada", { id: tid });
+      setCategories(categories.filter(c => c.id !== id));
+    } catch (error: any) {
+      toast.error(error.message, { id: tid });
+    }
+  };
 
   const handleCloseModal = () => {
     const isDirty = JSON.stringify(formData) !== JSON.stringify(initialFormData);
@@ -345,6 +382,9 @@ export default function InventoryPage() {
             <Sparkles size={18} />
             Importar PDF con IA
           </button>
+          <button className="btn btn-outline" onClick={() => setIsCategoryModalOpen(true)}>
+            Gestionar Categorías
+          </button>
           <button className="btn btn-primary" onClick={() => { setEditingProductId(null); setFormData(initialProductState); setInitialFormData(initialProductState); setIsModalOpen(true); }}>
             <Plus size={18} />
             Nuevo Producto
@@ -463,6 +503,42 @@ export default function InventoryPage() {
           </table>
         </div>
       </div>
+
+      {/* MODAL GESTION DE CATEGORIAS */}
+      {isCategoryModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "2rem" }}>
+          <div className="card" style={{ width: "100%", maxWidth: "500px", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--color-border)", padding: "1.5rem", background: "var(--color-background)" }}>
+              <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--color-primary)" }}>Gestionar Categorías</h2>
+              <button type="button" onClick={() => setIsCategoryModalOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+                <X size={24} color="var(--color-text-muted)" />
+              </button>
+            </div>
+            <div style={{ padding: "1.5rem", maxHeight: "60vh", overflowY: "auto" }}>
+              <form onSubmit={handleCreateCategory} style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+                <input type="text" className="input" placeholder="Nueva categoría..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} required />
+                <button type="submit" className="btn btn-primary" disabled={isSavingCategory} style={{ whiteSpace: "nowrap" }}>
+                  {isSavingCategory ? "Creando..." : "Crear"}
+                </button>
+              </form>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {categories.length === 0 ? (
+                  <div style={{ textAlign: "center", color: "var(--color-text-muted)", padding: "1rem" }}>No hay categorías.</div>
+                ) : (
+                  categories.map(cat => (
+                    <div key={cat.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)" }}>
+                      <span style={{ fontWeight: 600 }}>{cat.name}</span>
+                      <button onClick={() => handleDeleteCategory(cat.id)} style={{ color: "var(--color-danger)", background: "none", border: "none", cursor: "pointer" }} title="Eliminar Categoría">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL AVANZADO DE CREACIÓN/EDICIÓN DE PRODUCTO */}
       {isModalOpen && (

@@ -27,6 +27,33 @@ export async function getCategories() {
   }
 }
 
+export async function createCategory(name: string) {
+  try {
+    const data = await prisma.category.create({ data: { name } });
+    revalidatePath('/inventory');
+    return { success: true, data: JSON.parse(JSON.stringify(data)) };
+  } catch (error: any) {
+    console.error("Error creating category:", error);
+    return { error: `Error: ${error.message}` };
+  }
+}
+
+export async function deleteCategory(id: string) {
+  try {
+    // Check if there are products attached
+    const productsCount = await prisma.product.count({ where: { categoryId: id } });
+    if (productsCount > 0) {
+      return { error: `No se puede eliminar. Hay ${productsCount} producto(s) usando esta categoría.` };
+    }
+    await prisma.category.delete({ where: { id } });
+    revalidatePath('/inventory');
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting category:", error);
+    return { error: `Error: ${error.message}` };
+  }
+}
+
 export type ProductInputData = {
   sku: string;
   name: string;

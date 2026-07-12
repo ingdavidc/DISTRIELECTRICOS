@@ -30,6 +30,7 @@ export default function PaymentsPage() {
   const [creditDays, setCreditDays] = useState(30);
   const [receiptType, setReceiptType] = useState("VOUCHER"); // FACTURA, VOUCHER
   const [amountToPay, setAmountToPay] = useState(0);
+  const [receivedAmount, setReceivedAmount] = useState<number | "">("");
   const [priceTier, setPriceTier] = useState<"NORMAL" | "FRECUENTE" | "VOLUMEN" | "CORPORATIVO">("NORMAL");
 
   const handlePriceTierChange = (newTier: string) => {
@@ -181,6 +182,13 @@ export default function PaymentsPage() {
     if (amountToPay <= 0 || amountToPay > currentBalance) {
       toast.error("Monto de abono inválido");
       return;
+    }
+  
+    if (paymentMethod === "EFECTIVO") {
+      if (receivedAmount !== "" && receivedAmount < amountToPay) {
+        toast.error("El monto recibido es menor al monto a pagar");
+        return;
+      }
     }
 
     if (paymentMethod === "TARJETA" || paymentMethod === "TRANSFERENCIA") {
@@ -552,6 +560,29 @@ export default function PaymentsPage() {
                 </div>
 
                 {/* Sub-forms depending on method */}
+                {paymentMethod === "EFECTIVO" && (
+                  <div style={{ background: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", marginBottom: "1rem" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", alignItems: "center" }}>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Monto Recibido</label>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          value={receivedAmount} 
+                          onChange={e => setReceivedAmount(e.target.value ? Number(e.target.value) : "")} 
+                          placeholder={`Ej: ${amountToPay}`} 
+                        />
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Vuelto / Cambio</div>
+                        <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: receivedAmount !== "" && receivedAmount >= amountToPay ? "var(--color-success)" : "var(--color-text-muted)" }}>
+                          ${(receivedAmount !== "" && receivedAmount >= amountToPay ? receivedAmount - amountToPay : 0).toLocaleString('de-DE')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {(paymentMethod === "TARJETA" || paymentMethod === "TRANSFERENCIA") && (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", background: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>

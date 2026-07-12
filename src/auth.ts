@@ -48,4 +48,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  events: {
+    async signIn({ user }) {
+      if (user?.id) {
+        await prisma.userLog.create({
+          data: {
+            userId: user.id,
+            action: "LOGIN",
+            details: "Inició sesión en el sistema",
+          }
+        });
+      }
+    }
+  }
 });

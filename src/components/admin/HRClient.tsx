@@ -415,21 +415,42 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  {selectedUserLogs.map((log: any) => (
-                    <div key={log.id} style={{ padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "var(--color-background)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                        <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>{log.action}</span>
-                        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                          {new Date(log.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      {log.details && (
-                        <div style={{ fontSize: "0.9rem", color: "var(--color-text-main)", whiteSpace: "pre-wrap" }}>
-                          {log.details}
+                  {selectedUserLogs.map((log: any, index: number) => {
+                    let duration = null;
+                    if (log.action === "LOGOUT") {
+                      const loginLog = selectedUserLogs.slice(index + 1).find((l: any) => l.action === "LOGIN");
+                      if (loginLog) {
+                        const diffMs = new Date(log.createdAt).getTime() - new Date(loginLog.createdAt).getTime();
+                        if (diffMs > 0) {
+                          const diffMins = Math.floor(diffMs / 60000);
+                          const hours = Math.floor(diffMins / 60);
+                          const mins = diffMins % 60;
+                          duration = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                        }
+                      }
+                    }
+                    
+                    return (
+                      <div key={log.id} style={{ padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "var(--color-background)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                          <span style={{ fontWeight: 600, color: log.action === "LOGIN" ? "var(--color-success)" : log.action === "LOGOUT" ? "var(--color-danger)" : "var(--color-primary)" }}>{log.action}</span>
+                          <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                            {new Date(log.createdAt).toLocaleString()}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {log.details && (
+                          <div style={{ fontSize: "0.9rem", color: "var(--color-text-main)", whiteSpace: "pre-wrap", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>{log.details}</span>
+                            {duration && (
+                              <span style={{ fontSize: "0.8rem", background: "#f0f0f0", padding: "0.25rem 0.5rem", borderRadius: "4px", fontWeight: "bold", color: "#555" }}>
+                                Permanencia: {duration}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
