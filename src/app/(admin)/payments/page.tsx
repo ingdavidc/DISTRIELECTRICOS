@@ -30,8 +30,11 @@ export default function PaymentsPage() {
   const [creditDays, setCreditDays] = useState(30);
   const [receiptType, setReceiptType] = useState("VOUCHER"); // FACTURA, VOUCHER
   const [amountToPay, setAmountToPay] = useState(0);
-  const [receivedAmount, setReceivedAmount] = useState<number | "">("");
   const [priceTier, setPriceTier] = useState<"NORMAL" | "FRECUENTE" | "VOLUMEN" | "CORPORATIVO">("NORMAL");
+
+  // Cash Modal State
+  const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+  const [keypadValue, setKeypadValue] = useState("0");
 
   const handlePriceTierChange = (newTier: string) => {
     setPriceTier(newTier as any);
@@ -171,7 +174,6 @@ export default function PaymentsPage() {
     }
   }, [currentTotal, isPending]);
 
-
   const handleApprove = async () => {
     if (!selectedOrder) return;
     if (isPending && editableItems.length === 0) {
@@ -184,13 +186,6 @@ export default function PaymentsPage() {
       return;
     }
   
-    if (paymentMethod === "EFECTIVO") {
-      if (receivedAmount !== "" && receivedAmount < amountToPay) {
-        toast.error("El monto recibido es menor al monto a pagar");
-        return;
-      }
-    }
-
     if (paymentMethod === "TARJETA" || paymentMethod === "TRANSFERENCIA") {
       if (!paymentBank) { toast.error("Debe seleccionar un banco"); return; }
       if (!transactionId) { toast.error("Debe ingresar el número de comprobante"); return; }
@@ -200,7 +195,31 @@ export default function PaymentsPage() {
       if (!creditProvider) { toast.error("Debe seleccionar la entidad de crédito"); return; }
     }
     
+    if (paymentMethod === "EFECTIVO") {
+      setIsCashModalOpen(true);
+      setKeypadValue("0");
+      return;
+    }
+
+    await executePayment();
+  };
+
+  const handleKeypadPress = (val: string) => {
+    if (val === "CLEAR") {
+      setKeypadValue("0");
+    } else if (val === "BACKSPACE") {
+      setKeypadValue(prev => prev.length > 1 ? prev.slice(0, -1) : "0");
+    } else if (val === "00" || val === "000") {
+      if (keypadValue !== "0") setKeypadValue(prev => prev + val);
+    } else {
+      setKeypadValue(prev => prev === "0" ? val : prev + val);
+    }
+  };
+
+  const executePayment = async () => {
+    if (!selectedOrder) return;
     setIsProcessing(true);
+    if (isCashModalOpen) setIsCashModalOpen(false);
     const tid = toast.loading("Procesando pago...");
 
     try {
@@ -560,29 +579,6 @@ export default function PaymentsPage() {
                 </div>
 
                 {/* Sub-forms depending on method */}
-                {paymentMethod === "EFECTIVO" && (
-                  <div style={{ background: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", marginBottom: "1rem" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", alignItems: "center" }}>
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">Monto Recibido</label>
-                        <input 
-                          type="number" 
-                          className="form-input" 
-                          value={receivedAmount} 
-                          onChange={e => setReceivedAmount(e.target.value ? Number(e.target.value) : "")} 
-                          placeholder={`Ej: ${amountToPay}`} 
-                        />
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Vuelto / Cambio</div>
-                        <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: receivedAmount !== "" && receivedAmount >= amountToPay ? "var(--color-success)" : "var(--color-text-muted)" }}>
-                          ${(receivedAmount !== "" && receivedAmount >= amountToPay ? receivedAmount - amountToPay : 0).toLocaleString('de-DE')}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {(paymentMethod === "TARJETA" || paymentMethod === "TRANSFERENCIA") && (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", background: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
@@ -709,6 +705,55 @@ export default function PaymentsPage() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setIsHistoryModalOpen(false)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CASH KEYPAD MODAL */}
+      {isCashModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsCashModalOpen(false)} style={{ zIndex: 1000 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: "400px" }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Pago en Efectivo</h3>
+              <button className="btn-close" onClick={() => setIsCashModalOpen(false)}><X size={24} /></button>
+            </div>
+            <div className="modal-body" style={{ padding: "1.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", fontSize: "1.1rem" }}>
+                <span style={{ color: "var(--color-text-muted)" }}>Total a Pagar:</span>
+                <span style={{ fontWeight: "bold" }}>${amountToPay.toLocaleString('de-DE')}</span>
+              </div>
+              
+              <div style={{ background: "var(--color-background)", border: "1px solid var(--color-border)", padding: "1rem", borderRadius: "var(--radius-md)", marginBottom: "1rem", textAlign: "right" }}>
+                <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Monto Recibido</div>
+                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "var(--color-primary)", minHeight: "40px" }}>
+                  ${Number(keypadValue).toLocaleString('de-DE')}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem", padding: "0.5rem", background: Number(keypadValue) >= amountToPay ? "var(--color-success-light, #d1fae5)" : "var(--color-background)", borderRadius: "var(--radius-md)" }}>
+                <span style={{ color: "var(--color-text-muted)", fontWeight: "bold" }}>Vuelto / Cambio:</span>
+                <span style={{ fontWeight: "bold", color: Number(keypadValue) >= amountToPay ? "var(--color-success)" : "var(--color-text-muted)", fontSize: "1.2rem" }}>
+                  ${Number(keypadValue) >= amountToPay ? (Number(keypadValue) - amountToPay).toLocaleString('de-DE') : "0"}
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                {["1","2","3","4","5","6","7","8","9","00","0","000"].map(n => (
+                  <button key={n} type="button" onClick={() => handleKeypadPress(n)} className="btn btn-outline" style={{ fontSize: "1.3rem", padding: "1rem", fontWeight: "bold" }}>{n}</button>
+                ))}
+                <button type="button" onClick={() => handleKeypadPress("CLEAR")} className="btn btn-outline" style={{ color: "var(--color-danger)", borderColor: "var(--color-danger)", fontWeight: "bold" }}>Limpiar</button>
+                <button type="button" onClick={() => handleKeypadPress("BACKSPACE")} className="btn btn-outline" style={{ gridColumn: "span 2", fontWeight: "bold" }}>Borrar</button>
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                style={{ width: "100%", padding: "1rem", fontSize: "1.1rem" }}
+                disabled={Number(keypadValue) < amountToPay || isProcessing}
+                onClick={executePayment}
+              >
+                {isProcessing ? "Procesando..." : "Aprobar Pago"}
+              </button>
             </div>
           </div>
         </div>
