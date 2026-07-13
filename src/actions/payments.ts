@@ -15,15 +15,6 @@ async function requireSession() {
 const ALLOWED_METHODS = new Set(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'CREDITO', 'OTRO']);
 const ALLOWED_RECEIPT_TYPES = new Set(['FACTURA', 'VOUCHER']);
 
-// ── Input sanitizer (escapes HTML special chars) ───────────────────────────────
-function escapeHtml(str: string) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 export async function getPendingOrders() {
   try {
@@ -243,4 +234,4 @@ export async function cancelOrder(orderId: string) {
   }
 }
 
-export { escapeHtml };
+
