@@ -1,6 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import WelcomeToast from "@/components/WelcomeToast";
+import IdleTimeout from "@/components/IdleTimeout";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
@@ -17,6 +18,7 @@ export default async function AdminLayout({
 
   return (
     <div className="dashboard-layout">
+      <IdleTimeout />
       <WelcomeToast userName={session.user.name || ""} />
       <Sidebar 
         role={(session.user as any).role || "ADMIN"} 
