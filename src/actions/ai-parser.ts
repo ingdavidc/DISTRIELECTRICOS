@@ -25,6 +25,7 @@ export async function parsePdfInvoice(formData: FormData) {
       return { success: false, error: "Solo se permiten archivos PDF o imágenes (JPG, PNG, WEBP)." };
     }
     const mimeType = file.type as "application/pdf" | "image/jpeg" | "image/png" | "image/webp";
+    const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64Data = buffer.toString("base64");
 
