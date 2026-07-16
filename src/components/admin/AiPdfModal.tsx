@@ -63,7 +63,7 @@ export default function AiPdfModal({
 
       // Iniciar Gemini localmente (bypassa los límites de tiempo y peso de Vercel)
       const genAI = new GoogleGenerativeAI(configRes.key);
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
       const prompt = [
         "Eres un asistente experto en contabilidad e inventarios de una empresa llamada DISTRIELECTRICOS E&D.",
@@ -92,7 +92,8 @@ export default function AiPdfModal({
         "1. El 'cost' debe ser numerico sin simbolos de moneda.",
         "2. El 'tax' debe ser numerico (ej: 19 o 5), si no se menciona asume 19.",
         "3. Extrae TODOS los productos de la factura.",
-        "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible."
+        "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible.",
+        "5. MUY IMPORTANTE: Escapa correctamente cualquier comilla doble (\") dentro de los textos usando la barra invertida (\\\") para no romper la sintaxis del JSON."
       ].join("\\n");
 
       const result = await model.generateContent({
