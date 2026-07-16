@@ -184,11 +184,11 @@ export default function AiPdfModal({
   };
 
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
-      <div className="card" style={{ width: "100%", maxWidth: "900px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", background: "#fff" }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
+      <div className="card" style={{ width: "95vw", maxWidth: "1200px", maxHeight: "95vh", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", background: "#fff" }}>
         
-        <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <FileText size={24} /> 
             {onSingleProductFill ? "Autocompletar con IA" : "Importación Inteligente de Facturas"}
           </h2>
@@ -274,17 +274,17 @@ export default function AiPdfModal({
                 Productos Detectados ({parsedData.products.length})
               </h4>
               
-              <div style={{ overflowX: "auto" }}>
-                <table className="table" style={{ minWidth: "900px" }}>
+              <div style={{ overflowX: "auto", paddingBottom: "1rem" }}>
+                <table className="table" style={{ width: "100%", minWidth: "900px" }}>
                   <thead>
                     <tr>
                       <th style={{ width: "50px", textAlign: "center" }}>Acción</th>
-                      <th>Estado</th>
-                      <th>SKU</th>
+                      <th style={{ whiteSpace: "nowrap" }}>Estado</th>
+                      <th style={{ whiteSpace: "nowrap" }}>SKU</th>
                       <th>Descripción</th>
-                      <th>Cant.</th>
-                      <th>Costo Lectura</th>
-                      <th>Resolución Precio</th>
+                      <th style={{ whiteSpace: "nowrap" }}>Cant.</th>
+                      <th style={{ whiteSpace: "nowrap" }}>Costo Lectura</th>
+                      <th style={{ whiteSpace: "nowrap", minWidth: "180px" }}>Resolución Precio</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -326,13 +326,13 @@ export default function AiPdfModal({
                               </div>
                             )}
                           </td>
-                          <td>
+                          <td style={{ whiteSpace: "nowrap" }}>
                             {p.isNew ? (
                               <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Se creará nuevo</span>
                             ) : hasPriceChange ? (
                               <select 
                                 className="input" 
-                                style={{ padding: "0.25rem 0.5rem", height: "auto", fontSize: "0.85rem", width: "100%" }}
+                                style={{ padding: "0.25rem 0.5rem", height: "auto", fontSize: "0.85rem", width: "100%", minWidth: "160px" }}
                                 value={p.resolution}
                                 onChange={(e) => handleResolutionChange(i, e.target.value as any)}
                                 disabled={isDeleted}
