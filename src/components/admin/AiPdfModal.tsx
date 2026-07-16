@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { UploadCloud, FileText, CheckCircle, AlertTriangle, Loader2, X } from "lucide-react";
+import { UploadCloud, FileText, CheckCircle, AlertTriangle, Loader2, X, Bot, Sparkles } from "lucide-react";
 import { getGeminiConfig } from "@/actions/ai-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { importAiData, AiImportData } from "@/actions/inventory";
@@ -191,10 +191,42 @@ export default function AiPdfModal({
           )}
 
           {isProcessing && (
-            <div style={{ textAlign: "center", padding: "3rem 0" }}>
-              <Loader2 size={48} className="spin" color="var(--color-primary)" style={{ margin: "0 auto 1rem" }} />
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 600 }}>La Inteligencia Artificial está leyendo...</h3>
-              <p style={{ color: "var(--color-text-muted)" }}>Esto puede tardar unos 10 a 20 segundos dependiendo del tamaño del PDF.</p>
+            <div style={{ textAlign: "center", padding: "4rem 0", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <style>{`
+                @keyframes botBounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-12px); }
+                }
+                @keyframes botGlow {
+                  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+                  70% { box-shadow: 0 0 0 20px rgba(37, 99, 235, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+                }
+              `}</style>
+              
+              <div style={{ position: "relative", marginBottom: "2rem", animation: "botBounce 2s ease-in-out infinite" }}>
+                <div style={{ 
+                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", 
+                  width: "60px", height: "60px", background: "var(--color-primary)", opacity: 0.1, borderRadius: "50%",
+                  animation: "botGlow 2s infinite"
+                }} />
+                <Bot size={80} color="var(--color-primary)" style={{ position: "relative", zIndex: 2 }} />
+                <div style={{ position: "absolute", top: -10, right: -15, animation: "botBounce 1.5s ease-in-out infinite", animationDelay: "0.5s", zIndex: 3 }}>
+                  <Sparkles size={32} color="#eab308" />
+                </div>
+              </div>
+              
+              <h3 style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--color-primary)", marginBottom: "0.5rem" }}>
+                La Inteligencia Artificial está leyendo...
+              </h3>
+              <p style={{ color: "var(--color-text-muted)", maxWidth: "400px", margin: "0 auto" }}>
+                Analizando el documento y extrayendo productos, cantidades, costos e impuestos. Por favor no cierres la ventana.
+              </p>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "2rem", background: "rgba(37, 99, 235, 0.05)", padding: "0.75rem 1.5rem", borderRadius: "30px", fontSize: "0.95rem", fontWeight: 500 }}>
+                <Loader2 size={18} className="spin" color="var(--color-primary)" />
+                <span style={{ color: "var(--color-primary)" }}>Procesando en tiempo real</span>
+              </div>
             </div>
           )}
 
