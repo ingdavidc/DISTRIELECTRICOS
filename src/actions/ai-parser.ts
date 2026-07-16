@@ -61,8 +61,16 @@ export async function parsePdfInvoice(formData: FormData) {
       "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible."
     ].join("\n");
 
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
+    const data = await res.json();
+    if (data.models) {
+      const names = data.models.map((m: any) => m.name.replace('models/', '')).join(', ');
+      return { success: false, error: "Modelos disponibles para tu llave: " + names };
+    } else {
+      return { success: false, error: "Error leyendo modelos: " + JSON.stringify(data) };
+    }
+    
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [
         { text: prompt },
