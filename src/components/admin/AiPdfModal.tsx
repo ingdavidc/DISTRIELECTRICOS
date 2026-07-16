@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { UploadCloud, FileText, CheckCircle, AlertTriangle, Loader2, X, Bot, Sparkles } from "lucide-react";
+import { UploadCloud, FileText, CheckCircle, AlertTriangle, Loader2, X, Bot, Sparkles, Trash2, Edit3, PlusCircle } from "lucide-react";
 import { getGeminiConfig } from "@/actions/ai-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { importAiData, AiImportData } from "@/actions/inventory";
+import { importAiData, previewAiImport, AiImportData, AiPreviewData } from "@/actions/inventory";
 import toast from "react-hot-toast";
 
 export default function AiPdfModal({ 
@@ -14,11 +14,11 @@ export default function AiPdfModal({
 }: { 
   isOpen: boolean; 
   onClose: () => void;
-  onSingleProductFill?: (data: AiImportData["products"][0], supplierId?: string) => void;
+  onSingleProductFill?: (data: AiPreviewData["products"][0], supplierId?: string) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [parsedData, setParsedData] = useState<AiImportData | null>(null);
+  const [parsedData, setParsedData] = useState<AiPreviewData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -110,10 +110,13 @@ export default function AiPdfModal({
       // Extraer solo el bloque JSON válido desde el primer '{' hasta el último '}'
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       const cleanedJson = jsonMatch ? jsonMatch[0] : responseText;
-      const parsedData = JSON.parse(cleanedJson);
+      const rawAiData = JSON.parse(cleanedJson) as AiImportData;
 
-      setParsedData(parsedData);
-      toast.success("Factura procesada con éxito por la IA.");
+      // Cruzar con BD para preview
+      const previewData = await previewAiImport(rawAiData);
+
+      setParsedData(previewData);
+      toast.success("Factura procesada. Por favor revisa los datos antes de importar.");
 
     } catch (err: any) {
       console.error("Error AI local:", err);
@@ -124,17 +127,33 @@ export default function AiPdfModal({
     }
   };
 
+  const handleToggleDelete = (index: number) => {
+    if (!parsedData) return;
+    const newData = { ...parsedData };
+    newData.products[index].deleted = !newData.products[index].deleted;
+    setParsedData(newData);
+  };
+
+  const handleResolutionChange = (index: number, resolution: "KEEP_OLD" | "UPDATE_NEW" | "AVERAGE") => {
+    if (!parsedData) return;
+    const newData = { ...parsedData };
+    newData.products[index].resolution = resolution;
+    setParsedData(newData);
+  };
+
   const handleConfirmImport = async () => {
     if (!parsedData) return;
     
+    const activeProducts = parsedData.products.filter(p => !p.deleted);
+
     // Si estamos en modo llenado de un solo producto (desde la ficha técnica)
     if (onSingleProductFill) {
-      if (parsedData.products.length === 0) {
-        toast.error("No se encontraron productos en la factura.");
+      if (activeProducts.length === 0) {
+        toast.error("No seleccionaste ningún producto.");
         return;
       }
-      // Llenamos con el primer producto
-      onSingleProductFill(parsedData.products[0]);
+      // Llenamos con el primer producto activo
+      onSingleProductFill(activeProducts[0]);
       onClose();
       return;
     }
@@ -221,7 +240,7 @@ export default function AiPdfModal({
                 La Inteligencia Artificial está leyendo...
               </h3>
               <p style={{ color: "var(--color-text-muted)", maxWidth: "400px", margin: "0 auto" }}>
-                Analizando el documento y extrayendo productos, cantidades, costos e impuestos. Por favor no cierres la ventana.
+                Analizando el documento y cruzando SKUs con la base de datos para detectar variaciones. Por favor espera.
               </p>
               
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "2rem", background: "rgba(37, 99, 235, 0.05)", padding: "0.75rem 1.5rem", borderRadius: "30px", fontSize: "0.95rem", fontWeight: 500 }}>
@@ -236,8 +255,8 @@ export default function AiPdfModal({
               <div style={{ background: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.3)", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem", display: "flex", gap: "1rem", alignItems: "flex-start" }}>
                 <CheckCircle size={24} color="var(--color-success)" style={{ flexShrink: 0 }} />
                 <div>
-                  <h4 style={{ fontWeight: 700, color: "var(--color-success)" }}>Lectura Exitosa</h4>
-                  <p style={{ fontSize: "0.9rem", marginTop: "0.25rem" }}>Revisa los datos extraídos antes de confirmar la importación.</p>
+                  <h4 style={{ fontWeight: 700, color: "var(--color-success)" }}>Revisión Requerida</h4>
+                  <p style={{ fontSize: "0.9rem", marginTop: "0.25rem" }}>Selecciona qué hacer con los cambios de precio y elimina los productos que no desees importar.</p>
                 </div>
               </div>
 
@@ -256,26 +275,79 @@ export default function AiPdfModal({
               </h4>
               
               <div style={{ overflowX: "auto" }}>
-                <table className="table">
+                <table className="table" style={{ minWidth: "900px" }}>
                   <thead>
                     <tr>
+                      <th style={{ width: "50px", textAlign: "center" }}>Acción</th>
+                      <th>Estado</th>
                       <th>SKU</th>
                       <th>Descripción</th>
                       <th>Cant.</th>
-                      <th>Costo Unit.</th>
-                      <th>IVA</th>
+                      <th>Costo Lectura</th>
+                      <th>Resolución Precio</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {parsedData.products.map((p, i) => (
-                      <tr key={i}>
-                        <td style={{ fontWeight: 600 }}>{p.sku || "Generar"}</td>
-                        <td>{p.name}</td>
-                        <td>{p.quantity}</td>
-                        <td>${p.cost?.toLocaleString('de-DE')}</td>
-                        <td>{p.tax}%</td>
-                      </tr>
-                    ))}
+                    {parsedData.products.map((p, i) => {
+                      const isDeleted = p.deleted;
+                      const hasPriceChange = !p.isNew && p.currentCost !== undefined && p.currentCost !== p.cost;
+                      
+                      return (
+                        <tr key={i} style={{ opacity: isDeleted ? 0.4 : 1, transition: "opacity 0.2s" }}>
+                          <td style={{ textAlign: "center" }}>
+                            <button 
+                              type="button" 
+                              onClick={() => handleToggleDelete(i)}
+                              style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.25rem" }}
+                              title={isDeleted ? "Restaurar" : "Eliminar de importación"}
+                            >
+                              <Trash2 size={18} color={isDeleted ? "var(--color-text-muted)" : "var(--color-danger)"} />
+                            </button>
+                          </td>
+                          <td>
+                            {p.isNew ? (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "rgba(34, 197, 94, 0.1)", color: "var(--color-success)", padding: "0.2rem 0.5rem", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>
+                                <PlusCircle size={12} /> NUEVO
+                              </span>
+                            ) : (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "rgba(59, 130, 246, 0.1)", color: "var(--color-primary)", padding: "0.2rem 0.5rem", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>
+                                <Edit3 size={12} /> EXISTE
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ fontWeight: 600, fontSize: "0.9rem" }}>{p.sku || "Generar"}</td>
+                          <td style={{ fontSize: "0.9rem" }}>{p.name}</td>
+                          <td style={{ fontWeight: 600 }}>{p.quantity}</td>
+                          <td style={{ fontWeight: 600, color: hasPriceChange ? "var(--color-warning)" : "inherit" }}>
+                            ${p.cost?.toLocaleString('de-DE')}
+                            {hasPriceChange && (
+                              <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 400 }}>
+                                Actual: ${p.currentCost?.toLocaleString('de-DE')}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {p.isNew ? (
+                              <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Se creará nuevo</span>
+                            ) : hasPriceChange ? (
+                              <select 
+                                className="input" 
+                                style={{ padding: "0.25rem 0.5rem", height: "auto", fontSize: "0.85rem", width: "100%" }}
+                                value={p.resolution}
+                                onChange={(e) => handleResolutionChange(i, e.target.value as any)}
+                                disabled={isDeleted}
+                              >
+                                <option value="UPDATE_NEW">Actualizar a ${p.cost?.toLocaleString('de-DE')}</option>
+                                <option value="KEEP_OLD">Mantener ${p.currentCost?.toLocaleString('de-DE')}</option>
+                                <option value="AVERAGE">Ponderar con stock ({p.currentStock} und)</option>
+                              </select>
+                            ) : (
+                              <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Sin variación</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -174,7 +174,48 @@ export type AiImportData = {
   products: { sku: string; name: string; quantity: number; cost: number; tax: number; }[];
 };
 
-export async function importAiData(data: AiImportData) {
+export type AiPreviewProduct = {
+  sku: string;
+  name: string;
+  quantity: number;
+  cost: number;
+  tax: number;
+  isNew: boolean;
+  currentCost?: number;
+  currentStock?: number;
+  resolution?: "KEEP_OLD" | "UPDATE_NEW" | "AVERAGE";
+  deleted?: boolean;
+};
+
+export type AiPreviewData = {
+  supplier: { name: string; identification: string; email: string; phone: string; };
+  products: AiPreviewProduct[];
+};
+
+export async function previewAiImport(data: AiImportData): Promise<AiPreviewData> {
+  const previewProducts: AiPreviewProduct[] = [];
+  
+  for (const item of data.products) {
+    if (!item.sku) continue;
+    const existing = await prisma.product.findUnique({ where: { sku: item.sku } });
+    
+    previewProducts.push({
+      ...item,
+      isNew: !existing,
+      currentCost: existing ? existing.cost : undefined,
+      currentStock: existing ? existing.stock : undefined,
+      resolution: "UPDATE_NEW", // default
+      deleted: false
+    });
+  }
+
+  return {
+    supplier: data.supplier,
+    products: previewProducts
+  };
+}
+
+export async function importAiData(data: AiPreviewData) {
   try {
     let supplierId: string | null = null;
     
@@ -210,13 +251,25 @@ export async function importAiData(data: AiImportData) {
 
     // 3. Procesar Productos
     for (const item of data.products) {
-      if (!item.sku || !item.name) continue;
+      if (!item.sku || !item.name || item.deleted) continue;
 
       let product = await prisma.product.findUnique({ where: { sku: item.sku } });
 
+      let finalCost = item.cost;
+      if (product) {
+        if (item.resolution === "KEEP_OLD") {
+          finalCost = product.cost;
+        } else if (item.resolution === "AVERAGE") {
+          const oldTotal = product.cost * product.stock;
+          const newTotal = item.cost * (item.quantity || 0);
+          const totalStock = product.stock + (item.quantity || 0);
+          finalCost = totalStock > 0 ? (oldTotal + newTotal) / totalStock : item.cost;
+        }
+      }
+
       // Calcular precio de venta (PVP) sugerido basado en costo + 30% utilidad + IVA
-      const profitMargin = 30; // 30% por defecto
-      const subtotal = item.cost * (1 + (profitMargin / 100));
+      const profitMargin = product ? product.profitMargin : 30;
+      const subtotal = finalCost * (1 + (profitMargin / 100));
       const calculatedPrice = subtotal * (1 + ((item.tax || 19) / 100));
       const roundedPrice = Math.ceil(calculatedPrice / 100) * 100;
 
@@ -226,7 +279,8 @@ export async function importAiData(data: AiImportData) {
           where: { id: product.id },
           data: {
             stock: product.stock + (item.quantity || 0),
-            cost: item.cost || product.cost,
+            cost: finalCost,
+            price: roundedPrice,
             supplierId: supplierId || product.supplierId
           }
         });
