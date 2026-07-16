@@ -3,6 +3,13 @@
 
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { auth } from '@/auth';
+
+export async function getGeminiConfig() {
+  const session = await auth();
+  if (!session?.user) return { success: false, error: "No autorizado" };
+  return { success: true, key: process.env.GEMINI_API_KEY };
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 

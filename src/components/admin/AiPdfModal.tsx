@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { UploadCloud, FileText, CheckCircle, AlertTriangle, Loader2, X } from "lucide-react";
-import { parsePdfInvoice } from "@/actions/ai-parser";
+import { getGeminiConfig } from "@/actions/ai-parser";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { importAiData, AiImportData } from "@/actions/inventory";
 import toast from "react-hot-toast";
 
@@ -34,20 +35,86 @@ export default function AiPdfModal({
     setIsProcessing(true);
     setParsedData(null);
 
-    const formData = new FormData();
-    formData.append("file", selected);
-
     try {
-      const res = await parsePdfInvoice(formData);
-      if (res.success && res.data) {
-        setParsedData(res.data);
-        toast.success("Factura procesada con éxito por la IA.");
-      } else {
-        toast.error(res.error || "Error al procesar la factura.");
+      // Validar tamaño máximo (Ej: 10MB)
+      if (selected.size > 10 * 1024 * 1024) {
+        toast.error("El archivo PDF no puede superar los 10 MB.");
         setFile(null);
+        setIsProcessing(false);
+        return;
       }
+
+      // Convertir archivo a base64 nativamente (rápido y no congela la UI)
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(selected);
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = error => reject(error);
+      });
+
+      // Obtener llave API segura del servidor
+      const configRes = await getGeminiConfig();
+      if (!configRes.success || !configRes.key) {
+        throw new Error("No se pudo obtener la llave de API o la sesión caducó.");
+      }
+
+      // Iniciar Gemini localmente (bypassa los límites de tiempo y peso de Vercel)
+      const genAI = new GoogleGenerativeAI(configRes.key);
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+      const prompt = [
+        "Eres un asistente experto en contabilidad e inventarios de una empresa llamada DISTRIELECTRICOS E&D.",
+        "He adjuntado una factura de proveedor en formato PDF. Tu trabajo es extraer los datos clave para insertarlos en nuestro sistema ERP.",
+        "",
+        "Debes devolver UNICAMENTE un objeto JSON valido con esta estructura exacta, sin texto adicional, sin formato markdown:",
+        "{",
+        "  \"supplier\": {",
+        "    \"name\": \"Nombre de la empresa proveedora\",",
+        "    \"identification\": \"NIT o RUT (solo numeros)\",",
+        "    \"email\": \"correo si aparece\",",
+        "    \"phone\": \"telefono si aparece\"",
+        "  },",
+        "  \"products\": [",
+        "    {",
+        "      \"sku\": \"Codigo del producto si aparece, o genera uno corto basado en el nombre\",",
+        "      \"name\": \"Nombre descriptivo del producto\",",
+        "      \"quantity\": 10,",
+        "      \"cost\": 15000.50,",
+        "      \"tax\": 19",
+        "    }",
+        "  ]",
+        "}",
+        "",
+        "Reglas:",
+        "1. El 'cost' debe ser numerico sin simbolos de moneda.",
+        "2. El 'tax' debe ser numerico (ej: 19 o 5), si no se menciona asume 19.",
+        "3. Extrae TODOS los productos de la factura.",
+        "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible."
+      ].join("\\n");
+
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [
+          { text: prompt },
+          { inlineData: { data: base64Data, mimeType: selected.type } }
+        ]}],
+        generationConfig: {
+          responseMimeType: "application/json",
+        }
+      });
+
+      const responseText = result.response.text();
+      const cleanedJson = responseText.replace(/```json\\n?|```/g, "").trim();
+      const parsedData = JSON.parse(cleanedJson);
+
+      setParsedData(parsedData);
+      toast.success("Factura procesada con éxito por la IA.");
+
     } catch (err: any) {
-      toast.error("Error inesperado: " + err.message);
+      console.error("Error AI local:", err);
+      toast.error("Error al procesar: " + err.message);
       setFile(null);
     } finally {
       setIsProcessing(false);
