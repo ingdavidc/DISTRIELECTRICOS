@@ -87,6 +87,6 @@ export async function parsePdfInvoice(formData: FormData) {
 
   } catch (error: any) {
     console.error("Error en parsePdfInvoice:", error);
-    return { success: false, error: "Error de conexion con la IA o procesamiento del archivo." };
+    return { success: false, error: "Error devuelto por el servidor: " + (error.message || String(error)) };
   }
 }
