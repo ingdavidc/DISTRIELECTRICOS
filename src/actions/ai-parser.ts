@@ -61,7 +61,7 @@ export async function parsePdfInvoice(formData: FormData) {
       "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible."
     ].join("\n");
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
 
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [
