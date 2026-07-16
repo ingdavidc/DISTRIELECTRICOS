@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles, Barcode, Printer, RefreshCw } from "lucide-react";
-import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, createCategory, deleteCategory, ProductInputData } from "@/actions/inventory";
+import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles, Barcode, Printer, RefreshCw, ArrowUp, ArrowDown } from "lucide-react";
+import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, createCategory, deleteCategory, ProductInputData, getTotalProductsCount } from "@/actions/inventory";
 import { getSuppliers } from "@/actions/purchases";
 import AiPdfModal from "@/components/admin/AiPdfModal";
 import { createClient } from "@supabase/supabase-js";
@@ -20,6 +20,10 @@ export default function InventoryPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [limit, setLimit] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isLoading, setIsLoading] = useState(true);
 
   // Modal State
@@ -128,13 +132,19 @@ export default function InventoryPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [prods, sups, cats] = await Promise.all([getInventoryProducts(), getSuppliers(), getCategories()]);
+      const [prods, count, sups, cats] = await Promise.all([
+        getInventoryProducts(limit, sortField, sortOrder),
+        getTotalProductsCount(),
+        getSuppliers(), 
+        getCategories()
+      ]);
       
       if (prods && (prods as any).error) {
         throw new Error((prods as any).error);
       }
 
       setProducts(prods as any[]);
+      setTotalCount(count);
       setSuppliers(sups);
       setCategories(cats);
     } catch (error: any) {
@@ -147,7 +157,9 @@ export default function InventoryPage() {
 
   useEffect(() => {
     loadData();
+  }, [limit, sortField, sortOrder]);
 
+  useEffect(() => {
     // Setup Supabase Realtime
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -368,13 +380,27 @@ export default function InventoryPage() {
     (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) return null;
+    return sortOrder === "asc" ? <ArrowUp size={14} style={{ display: "inline", marginLeft: "4px" }} /> : <ArrowDown size={14} style={{ display: "inline", marginLeft: "4px" }} />;
+  };
+
   return (
     <>
       <div className="page-header">
         <div>
           <h1 className="page-title">Inventario y Abastecimiento</h1>
           <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem", maxWidth: "600px", marginTop: "0.5rem" }}>
-            Gestiona stock, ficha técnica y configura compras automáticas.
+            Gestiona stock, ficha técnica y configura compras automáticas. ({totalCount} productos en BD)
           </p>
         </div>
         <div style={{ display: "flex", gap: "1rem" }}>
@@ -405,6 +431,17 @@ export default function InventoryPage() {
               style={{ paddingLeft: "35px" }}
             />
           </div>
+          <select 
+            className="input" 
+            style={{ width: "auto" }} 
+            value={limit} 
+            onChange={(e) => setLimit(Number(e.target.value))}
+          >
+            <option value={20}>Mostrar 20</option>
+            <option value={50}>Mostrar 50</option>
+            <option value={100}>Mostrar 100</option>
+            <option value={500}>Mostrar 500</option>
+          </select>
           <button className="btn btn-outline" onClick={loadData}>Recargar</button>
         </div>
 
@@ -412,11 +449,11 @@ export default function InventoryPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>SKU</th>
-                <th>Producto / Marca</th>
-                <th>Costo</th>
-                <th>PVP</th>
-                <th>Stock / Medida</th>
+                <th onClick={() => handleSort("sku")} style={{ cursor: "pointer", userSelect: "none" }}>SKU {renderSortIcon("sku")}</th>
+                <th onClick={() => handleSort("name")} style={{ cursor: "pointer", userSelect: "none" }}>Producto / Marca {renderSortIcon("name")}</th>
+                <th onClick={() => handleSort("cost")} style={{ cursor: "pointer", userSelect: "none" }}>Costo {renderSortIcon("cost")}</th>
+                <th onClick={() => handleSort("price")} style={{ cursor: "pointer", userSelect: "none" }}>PVP {renderSortIcon("price")}</th>
+                <th onClick={() => handleSort("stock")} style={{ cursor: "pointer", userSelect: "none" }}>Stock / Medida {renderSortIcon("stock")}</th>
                 <th>Acciones</th>
               </tr>
             </thead>

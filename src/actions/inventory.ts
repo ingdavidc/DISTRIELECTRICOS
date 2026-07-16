@@ -11,18 +11,35 @@ async function requireSession() {
   return session;
 }
 
-export async function getInventoryProducts() {
+export async function getInventoryProducts(limit?: number, sortField: string = 'createdAt', sortOrder: 'asc' | 'desc' = 'desc') {
   try {
     await requireSession();
+    const orderBy: any = {};
+    if (sortField === 'category') {
+      orderBy.category = { name: sortOrder };
+    } else {
+      orderBy[sortField] = sortOrder;
+    }
+    
     const data = await prisma.product.findMany({
       include: { category: true, supplier: true, altSupplier: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy,
+      ...(limit ? { take: limit } : {})
     });
     return JSON.parse(JSON.stringify(data));
   } catch (error: any) {
     if (error.message === 'NO_AUTH') return { error: 'No autorizado' } as any;
     console.error('Error fetching inventory products:', error);
     return { error: 'Error al cargar productos' } as any;
+  }
+}
+
+export async function getTotalProductsCount() {
+  try {
+    return await prisma.product.count();
+  } catch (error) {
+    console.error('Error fetching total products count:', error);
+    return 0;
   }
 }
 
