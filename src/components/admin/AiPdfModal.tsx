@@ -95,46 +95,15 @@ export default function AiPdfModal({
         "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible."
       ].join("\\n");
 
-      const modelNames = [
-        "gemini-flash-latest", 
-        "gemini-3.5-flash", 
-        "gemini-2.0-flash", 
-        "gemini-2.0-flash-lite", 
-        "gemini-pro-latest"
-      ];
-      let result: any = null;
-
-      for (const modelName of modelNames) {
-        try {
-          const model = genAI.getGenerativeModel({ model: modelName });
-          result = await model.generateContent({
-            contents: [{ role: "user", parts: [
-              { text: prompt },
-              { inlineData: { data: base64Data, mimeType: selected.type } }
-            ]}],
-            generationConfig: {
-              responseMimeType: "application/json",
-            }
-          });
-          break; // Si tiene éxito, salimos del bucle
-        } catch (e: any) {
-          // Si el error es 503 (alta demanda), 429 (límite), o 404 (no disponible/obsoleto), intentar con el siguiente
-          if (
-            e.message?.includes("503") || 
-            e.message?.includes("high demand") || 
-            e.message?.includes("429") || 
-            e.message?.includes("404")
-          ) {
-            console.warn(`Modelo ${modelName} no disponible, intentando con el siguiente...`);
-            continue;
-          }
-          throw e; // Si es otro error (ej: 401, 400), lanzarlo inmediatamente
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [
+          { text: prompt },
+          { inlineData: { data: base64Data, mimeType: selected.type } }
+        ]}],
+        generationConfig: {
+          responseMimeType: "application/json",
         }
-      }
-
-      if (!result) {
-        throw new Error("Todos los servidores gratuitos de Google IA están saturados en este momento. Por favor intenta en unos minutos.");
-      }
+      });
 
       const responseText = result.response.text();
       // Extraer solo el bloque JSON válido desde el primer '{' hasta el último '}'
