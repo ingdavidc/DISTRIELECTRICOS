@@ -63,7 +63,7 @@ export default function AiPdfModal({
 
       // Iniciar Gemini localmente (bypassa los límites de tiempo y peso de Vercel)
       const genAI = new GoogleGenerativeAI(configRes.key);
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = [
         "Eres un asistente experto en contabilidad e inventarios de una empresa llamada DISTRIELECTRICOS E&D.",
