@@ -106,7 +106,9 @@ export default function AiPdfModal({
       });
 
       const responseText = result.response.text();
-      const cleanedJson = responseText.replace(/```json\\n?|```/g, "").trim();
+      // Extraer solo el bloque JSON válido desde el primer '{' hasta el último '}'
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      const cleanedJson = jsonMatch ? jsonMatch[0] : responseText;
       const parsedData = JSON.parse(cleanedJson);
 
       setParsedData(parsedData);
