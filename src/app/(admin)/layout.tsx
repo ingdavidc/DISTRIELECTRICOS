@@ -1,5 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
+
+export const maxDuration = 60; // Increase timeout to 60s for Vercel Hobby tier
 import WelcomeToast from "@/components/WelcomeToast";
 import IdleTimeout from "@/components/IdleTimeout";
 import { auth } from "@/auth";

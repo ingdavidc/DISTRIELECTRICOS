@@ -1,6 +1,6 @@
 "use server";
 
-export const maxDuration = 60; // 60 seconds timeout for Vercel/Netlify serverless functions
+
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
