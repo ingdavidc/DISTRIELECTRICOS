@@ -1,5 +1,7 @@
 "use server";
 
+export const maxDuration = 60; // 60 seconds timeout for Vercel/Netlify serverless functions
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -61,15 +63,15 @@ export async function parsePdfInvoice(formData: FormData) {
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType
-        }
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [
+        { text: prompt },
+        { inlineData: { data: base64Data, mimeType } }
+      ]}],
+      generationConfig: {
+        responseMimeType: "application/json",
       }
-    ]);
+    });
 
     const responseText = result.response.text();
     
