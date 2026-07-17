@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { UploadCloud, FileText, CheckCircle, AlertTriangle, Loader2, X, Bot, Sparkles, Trash2, Edit3, PlusCircle } from "lucide-react";
 import { getGeminiConfig } from "@/actions/ai-parser";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { importAiData, previewAiImport, AiImportData, AiPreviewData } from "@/actions/inventory";
 import toast from "react-hot-toast";
 
@@ -96,6 +96,34 @@ export default function AiPdfModal({
         "5. MUY IMPORTANTE: Escapa correctamente cualquier comilla doble (\") dentro de los textos usando la barra invertida (\\\") para no romper la sintaxis del JSON."
       ].join("\\n");
 
+      const schema = {
+        type: SchemaType.OBJECT,
+        properties: {
+          supplier: {
+            type: SchemaType.OBJECT,
+            properties: {
+              name: { type: SchemaType.STRING },
+              identification: { type: SchemaType.STRING },
+              email: { type: SchemaType.STRING },
+              phone: { type: SchemaType.STRING },
+            },
+          },
+          products: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                sku: { type: SchemaType.STRING },
+                name: { type: SchemaType.STRING },
+                quantity: { type: SchemaType.NUMBER },
+                cost: { type: SchemaType.NUMBER },
+                tax: { type: SchemaType.NUMBER },
+              },
+            },
+          },
+        },
+      };
+
       const result = await model.generateContent({
         contents: [{ role: "user", parts: [
           { text: prompt },
@@ -103,6 +131,7 @@ export default function AiPdfModal({
         ]}],
         generationConfig: {
           responseMimeType: "application/json",
+          responseSchema: schema,
         }
       });
 
