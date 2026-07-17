@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_HISTORY_TURNS = 10;
-const CORRECT_MODEL = "gemini-1.5-flash";
+const CORRECT_MODEL = "gemini-flash-latest";
 
 export async function sendChatMessage(messages: { role: "user" | "model", content: string }[]) {
   try {
