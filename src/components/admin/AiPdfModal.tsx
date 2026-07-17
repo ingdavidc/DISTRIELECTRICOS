@@ -131,7 +131,7 @@ export default function AiPdfModal({
         ]}],
         generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: schema,
+          responseSchema: schema as any,
         }
       });
 
