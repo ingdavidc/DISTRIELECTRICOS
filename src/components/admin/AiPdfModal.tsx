@@ -93,36 +93,8 @@ export default function AiPdfModal({
         "2. El 'tax' debe ser numerico (ej: 19 o 5), si no se menciona asume 19.",
         "3. Extrae TODOS los productos de la factura.",
         "4. Si el PDF es un recibo escaneado o imagen, leelo igual y extrae lo mejor posible.",
-        "5. MUY IMPORTANTE: Escapa correctamente cualquier comilla doble (\") dentro de los textos usando la barra invertida (\\\") para no romper la sintaxis del JSON."
-      ].join("\\n");
-
-      const schema = {
-        type: SchemaType.OBJECT,
-        properties: {
-          supplier: {
-            type: SchemaType.OBJECT,
-            properties: {
-              name: { type: SchemaType.STRING },
-              identification: { type: SchemaType.STRING },
-              email: { type: SchemaType.STRING },
-              phone: { type: SchemaType.STRING },
-            },
-          },
-          products: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                sku: { type: SchemaType.STRING },
-                name: { type: SchemaType.STRING },
-                quantity: { type: SchemaType.STRING },
-                cost: { type: SchemaType.STRING },
-                tax: { type: SchemaType.STRING },
-              },
-            },
-          },
-        },
-      };
+        "5. REGLA DE ORO: ELIMINA POR COMPLETO cualquier comilla doble (\") que aparezca en los nombres de productos o textos. No las escapes, simplemente bórralas o cámbialas por espacios para no romper el JSON."
+      ].join("\n");
 
       const result = await model.generateContent({
         contents: [{ role: "user", parts: [
@@ -131,7 +103,6 @@ export default function AiPdfModal({
         ]}],
         generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: schema as any,
         }
       });
 
