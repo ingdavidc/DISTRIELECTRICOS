@@ -115,9 +115,9 @@ export default function AiPdfModal({
               properties: {
                 sku: { type: SchemaType.STRING },
                 name: { type: SchemaType.STRING },
-                quantity: { type: SchemaType.NUMBER },
-                cost: { type: SchemaType.NUMBER },
-                tax: { type: SchemaType.NUMBER },
+                quantity: { type: SchemaType.STRING },
+                cost: { type: SchemaType.STRING },
+                tax: { type: SchemaType.STRING },
               },
             },
           },
@@ -139,7 +139,18 @@ export default function AiPdfModal({
       // Extraer solo el bloque JSON válido desde el primer '{' hasta el último '}'
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       const cleanedJson = jsonMatch ? jsonMatch[0] : responseText;
-      const rawAiData = JSON.parse(cleanedJson) as AiImportData;
+      const rawResponse = JSON.parse(cleanedJson);
+
+      if (rawResponse.products && Array.isArray(rawResponse.products)) {
+        rawResponse.products = rawResponse.products.map((p: any) => ({
+          ...p,
+          quantity: typeof p.quantity === "string" ? parseFloat(p.quantity.replace(/,/g, "")) || 0 : (p.quantity || 0),
+          cost: typeof p.cost === "string" ? parseFloat(p.cost.replace(/,/g, "")) || 0 : (p.cost || 0),
+          tax: typeof p.tax === "string" ? parseFloat(p.tax.replace(/,/g, "")) || 19 : (p.tax || 19),
+        }));
+      }
+
+      const rawAiData = rawResponse as AiImportData;
 
       // Cruzar con BD para preview
       const previewData = await previewAiImport(rawAiData);
