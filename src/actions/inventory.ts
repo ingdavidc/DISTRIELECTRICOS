@@ -195,6 +195,13 @@ export type AiPreviewData = {
 export async function previewAiImport(data: AiImportData): Promise<AiPreviewData> {
   const previewProducts: AiPreviewProduct[] = [];
   
+  if (!data || !Array.isArray(data.products)) {
+    return {
+      supplier: data?.supplier || { name: "", identification: "", email: "", phone: "" },
+      products: []
+    };
+  }
+
   for (const item of data.products) {
     if (!item.sku) continue;
     const existing = await prisma.product.findUnique({ where: { sku: item.sku } });
@@ -250,6 +257,10 @@ export async function importAiData(data: AiPreviewData) {
     }
 
     // 3. Procesar Productos
+    if (!data || !Array.isArray(data.products)) {
+      return { success: false, error: "Estructura de datos inválida: falta la lista de productos." };
+    }
+
     for (const item of data.products) {
       if (!item.sku || !item.name || item.deleted) continue;
 
