@@ -73,8 +73,13 @@ export async function authenticateStaff(
 
     // Buscamos al usuario temporalmente para saber su rol y decidir a dónde redirigir
     const { prisma } = await import("@/lib/prisma");
-    const user = await prisma.user.findUnique({
-      where: { identification: parsed.data.identification }
+    const user = await prisma.user.findFirst({
+      where: { 
+        OR: [
+          { identification: parsed.data.identification },
+          { email: parsed.data.identification }
+        ]
+      }
     });
 
     let redirectTo = "/";
