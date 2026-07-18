@@ -4,7 +4,11 @@ export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
   },
-  session: { strategy: "jwt" },
+  session: { 
+    strategy: "jwt",
+    maxAge: 30 * 60, // 30 minutos
+    updateAge: 5 * 60, // Actualizar la cookie si hay actividad
+  },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;

@@ -28,6 +28,18 @@ export async function authenticate(
       return "Credenciales inválidas.";
     }
 
+    const { prisma } = await import("@/lib/prisma");
+    const user = await prisma.user.findUnique({
+      where: { email: parsed.data.email }
+    });
+
+    if (user) {
+      // Registrar log de inicio de sesión de forma explícita
+      await prisma.userLog.create({
+        data: { userId: user.id, action: "LOGIN", details: "Inició sesión en el sistema (Admin)" }
+      });
+    }
+
     (await cookies()).set("show_welcome", "true", { path: "/", httpOnly: false });
     await signIn("credentials", {
       username: parsed.data.email, // Mapeado a username para auth.ts
@@ -72,6 +84,11 @@ export async function authenticateStaff(
       else if (user.role === "FINANCE") redirectTo = "/payments";
       else if (user.role === "ADMIN") redirectTo = "/dashboard";
       else if (user.role === "OPERATIVE" && user.modules.length > 0) redirectTo = user.modules[0];
+      
+      // Registrar log de inicio de sesión de forma explícita
+      await prisma.userLog.create({
+        data: { userId: user.id, action: "LOGIN", details: "Inició sesión en el sistema (Staff)" }
+      });
     }
 
     (await cookies()).set("show_welcome", "true", { path: "/", httpOnly: false });
