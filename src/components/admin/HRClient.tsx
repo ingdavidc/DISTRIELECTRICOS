@@ -180,6 +180,7 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     { id: "/quotes", label: "Cotizaciones" },
     { id: "/purchases", label: "Órdenes de Compra" },
     { id: "/suppliers", label: "Proveedores" },
+    { id: "/website", label: "Gestor Web" },
   ];
 
   return (
