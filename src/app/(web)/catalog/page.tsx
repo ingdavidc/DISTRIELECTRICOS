@@ -75,6 +75,7 @@ export default async function CatalogPage({
         totalPages={totalPages}
         totalCount={totalCount}
         isFlash={flash}
+        flashOfferIds={config.flashOfferIds || []}
       />
     </Suspense>
   );

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
 import { createSpecialRequest } from "@/actions/requests";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
 import { requestMultipleToCounter } from "@/actions/counter";
 import { getAverageDispatchTime } from "@/actions/dispatch";
+import { getWebConfig } from "@/actions/website";
 
 import { Product } from "@prisma/client";
 type Customer = Awaited<ReturnType<typeof searchCustomers>>[0];
@@ -19,6 +20,7 @@ interface CartItem extends Product {
 
 export default function POSPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [flashOfferIds, setFlashOfferIds] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +52,7 @@ export default function POSPage() {
   useEffect(() => {
     fetchProducts("");
     getAverageDispatchTime().then(setAvgTime);
+    getWebConfig().then(c => setFlashOfferIds(c.flashOfferIds || []));
     searchInputRef.current?.focus();
   }, []);
 
@@ -346,7 +349,14 @@ export default function POSPage() {
                         </span>
                       </div>
                     </div>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0.25rem 0", flex: 1 }}>{product.name}</h3>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", margin: "0.25rem 0" }}>
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: 600, flex: 1 }}>{product.name}</h3>
+                    {flashOfferIds.includes(product.id) && (
+                      <div title="OFERTA FLASH" style={{ background: "var(--color-secondary)", color: "white", padding: "0.15rem 0.4rem", borderRadius: "4px", display: "flex", alignItems: "center" }}>
+                        <Zap size={12} fill="white" />
+                      </div>
+                    )}
+                  </div>
                   <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)" }}>
                     ${product.price.toLocaleString('de-DE')}
                   </div>

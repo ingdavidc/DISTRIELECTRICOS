@@ -15,7 +15,8 @@ export default function CatalogClient({
   currentPage,
   totalPages,
   totalCount,
-  isFlash: serverFlash
+  isFlash: serverFlash,
+  flashOfferIds
 }: {
   products: any[],
   categories: any[],
@@ -26,7 +27,8 @@ export default function CatalogClient({
   currentPage: number,
   totalPages: number,
   totalCount: number,
-  isFlash: boolean
+  isFlash: boolean,
+  flashOfferIds: string[]
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -181,7 +183,7 @@ export default function CatalogClient({
                 {products.map((prod) => (
                   <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                     <div style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                      {isFlash && (
+                      {flashOfferIds.includes(prod.id) && (
                         <div style={{ position: "absolute", top: "10px", left: "10px", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.25rem" }}>
                           <Zap size={12} fill="white" /> FLASH
                         </div>
