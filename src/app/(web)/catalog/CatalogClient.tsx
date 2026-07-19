@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Search, ShoppingCart, Filter, X, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { useCart } from "@/components/web/CartContext";
 
@@ -40,6 +41,17 @@ export default function CatalogClient({
 
   const [minPrice, setMinPrice] = useState(currentMin?.toString() || "");
   const [maxPrice, setMaxPrice] = useState(currentMax?.toString() || "");
+
+  const getCategoryHref = (categoryId: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (categoryId && categoryId !== 'all') {
+      params.set('category', categoryId);
+    } else {
+      params.delete('category');
+    }
+    params.delete('page');
+    return `/catalog?${params.toString()}`;
+  };
 
   const updateFilters = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -105,21 +117,21 @@ export default function CatalogClient({
             </h3>
             <ul style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <li>
-                <button 
-                  onClick={() => updateFilters('category', 'all')}
-                  style={{ background: "none", border: "none", color: currentCategory === 'all' ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === 'all' ? 700 : 500, cursor: "pointer", textAlign: "left", width: "100%" }}
+                <Link 
+                  href={getCategoryHref('all')}
+                  style={{ display: "block", textDecoration: "none", color: currentCategory === 'all' ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === 'all' ? 700 : 500, width: "100%" }}
                 >
                   Todas las Categorías
-                </button>
+                </Link>
               </li>
               {categories.map(cat => (
                 <li key={cat.id}>
-                  <button 
-                    onClick={() => updateFilters('category', cat.id)}
-                    style={{ background: "none", border: "none", color: currentCategory === cat.id ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === cat.id ? 700 : 500, cursor: "pointer", textAlign: "left", width: "100%" }}
+                  <Link 
+                    href={getCategoryHref(cat.id)}
+                    style={{ display: "block", textDecoration: "none", color: currentCategory === cat.id ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === cat.id ? 700 : 500, width: "100%" }}
                   >
                     {cat.name}
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>
