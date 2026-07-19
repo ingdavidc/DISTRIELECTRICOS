@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 async function getSession() {
   const { auth } = await import("@/auth");
@@ -34,10 +35,16 @@ export async function updateWebConfig(data: {
 }) {
   await getSession();
 
-  return await prisma.webConfig.update({
+  const res = await prisma.webConfig.update({
     where: { id: "default" },
     data
   });
+  
+  revalidatePath('/');
+  revalidatePath('/catalog');
+  revalidatePath('/pos');
+  
+  return res;
 }
 
 export async function searchProducts(query: string) {

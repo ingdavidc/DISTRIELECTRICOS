@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import CatalogClient from "./CatalogClient";
 import { getWebConfig } from "@/actions/website";
 
+export const dynamic = 'force-dynamic';
+
 export default async function CatalogPage({
   searchParams
 }: {
