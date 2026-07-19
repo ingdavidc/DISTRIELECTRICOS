@@ -26,15 +26,40 @@ export async function getWebConfig() {
 export async function updateWebConfig(data: {
   heroTitle?: string;
   heroSubtitle?: string;
-  heroImageUrl?: string;
-  featuredAuto?: boolean;
+  heroButtonText?: string;
+  useAutoFeatured?: boolean;
+  autoFeaturedCount?: number;
   featuredProductIds?: string[];
+  flashOfferIds?: string[];
 }) {
   await getSession();
 
   return await prisma.webConfig.update({
     where: { id: "default" },
     data
+  });
+}
+
+export async function searchProducts(query: string) {
+  await getSession();
+  if (!query) return [];
+  return await prisma.product.findMany({
+    where: {
+      OR: [
+        { name: { contains: query, mode: "insensitive" } },
+        { sku: { contains: query, mode: "insensitive" } }
+      ]
+    },
+    take: 10,
+    select: { id: true, name: true, price: true, imageUrl: true }
+  });
+}
+
+export async function getProductsByIds(ids: string[]) {
+  if (!ids || ids.length === 0) return [];
+  return await prisma.product.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, name: true, price: true, imageUrl: true }
   });
 }
 

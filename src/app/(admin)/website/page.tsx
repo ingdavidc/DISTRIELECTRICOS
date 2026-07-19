@@ -1,9 +1,12 @@
-import { getWebConfig, getWebGallery } from "@/actions/website";
+import { getWebConfig, getWebGallery, getProductsByIds } from "@/actions/website";
 import WebsiteManager from "./WebsiteManager";
 
 export default async function WebsiteAdminPage() {
   const config = await getWebConfig();
   const gallery = await getWebGallery();
+
+  const flashProducts = await getProductsByIds(config.flashOfferIds || []);
+  const featuredProducts = await getProductsByIds(config.featuredProductIds || []);
 
   return (
     <div className="page-container">
@@ -13,7 +16,12 @@ export default async function WebsiteAdminPage() {
       </div>
 
       <div className="card">
-        <WebsiteManager initialConfig={config} initialGallery={gallery} />
+        <WebsiteManager 
+          initialConfig={config} 
+          initialGallery={gallery} 
+          initialFlashProducts={flashProducts}
+          initialFeaturedProducts={featuredProducts}
+        />
       </div>
     </div>
   );

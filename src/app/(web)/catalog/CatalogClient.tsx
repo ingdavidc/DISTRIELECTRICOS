@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, ShoppingCart, Filter, X } from "lucide-react";
+import { Search, ShoppingCart, Filter, X, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { useCart } from "@/components/web/CartContext";
 
 export default function CatalogClient({
@@ -11,20 +11,27 @@ export default function CatalogClient({
   currentCategory,
   currentQuery,
   currentMin,
-  currentMax
+  currentMax,
+  currentPage,
+  totalPages,
+  totalCount,
+  isFlash
 }: {
   products: any[],
   categories: any[],
   currentCategory: string,
   currentQuery: string,
   currentMin?: number,
-  currentMax?: number
+  currentMax?: number,
+  currentPage: number,
+  totalPages: number,
+  totalCount: number,
+  isFlash: boolean
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
   
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [minPrice, setMinPrice] = useState(currentMin?.toString() || "");
   const [maxPrice, setMaxPrice] = useState(currentMax?.toString() || "");
 
@@ -35,6 +42,8 @@ export default function CatalogClient({
     } else {
       params.delete(key);
     }
+    // Always reset to page 1 when changing filters
+    params.delete('page');
     router.push(`/catalog?${params.toString()}`);
   };
 
@@ -46,6 +55,7 @@ export default function CatalogClient({
     if (maxPrice) params.set('maxPrice', maxPrice);
     else params.delete('maxPrice');
     
+    params.delete('page');
     router.push(`/catalog?${params.toString()}`);
   };
 
@@ -55,19 +65,30 @@ export default function CatalogClient({
     setMaxPrice("");
   };
 
+  const goToPage = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (p === 1) params.delete('page');
+    else params.set('page', p.toString());
+    router.push(`/catalog?${params.toString()}`);
+  };
+
   return (
     <div style={{ background: "var(--color-background)", minHeight: "100vh" }}>
       {/* Page Header */}
       <div style={{ background: "white", borderBottom: "1px solid var(--color-border)", padding: "2rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>
-            Catálogo de Productos
-          </h1>
-          {currentQuery && (
-            <p style={{ color: "var(--color-text-muted)", marginTop: "0.5rem" }}>
-              Resultados para: <strong style={{ color: "var(--color-secondary)" }}>"{currentQuery}"</strong>
-            </p>
-          )}
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", gap: "1rem", alignItems: "center" }}>
+          {isFlash && <Zap size={32} color="var(--color-secondary)" fill="var(--color-secondary)" />}
+          <div>
+            <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>
+              {isFlash ? "Ofertas Flash" : "Catálogo de Productos"}
+            </h1>
+            {currentQuery && (
+              <p style={{ color: "var(--color-text-muted)", marginTop: "0.5rem" }}>
+                Resultados para: <strong style={{ color: "var(--color-secondary)" }}>"{currentQuery}"</strong>
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -126,7 +147,7 @@ export default function CatalogClient({
             </button>
           </div>
 
-          {(currentQuery || currentCategory !== 'all' || currentMin || currentMax) && (
+          {(currentQuery || currentCategory !== 'all' || currentMin || currentMax || isFlash) && (
             <button className="btn btn-outline" onClick={clearFilters} style={{ width: "100%" }}>
               Limpiar Filtros
             </button>
@@ -137,7 +158,7 @@ export default function CatalogClient({
         <main style={{ flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <span style={{ color: "var(--color-text-muted)" }}>
-              Mostrando {products.length} producto{products.length !== 1 && 's'}
+              Mostrando {products.length} producto{products.length !== 1 && 's'} de un total de {totalCount}
             </span>
           </div>
 
@@ -151,33 +172,65 @@ export default function CatalogClient({
               <button className="btn btn-primary" onClick={clearFilters}>Ver Todos los Productos</button>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem" }}>
-              {products.map((prod) => (
-                <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                  <div style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                    {prod.imageUrl ? (
-                      <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "1rem" }} />
-                    ) : (
-                      <ShoppingCart size={60} color="var(--color-medium-gray)" />
-                    )}
-                  </div>
-                  <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "white" }}>
-                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>{prod.brand || "Sin Marca"}</div>
-                    <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1 }}>{prod.name}</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                      <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ padding: "0.5rem", borderRadius: "50%" }}
-                        onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
-                      >
-                        <ShoppingCart size={20} />
-                      </button>
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem", marginBottom: "3rem" }}>
+                {products.map((prod) => (
+                  <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    <div style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                      {isFlash && (
+                        <div style={{ position: "absolute", top: "10px", left: "10px", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                          <Zap size={12} fill="white" /> FLASH
+                        </div>
+                      )}
+                      {prod.imageUrl ? (
+                        <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "1rem" }} />
+                      ) : (
+                        <ShoppingCart size={60} color="var(--color-medium-gray)" />
+                      )}
+                    </div>
+                    <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "white" }}>
+                      <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>{prod.brand || "Sin Marca"}</div>
+                      <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1 }}>{prod.name}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                        <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ padding: "0.5rem", borderRadius: "50%" }}
+                          onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
+                        >
+                          <ShoppingCart size={20} />
+                        </button>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem", padding: "1rem" }}>
+                  <button 
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="btn btn-outline"
+                    style={{ padding: "0.5rem", borderRadius: "50%" }}
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <div style={{ fontWeight: 600, color: "var(--color-text-main)" }}>
+                    Página {currentPage} de {totalPages}
+                  </div>
+                  <button 
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="btn btn-outline"
+                    style={{ padding: "0.5rem", borderRadius: "50%" }}
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </main>
       </div>

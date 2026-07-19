@@ -301,6 +301,7 @@ model WebConfig {
   // Featured Products
   featuredAuto       Boolean  @default(true) // true = automáticos, false = manuales
   featuredProductIds String[] @default([]) // Array de IDs de productos seleccionados manualmente
+  flashOfferIds      String[] @default([]) // Array de IDs de ofertas flash seleccionadas manualmente
   
   updatedAt          DateTime @updatedAt
 }
