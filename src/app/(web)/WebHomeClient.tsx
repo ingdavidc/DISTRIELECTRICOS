@@ -91,14 +91,14 @@ export default function WebHomeClient({ config, gallery, products }: { config: a
       </section>
 
       {/* Day-to-Day Gallery (Carousel) */}
-      {gallery && gallery.length > 0 && (
-        <section style={{ background: "white", padding: "5rem 2rem" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)" }}>El Día a Día en DISTRIELECTRICOS</h2>
-            <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem" }}>Una mirada detrás de escena de nuestro trabajo en tienda y bodegas.</p>
-            
-            <div style={{ display: "flex", overflowX: "auto", gap: "1rem", paddingBottom: "1rem", scrollSnapType: "x mandatory" }}>
-              {gallery.map(item => (
+      <section style={{ background: "white", padding: "5rem 2rem" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)" }}>El Día a Día en DISTRIELECTRICOS</h2>
+          <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem" }}>Una mirada detrás de escena de nuestro trabajo en tienda y bodegas.</p>
+          
+          <div style={{ display: "flex", overflowX: "auto", gap: "1rem", paddingBottom: "1rem", scrollSnapType: "x mandatory" }}>
+            {gallery && gallery.length > 0 ? (
+              gallery.map(item => (
                 <div key={item.id} style={{ minWidth: "300px", height: "300px", borderRadius: "1rem", overflow: "hidden", scrollSnapAlign: "start", background: "#f0f0f0", flexShrink: 0, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
                   {item.type === "VIDEO" ? (
                     <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} controls muted loop />
@@ -106,11 +106,19 @@ export default function WebHomeClient({ config, gallery, products }: { config: a
                     <img src={item.url} alt="Galería" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   )}
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              // Empty State Placeholder
+              [1, 2, 3].map(i => (
+                <div key={i} style={{ minWidth: "300px", height: "300px", borderRadius: "1rem", overflow: "hidden", scrollSnapAlign: "start", background: "var(--color-background)", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed var(--color-border)", color: "var(--color-text-muted)" }}>
+                  <Zap size={40} style={{ opacity: 0.2, marginBottom: "1rem" }} />
+                  <p style={{ fontSize: "0.9rem", fontWeight: 600 }}>Próximamente</p>
+                </div>
+              ))
+            )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Featured Products */}
       <section style={{ background: "var(--color-background)", padding: "5rem 2rem" }}>
