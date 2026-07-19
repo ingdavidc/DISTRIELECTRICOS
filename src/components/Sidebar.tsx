@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Package, Users, LayoutDashboard, ShoppingCart, Truck, FileText, ClipboardList, Building2, Banknote } from "lucide-react";
+import { Package, Users, LayoutDashboard, ShoppingCart, Truck, FileText, ClipboardList, Building2, Banknote, Globe } from "lucide-react";
 
 export default function Sidebar({ role, modules = [] }: { role: string; modules?: string[] }) {
   const pathname = usePathname();
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN"] },
+    { name: "Gestor Web", href: "/website", icon: Globe, roles: ["ADMIN"] },
     { name: "Punto de Venta", href: "/pos", icon: ShoppingCart, roles: ["ADMIN", "CASHIER", "OPERATIVE"] },
     { name: "Caja / Pagos", href: "/payments", icon: Banknote, roles: ["ADMIN", "FINANCE", "OPERATIVE"] },
     { name: "Clientes", href: "/customers", icon: Users, roles: ["ADMIN", "CASHIER", "OPERATIVE"] },
