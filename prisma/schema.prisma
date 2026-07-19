@@ -311,3 +311,15 @@ model WebGallery {
   type      String   @default("IMAGE") // IMAGE, VIDEO
   createdAt DateTime @default(now())
 }
+
+model QuoteRequest {
+  id          String   @id @default(uuid())
+  name        String
+  company     String?
+  phone       String
+  email       String?
+  description String   @db.Text
+  status      String   @default("PENDING") // PENDING, REVIEWED, QUOTED, REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

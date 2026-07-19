@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Zap, Truck, ShieldCheck, Wrench, ArrowRight, ShoppingCart } from "lucide-react";
 import { useCart } from "@/components/web/CartContext";
 
@@ -29,13 +30,13 @@ export default function WebHomeClient({ config, gallery, products }: { config: a
               {config.heroSubtitle}
             </p>
             <div style={{ display: "flex", gap: "1rem" }}>
-              <button className="btn btn-secondary" style={{ fontSize: "1.1rem", padding: "1rem 2rem" }}>
+              <Link href="/catalog" className="btn btn-secondary" style={{ fontSize: "1.1rem", padding: "1rem 2rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
                 Ver Catálogo
                 <ArrowRight size={20} />
-              </button>
-              <button className="btn" style={{ fontSize: "1.1rem", padding: "1rem 2rem", background: "white", color: "var(--color-primary)", fontWeight: 600 }}>
+              </Link>
+              <Link href="/cotizar" className="btn" style={{ fontSize: "1.1rem", padding: "1rem 2rem", background: "white", color: "var(--color-primary)", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                 Cotizar Proyecto
-              </button>
+              </Link>
             </div>
           </div>
           <div style={{ flex: "1 1 300px", display: "flex", justifyContent: "flex-end" }}>
