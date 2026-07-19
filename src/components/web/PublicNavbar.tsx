@@ -75,7 +75,7 @@ export default function PublicNavbar() {
 
         {/* User Actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-          <Link href="/dashboard" style={{ display: "flex", flexDirection: "column", alignItems: "center", color: "var(--color-primary)", gap: "0.25rem", textDecoration: "none" }}>
+          <Link href="/profile" style={{ display: "flex", flexDirection: "column", alignItems: "center", color: "var(--color-primary)", gap: "0.25rem", textDecoration: "none" }}>
             <User size={24} />
             <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Mi Cuenta</span>
           </Link>

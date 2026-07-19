@@ -17,6 +17,10 @@ export default async function AdminLayout({
   if (!session?.user) {
     redirect("/login");
   }
+  
+  if ((session.user as any).role === "CUSTOMER") {
+    redirect("/profile");
+  }
 
   return (
     <div className="dashboard-layout">
