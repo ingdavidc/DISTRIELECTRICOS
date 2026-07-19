@@ -285,3 +285,29 @@ model CounterRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// -----------------------------------------
+// WEBSITE CMS
+// -----------------------------------------
+
+model WebConfig {
+  id                 String   @id @default("default")
+  
+  // Hero
+  heroTitle          String   @default("Todo el Material Eléctrico para tus Grandes Proyectos")
+  heroSubtitle       String   @default("Encuentra marcas líderes mundiales, disponibilidad de inventario en tiempo real y asesoría experta.")
+  heroImageUrl       String?
+  
+  // Featured Products
+  featuredAuto       Boolean  @default(true) // true = automáticos, false = manuales
+  featuredProductIds String[] @default([]) // Array de IDs de productos seleccionados manualmente
+  
+  updatedAt          DateTime @updatedAt
+}
+
+model WebGallery {
+  id        String   @id @default(uuid())
+  url       String
+  type      String   @default("IMAGE") // IMAGE, VIDEO
+  createdAt DateTime @default(now())
+}
