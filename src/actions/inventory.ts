@@ -130,6 +130,8 @@ export type ProductInputData = {
   imageUrl?: string;
   imageUrls?: string[];
   technicalSheetUrl?: string;
+
+  salesCount?: number;
 };
 
 export async function createProduct(data: ProductInputData) {

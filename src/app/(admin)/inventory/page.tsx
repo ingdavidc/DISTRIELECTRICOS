@@ -123,7 +123,7 @@ export default function InventoryPage() {
     name: "", sku: "", commercialName: "", description: "", features: "", brand: "", categoryId: "",
     unit: "Und", stock: 0, minStockLimit: 10, maxStockLimit: 100, location: "",
     cost: 0, profitMargin: 30, freqClientDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
-    supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: ""
+    supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: "", salesCount: 0
   };
   
   const [formData, setFormData] = useState<ProductInputData>(initialProductState);
@@ -362,7 +362,7 @@ export default function InventoryPage() {
       name: prod.name, sku: prod.sku, commercialName: prod.commercialName || "", description: prod.description || "", features: prod.features || "", brand: prod.brand || "", categoryId: prod.categoryId,
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
       cost: prod.cost, profitMargin: prod.profitMargin, freqClientDiscount: prod.freqClientDiscount || 5, volumeDiscount: prod.volumeDiscount || 10, corporateDiscount: prod.corporateDiscount || 15, tax: prod.tax, price: prod.price,
-      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || "", imageUrls: prod.imageUrls || [], technicalSheetUrl: prod.technicalSheetUrl || ""
+      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || "", imageUrls: prod.imageUrls || [], technicalSheetUrl: prod.technicalSheetUrl || "", salesCount: prod.salesCount || 0
     };
     setFormData(updatedFormData);
     setInitialFormData(updatedFormData);
@@ -648,6 +648,18 @@ export default function InventoryPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", gridColumn: "1 / -1" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>URL Ficha Técnica (PDF/Web)</label>
                       <input type="url" className="input" value={formData.technicalSheetUrl} onChange={(e) => setFormData({...formData, technicalSheetUrl: e.target.value})} placeholder="Ej: https://docs.schneider.com/breaker-20a.pdf" />
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--color-primary)" }}>Popularidad / Ventas</label>
+                      <NumericFormat 
+                        className="input"
+                        value={formData.salesCount}
+                        onValueChange={(v) => setFormData({...formData, salesCount: v.floatValue || 0})}
+                        allowNegative={false}
+                        decimalScale={0}
+                        placeholder="0"
+                      />
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>

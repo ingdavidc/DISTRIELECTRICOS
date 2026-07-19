@@ -50,7 +50,7 @@ export default function CatalogClient({
     }
     // Always reset to page 1 when changing filters
     params.delete('page');
-    router.push(`/catalog?${params.toString()}`);
+    window.location.href = `/catalog?${params.toString()}`;
   };
 
   const applyPriceFilter = () => {
@@ -62,13 +62,11 @@ export default function CatalogClient({
     else params.delete('maxPrice');
     
     params.delete('page');
-    router.push(`/catalog?${params.toString()}`);
+    window.location.href = `/catalog?${params.toString()}`;
   };
 
   const clearFilters = () => {
-    router.push('/catalog');
-    setMinPrice("");
-    setMaxPrice("");
+    window.location.href = '/catalog';
   };
 
   const goToPage = (p: number) => {
@@ -76,7 +74,7 @@ export default function CatalogClient({
     const params = new URLSearchParams(searchParams.toString());
     if (p === 1) params.delete('page');
     else params.set('page', p.toString());
-    router.push(`/catalog?${params.toString()}`);
+    window.location.href = `/catalog?${params.toString()}`;
   };
 
   return (
@@ -164,7 +162,7 @@ export default function CatalogClient({
         <main style={{ flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <span style={{ color: "var(--color-text-muted)" }}>
-              Mostrando {products.length} producto{products.length !== 1 && 's'} de un total de {totalCount}
+              Mostrando {products.length} producto{products.length !== 1 && 's'}
             </span>
           </div>
 
