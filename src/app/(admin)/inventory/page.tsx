@@ -128,13 +128,22 @@ export default function InventoryPage() {
   
   const [formData, setFormData] = useState<ProductInputData>(initialProductState);
   const [initialFormData, setInitialFormData] = useState<ProductInputData>(initialProductState);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
       const [prods, count, sups, cats] = await Promise.all([
-        getInventoryProducts(limit, sortField, sortOrder),
-        getTotalProductsCount(),
+        getInventoryProducts(limit, sortField, sortOrder, debouncedSearch),
+        getTotalProductsCount(debouncedSearch),
         getSuppliers(), 
         getCategories()
       ]);
@@ -157,7 +166,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     loadData();
-  }, [limit, sortField, sortOrder]);
+  }, [limit, sortField, sortOrder, debouncedSearch]);
 
   useEffect(() => {
     // Setup Supabase Realtime

@@ -11,7 +11,7 @@ async function requireSession() {
   return session;
 }
 
-export async function getInventoryProducts(limit?: number, sortField: string = 'createdAt', sortOrder: 'asc' | 'desc' = 'desc') {
+export async function getInventoryProducts(limit?: number, sortField: string = 'createdAt', sortOrder: 'asc' | 'desc' = 'desc', searchTerm?: string) {
   try {
     await requireSession();
     const orderBy: any = {};
@@ -21,9 +21,19 @@ export async function getInventoryProducts(limit?: number, sortField: string = '
       orderBy[sortField] = sortOrder;
     }
     
+    const where: any = {};
+    if (searchTerm) {
+      where.OR = [
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+        { sku: { contains: searchTerm, mode: 'insensitive' } },
+        { commercialName: { contains: searchTerm, mode: 'insensitive' } },
+      ];
+    }
+    
     const data = await prisma.product.findMany({
       include: { category: true, supplier: true, altSupplier: true },
       orderBy,
+      where,
       ...(limit ? { take: limit } : {})
     });
     return JSON.parse(JSON.stringify(data));
@@ -34,11 +44,21 @@ export async function getInventoryProducts(limit?: number, sortField: string = '
   }
 }
 
-export async function getTotalProductsCount() {
+export async function getTotalProductsCount(searchTerm?: string) {
   try {
-    return await prisma.product.count();
-  } catch (error) {
-    console.error('Error fetching total products count:', error);
+    await requireSession();
+    const where: any = {};
+    if (searchTerm) {
+      where.OR = [
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+        { sku: { contains: searchTerm, mode: 'insensitive' } },
+        { commercialName: { contains: searchTerm, mode: 'insensitive' } },
+      ];
+    }
+    const count = await prisma.product.count({ where });
+    return count;
+  } catch (error: any) {
+    console.error(error);
     return 0;
   }
 }
