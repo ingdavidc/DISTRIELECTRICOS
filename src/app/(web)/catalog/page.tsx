@@ -5,11 +5,10 @@ import { getWebConfig } from "@/actions/website";
 
 export const dynamic = 'force-dynamic';
 
-export default async function CatalogPage({
-  searchParams
-}: {
-  searchParams: { [key: string]: string | string[] | undefined }
+export default async function CatalogPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const searchParams = await props.searchParams;
   const q = typeof searchParams.q === 'string' ? searchParams.q : undefined;
   const categoryId = typeof searchParams.category === 'string' ? searchParams.category : undefined;
   const minPrice = typeof searchParams.minPrice === 'string' ? parseFloat(searchParams.minPrice) : undefined;
