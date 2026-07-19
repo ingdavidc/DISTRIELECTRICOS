@@ -50,7 +50,7 @@ export default async function CatalogPage({
   const [products, totalCount, categories] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy: { name: 'asc' }, // could add sorting param later
+      orderBy: { salesCount: 'desc' }, // Order by most popular/sold
       take,
       skip
     }),
