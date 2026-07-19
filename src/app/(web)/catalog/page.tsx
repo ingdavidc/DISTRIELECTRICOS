@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import CatalogClient from "./CatalogClient";
 
@@ -43,13 +44,15 @@ export default async function CatalogPage({
   ]);
 
   return (
-    <CatalogClient 
-      products={products} 
-      categories={categories} 
-      currentCategory={categoryId || 'all'}
-      currentQuery={q || ''}
-      currentMin={minPrice}
-      currentMax={maxPrice}
-    />
+    <Suspense fallback={<div style={{ padding: "4rem", textAlign: "center" }}>Cargando catálogo...</div>}>
+      <CatalogClient 
+        products={products} 
+        categories={categories} 
+        currentCategory={categoryId || 'all'}
+        currentQuery={q || ''}
+        currentMin={minPrice}
+        currentMax={maxPrice}
+      />
+    </Suspense>
   );
 }
