@@ -8,14 +8,14 @@ import { useCart } from "@/components/web/CartContext";
 export default function CatalogClient({
   products,
   categories,
-  currentCategory,
-  currentQuery,
+  currentCategory: serverCategory, // unused, kept for prop signature
+  currentQuery: serverQuery,
   currentMin,
   currentMax,
   currentPage,
   totalPages,
   totalCount,
-  isFlash
+  isFlash: serverFlash
 }: {
   products: any[],
   categories: any[],
@@ -32,6 +32,10 @@ export default function CatalogClient({
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
   
+  const currentCategory = searchParams.get('category') || 'all';
+  const currentQuery = searchParams.get('q') || '';
+  const isFlash = searchParams.get('flash') === 'true';
+
   const [minPrice, setMinPrice] = useState(currentMin?.toString() || "");
   const [maxPrice, setMaxPrice] = useState(currentMax?.toString() || "");
 
