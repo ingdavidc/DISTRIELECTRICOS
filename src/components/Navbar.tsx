@@ -2,20 +2,13 @@
 
 import { Bell, Search, UserCircle, LogOut } from "lucide-react";
 import { logOut } from "@/actions/auth";
+import GlobalSearch from "./GlobalSearch";
 
 export default function Navbar({ user }: { user?: any }) {
   return (
     <header className="topbar">
-      <div style={{ display: "flex", alignItems: "center", width: "300px" }}>
-        <div style={{ position: "relative", width: "100%" }}>
-          <Search size={18} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
-          <input 
-            type="text" 
-            placeholder="Buscar..." 
-            className="input" 
-            style={{ paddingLeft: "35px", borderRadius: "9999px", background: "var(--color-background)" }}
-          />
-        </div>
+      <div style={{ display: "flex", alignItems: "center", width: "400px" }}>
+        <GlobalSearch />
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
