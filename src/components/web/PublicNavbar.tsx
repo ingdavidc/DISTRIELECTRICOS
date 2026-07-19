@@ -107,7 +107,7 @@ export default function PublicNavbar() {
         <Link href="/catalog?category=d66cb982-eebc-49b5-944c-b2f56a76f8a8" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none" }}>Conductores Eléctricos</Link>
         <Link href="/catalog?category=18811ae2-62ea-45c5-b410-fce91ff5d585" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none" }}>Aparamenta</Link>
         <Link href="/catalog?category=3bdc7419-5e3c-4537-a360-d774e8964ea7" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none" }}>Tubería y Accesorios</Link>
-        <Link href="/catalog?flash=true" style={{ textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, color: "var(--color-danger)" }}>Ofertas Flash</Link>
+        <a href="/catalog?flash=true" style={{ textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, color: "var(--color-danger)" }}>Ofertas Flash</a>
       </nav>
     </header>
   );
