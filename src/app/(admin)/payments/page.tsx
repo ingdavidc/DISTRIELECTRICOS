@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store, X } from "lucide-react";
+import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store, X, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment } from "@/actions/payments";
-import { getCustomerOrders } from "@/actions/customers";
+import { getCustomerOrders, requestCustomerRUT } from "@/actions/customers";
 
 type Order = Awaited<ReturnType<typeof getPendingOrders>>[0];
 type CustomerOrder = Awaited<ReturnType<typeof getCustomerOrders>>[0];
@@ -59,6 +59,20 @@ export default function PaymentsPage() {
 
       return { ...item, unitPrice: Math.round(finalPrice) };
     }));
+  };
+
+  const handleRequestRUT = async (customerId: string) => {
+    const tid = toast.loading("Enviando solicitud de RUT por WhatsApp...");
+    try {
+      const res = await requestCustomerRUT(customerId);
+      if (res.success) {
+        toast.success("Solicitud enviada correctamente por WhatsApp", { id: tid });
+      } else {
+        toast.error(res.error || "Error al enviar solicitud", { id: tid });
+      }
+    } catch (e: any) {
+      toast.error("Error al conectar con el servidor", { id: tid });
+    }
   };
 
   // History Modal State
@@ -518,7 +532,7 @@ export default function PaymentsPage() {
                 <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Receipt size={18} /> Tipo de Comprobante
                 </h3>
-                <div style={{ display: "flex", gap: "1rem" }}>
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", border: `2px solid ${receiptType === 'VOUCHER' ? 'var(--color-primary)' : 'var(--color-border)'}`, padding: "0.75rem 1rem", borderRadius: "var(--radius-md)", flex: 1, background: receiptType === 'VOUCHER' ? 'rgba(32,53,98,0.05)' : 'white' }}>
                     <input type="radio" name="receiptType" value="VOUCHER" checked={receiptType === "VOUCHER"} onChange={() => setReceiptType("VOUCHER")} style={{ accentColor: "var(--color-primary)" }} />
                     <span style={{ fontWeight: 500 }}>Voucher Interno (Tirilla)</span>
@@ -528,6 +542,21 @@ export default function PaymentsPage() {
                     <span style={{ fontWeight: 500 }}>Factura Electrónica (API)</span>
                   </label>
                 </div>
+                {receiptType === 'FACTURA' && selectedOrder?.customer && (
+                  <div style={{ marginTop: "1rem", padding: "1rem", background: "#fefce8", border: "1px solid #fef08a", borderRadius: "var(--radius-md)" }}>
+                    <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem" }}>
+                      Para emitir Factura Electrónica, el cliente necesita tener registrado su RUT. 
+                      Si no lo tiene o le faltan datos DIAN, solicítelo aquí para actualizarlo automáticamente con Inteligencia Artificial.
+                    </p>
+                    <button 
+                      className="btn" 
+                      style={{ background: "#eab308", color: "white", padding: "0.5rem 1rem", border: "none", display: "inline-flex", gap: "0.5rem", alignItems: "center" }}
+                      onClick={() => handleRequestRUT(selectedOrder.customer!.id)}
+                    >
+                      <Sparkles size={16} /> Solicitar RUT por WhatsApp
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Payment Form */}

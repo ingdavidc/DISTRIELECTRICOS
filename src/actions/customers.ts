@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { sendWhatsAppMessage } from "@/lib/whatsapp";
 
 // ── Auth guard ─────────────────────────────────────────────────────────────────
 async function requireSession() {
@@ -185,5 +186,36 @@ export async function getCustomerOrders(customerId: string) {
     if ((error as Error).message === "NO_AUTH") return [];
     console.error("Error fetching customer orders:", error);
     return [];
+  }
+}
+
+export async function requestCustomerRUT(customerId: string) {
+  try {
+    await requireSession();
+    if (!customerId) return { success: false, error: "ID de cliente inválido" };
+
+    const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+    if (!customer) return { success: false, error: "Cliente no encontrado" };
+
+    if (!customer.phone) {
+      return { success: false, error: "El cliente no tiene número de teléfono registrado" };
+    }
+
+    // Nota para el martes: cambiar a sendWhatsAppTemplate cuando se adquiera Meta oficial
+    // await sendWhatsAppTemplate(customer.phone, "solicitud_rut", [customer.name]);
+    
+    // Mientras tanto enviamos mensaje de texto normal (sólo funciona si la ventana de 24h está abierta, pero es temporal)
+    const msg = `Hola ${customer.name}, para poder emitir tu Factura Electrónica necesitamos tus datos DIAN actualizados. Por favor responde a este chat enviándonos el archivo PDF o Imagen de tu RUT. ¡Gracias!`;
+    const res = await sendWhatsAppMessage(customer.phone, msg);
+
+    if (res.success) {
+      return { success: true };
+    } else {
+      return { success: false, error: "No se pudo enviar el WhatsApp" };
+    }
+
+  } catch (error: any) {
+    console.error("Error requesting RUT:", error);
+    return { success: false, error: "Error interno" };
   }
 }

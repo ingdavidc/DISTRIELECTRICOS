@@ -107,6 +107,17 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
         throw new Error('Esta orden ya no admite abonos');
       }
 
+      // Validar datos DIAN si es Factura Electrónica
+      if (paymentData.receiptType === 'FACTURA') {
+        if (!order.customer) {
+          throw new Error('Se requiere asignar un cliente para emitir Factura Electrónica');
+        }
+        const c = order.customer;
+        if (!c.personType || !c.taxRegime || !c.taxResponsibilities || !c.ciiuCode) {
+          throw new Error('Faltan datos DIAN del cliente (RUT) para emitir Factura Electrónica. Por favor solicite el RUT.');
+        }
+      }
+
       // ── Server-side amount validation against real balance ──────────────────
       const alreadyPaid = order.payments.reduce((s: number, p: any) => s + p.amount, 0);
       const outstanding = order.totalAmount - alreadyPaid;
