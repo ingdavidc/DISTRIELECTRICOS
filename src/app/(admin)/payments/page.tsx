@@ -584,53 +584,61 @@ export default function PaymentsPage() {
                     <span style={{ fontWeight: 500 }}>Factura Electrónica (API)</span>
                   </label>
                 </div>
-                {receiptType === 'FACTURA' && (
-                  <div style={{ marginTop: "1rem", padding: "1rem", background: "#fefce8", border: "1px solid #fef08a", borderRadius: "var(--radius-md)" }}>
-                    {selectedOrder?.customer ? (
-                      <>
-                        <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem" }}>
-                          Para emitir Factura Electrónica, el cliente necesita tener registrado su RUT. 
-                          Si le faltan datos DIAN, solicítelo aquí para actualizarlo automáticamente con Inteligencia Artificial.
-                        </p>
-                        <button 
-                          className="btn" 
-                          style={{ background: "#eab308", color: "white", padding: "0.5rem 1rem", border: "none", display: "inline-flex", gap: "0.5rem", alignItems: "center" }}
-                          onClick={() => handleRequestRUT(selectedOrder.customer!.id)}
-                        >
-                          <Sparkles size={16} /> Solicitar RUT a {selectedOrder.customer.name}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem", fontWeight: 500 }}>
-                          No se puede emitir Factura a "Consumidor Final". Debe asignar un cliente.
-                        </p>
-                        <p style={{ fontSize: "0.8rem", color: "#854d0e", marginBottom: "0.75rem" }}>
-                          Ingrese el celular del cliente. Si no existe, le solicitaremos el RUT por WhatsApp para crearlo con Inteligencia Artificial.
-                        </p>
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder="Ej: 3001234567" 
-                            value={manualPhone} 
-                            onChange={(e) => setManualPhone(e.target.value)}
-                            style={{ maxWidth: "200px" }}
-                          />
-                          <button 
-                            className="btn btn-primary" 
-                            style={{ padding: "0.5rem 1rem" }}
-                            onClick={handleAssignCustomer}
-                            disabled={isAssigning}
+                {receiptType === 'FACTURA' && (() => {
+                  const c = selectedOrder?.customer as any;
+                  const hasAllDian = c && c.personType && c.taxRegime && c.taxResponsibilities && c.ciiuCode;
+
+                  // Cliente OK con todos los datos DIAN → no mostrar nada
+                  if (hasAllDian) return null;
+
+                  return (
+                    <div style={{ marginTop: "1rem", padding: "1rem", background: "#fefce8", border: "1px solid #fef08a", borderRadius: "var(--radius-md)" }}>
+                      {c ? (
+                        <>
+                          <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem" }}>
+                            Al cliente <strong>{c.name}</strong> le faltan datos DIAN para emitir Factura Electrónica.
+                            Solicítele el RUT por WhatsApp para actualizarlos automáticamente con IA.
+                          </p>
+                          <button
+                            className="btn"
+                            style={{ background: "#eab308", color: "white", padding: "0.5rem 1rem", border: "none", display: "inline-flex", gap: "0.5rem", alignItems: "center" }}
+                            onClick={() => handleRequestRUT(c.id)}
                           >
-                            <Search size={16} style={{ marginRight: "0.25rem" }} />
-                            Asignar Cliente / Solicitar RUT
+                            <Sparkles size={16} /> Solicitar RUT a {c.name}
                           </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
+                        </>
+                      ) : (
+                        <>
+                          <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem", fontWeight: 500 }}>
+                            No se puede emitir Factura a "Consumidor Final". Debe asignar un cliente.
+                          </p>
+                          <p style={{ fontSize: "0.8rem", color: "#854d0e", marginBottom: "0.75rem" }}>
+                            Ingrese el celular del cliente. Si no existe, le solicitaremos el RUT por WhatsApp para crearlo con IA.
+                          </p>
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <input
+                              type="text"
+                              className="form-input"
+                              placeholder="Ej: 3001234567"
+                              value={manualPhone}
+                              onChange={(e) => setManualPhone(e.target.value)}
+                              style={{ maxWidth: "200px" }}
+                            />
+                            <button
+                              className="btn btn-primary"
+                              style={{ padding: "0.5rem 1rem" }}
+                              onClick={handleAssignCustomer}
+                              disabled={isAssigning}
+                            >
+                              <Search size={16} style={{ marginRight: "0.25rem" }} />
+                              Asignar / Solicitar RUT
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Payment Form */}
