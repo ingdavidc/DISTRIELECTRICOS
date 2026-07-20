@@ -221,10 +221,26 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
                     <button 
                       onClick={() => addToCart(product)}
                       disabled={product.stock < 1}
-                      className="btn btn-secondary" 
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                      className={`btn ${product.stock < 1 ? 'btn-outline' : 'btn-secondary'}`} 
+                      style={{ 
+                        padding: "0.5rem 1rem", 
+                        fontSize: "0.9rem", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "0.5rem",
+                        background: product.stock < 1 ? "#e5e7eb" : undefined,
+                        color: product.stock < 1 ? "#9ca3af" : undefined,
+                        borderColor: product.stock < 1 ? "#e5e7eb" : undefined,
+                        cursor: product.stock < 1 ? "not-allowed" : "pointer"
+                      }}
                     >
-                      <Plus size={16} /> Agregar
+                      {product.stock < 1 ? (
+                        "Agotado"
+                      ) : (
+                        <>
+                          <Plus size={16} /> Agregar
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
