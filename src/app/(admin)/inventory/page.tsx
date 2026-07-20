@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { Trash2, Edit } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { NumericFormat } from "react-number-format";
+import { searchProductImage } from "@/actions/image-search";
 
 import { Product } from "@prisma/client";
 type Supplier = Awaited<ReturnType<typeof getSuppliers>>[0];
@@ -40,6 +41,10 @@ export default function InventoryPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isSavingCategory, setIsSavingCategory] = useState(false);
+
+  // Image Assistant State
+  const [isSearchingImage, setIsSearchingImage] = useState(false);
+  const [imageSearchResults, setImageSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -117,6 +122,33 @@ export default function InventoryPage() {
         imageUrl: newUrls.length > 0 ? newUrls[0] : ""
       };
     });
+  };
+
+  const handleSearchImage = async () => {
+    if (!formData.name) {
+      toast.error("Por favor ingresa primero el Nombre del producto");
+      return;
+    }
+    
+    setIsSearchingImage(true);
+    setImageSearchResults([]);
+    
+    const query = `${formData.name} ${formData.brand || ""} ${formData.sku || ""}`.trim();
+    const tid = toast.loading(`Buscando imágenes para "${query}"...`);
+    
+    try {
+      const res = await searchProductImage(query);
+      if (res.success && res.images) {
+        setImageSearchResults(res.images);
+        toast.success(`Encontradas ${res.images.length} opciones`, { id: tid });
+      } else {
+        toast.error(res.error || "No se encontraron resultados", { id: tid });
+      }
+    } catch (err) {
+      toast.error("Error al conectar con el asistente visual", { id: tid });
+    } finally {
+      setIsSearchingImage(false);
+    }
   };
 
   const initialProductState: ProductInputData = {
@@ -891,13 +923,72 @@ export default function InventoryPage() {
                               style={{ padding: "0.5rem" }}
                             />
                           )}
-                          <input 
-                            type="text" 
-                            className="input" 
-                            value={formData.imageUrl} 
-                            onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
-                            placeholder="O pega la URL de la imagen directamente..." 
-                          />
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <input 
+                              type="text" 
+                              className="input" 
+                              value={formData.imageUrl} 
+                              onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
+                              placeholder="URL directa de la imagen..." 
+                              style={{ flex: 1 }}
+                            />
+                            <button 
+                              type="button" 
+                              onClick={handleSearchImage}
+                              disabled={isSearchingImage}
+                              className="btn btn-outline" 
+                              style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", color: "var(--color-primary)", borderColor: "var(--color-primary)" }}
+                            >
+                              <Sparkles size={16} /> 
+                              {isSearchingImage ? "Buscando..." : "Asistente IA"}
+                            </button>
+                          </div>
+                          
+                          {/* Resultados de búsqueda IA */}
+                          {imageSearchResults.length > 0 && (
+                            <div style={{ marginTop: "1rem", padding: "1rem", background: "var(--color-light-gray)", borderRadius: "var(--radius-md)", border: "1px dashed var(--color-border)" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                                <h4 style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                  <Sparkles size={14} color="var(--color-primary)" /> Resultados Sugeridos
+                                </h4>
+                                <button type="button" onClick={() => setImageSearchResults([])} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)" }}>
+                                  <X size={16} />
+                                </button>
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
+                                {imageSearchResults.map((img, idx) => (
+                                  <div 
+                                    key={idx} 
+                                    onClick={() => {
+                                      setFormData(prev => ({ 
+                                        ...prev, 
+                                        imageUrl: img.url,
+                                        imageUrls: Array.from(new Set([...(prev.imageUrls || []), img.url])) 
+                                      }));
+                                      setImageSearchResults([]);
+                                      toast.success("¡Imagen asignada!");
+                                    }}
+                                    style={{ 
+                                      aspectRatio: "1", 
+                                      borderRadius: "var(--radius-sm)", 
+                                      overflow: "hidden", 
+                                      border: "2px solid transparent", 
+                                      cursor: "pointer", 
+                                      transition: "transform 0.2s",
+                                      background: "#fff"
+                                    }}
+                                    onMouseOver={(e) => (e.currentTarget.style.border = "2px solid var(--color-primary)")}
+                                    onMouseOut={(e) => (e.currentTarget.style.border = "2px solid transparent")}
+                                    title={img.title}
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={img.preview} alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
                           <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
                             * Las imágenes se comprimirán automáticamente a WebP (&lt;100KB) antes de subirse.
                           </span>
