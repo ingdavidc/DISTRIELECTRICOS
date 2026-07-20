@@ -292,23 +292,24 @@ export default function CustomersPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" }}>
+              <h2 className="modal-title">
                 {editingId ? "Editar Cliente" : "Nuevo Cliente"}
               </h2>
               <button className="btn-close" onClick={handleCloseModal}>×</button>
             </div>
             
-            {/* Botón Mágico IA */}
-            <div style={{ marginBottom: "1.5rem", padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.5rem", border: "1px dashed #d1d5db", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <h4 style={{ fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-primary)" }}>
-                  <Sparkles size={16} color="#eab308" /> Autocompletar con IA
-                </h4>
-                <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", margin: 0, marginTop: "0.25rem" }}>
-                  Sube el PDF o Imagen del RUT y la IA extraerá todos los datos.
-                </p>
-              </div>
-              <div>
+            <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              {/* Botón Mágico IA */}
+              <div style={{ padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.5rem", border: "1px dashed #d1d5db", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <h4 style={{ fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-primary)", margin: 0 }}>
+                    <Sparkles size={16} color="#eab308" /> Autocompletar con IA
+                  </h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", margin: 0, marginTop: "0.25rem" }}>
+                    Sube el PDF o Imagen del RUT y la IA extraerá todos los datos.
+                  </p>
+                </div>
+                <div>
                 <input 
                   type="file" 
                   accept="application/pdf,image/*" 
@@ -392,6 +393,7 @@ export default function CustomersPage() {
                 <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Guardar'} Cliente</button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
