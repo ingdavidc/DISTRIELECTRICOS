@@ -361,7 +361,7 @@ export default function InventoryPage() {
     const updatedFormData: ProductInputData = {
       name: prod.name, sku: prod.sku, commercialName: prod.commercialName || "", description: prod.description || "", features: prod.features || "", brand: prod.brand || "", categoryId: prod.categoryId,
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
-      cost: prod.cost, profitMargin: prod.profitMargin, freqClientDiscount: prod.freqClientDiscount || 5, volumeDiscount: prod.volumeDiscount || 10, corporateDiscount: prod.corporateDiscount || 15, tax: prod.tax, price: prod.price,
+      cost: prod.cost, profitMargin: prod.profitMargin, expertDiscount: prod.expertDiscount || 5, volumeDiscount: prod.volumeDiscount || 10, corporateDiscount: prod.corporateDiscount || 15, tax: prod.tax, price: prod.price,
       supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || "", imageUrls: prod.imageUrls || [], technicalSheetUrl: prod.technicalSheetUrl || "", salesCount: prod.salesCount || 0, popularity: prod.popularity || 0
     };
     setFormData(updatedFormData);
