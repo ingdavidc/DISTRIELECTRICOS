@@ -17,10 +17,13 @@ export const authConfig: NextAuthConfig = {
         nextUrl.pathname.startsWith("/catalog") ||
         nextUrl.pathname.startsWith("/cotizar") ||
         nextUrl.pathname.startsWith("/login") ||
+        nextUrl.pathname.startsWith("/aliados") ||
+        nextUrl.pathname.startsWith("/profile") ||
         nextUrl.pathname.startsWith("/forgot-password") ||
         nextUrl.pathname.startsWith("/reset-password") ||
         nextUrl.pathname.startsWith("/receipt") ||
-        nextUrl.pathname.startsWith("/api/auth");
+        nextUrl.pathname.startsWith("/api/auth") ||
+        nextUrl.pathname.startsWith("/api/whatsapp");
 
       if (isPublicRoute) return true;
       if (isLoggedIn) return true;
