@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, Search, Menu, User, Phone, X, LayoutGrid, Zap } from "lucide-react";
@@ -18,6 +18,22 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
   const [clientCode, setClientCode] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#b2b-login') {
+        setShowB2BModal(true);
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    };
+    
+    // Check on mount
+    handleHashChange();
+    
+    // Listen for changes (in case they click the footer link while already on the page)
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const handleB2BLogin = async (e: React.FormEvent) => {
     e.preventDefault();

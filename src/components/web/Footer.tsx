@@ -52,7 +52,7 @@ export default function Footer() {
               </Link>
             </li>
             <li style={{ cursor: "pointer" }}>
-              <Link href="/cotizar" style={{ textDecoration: "none", color: "inherit" }}>
+              <Link href="#b2b-login" style={{ textDecoration: "none", color: "inherit" }} scroll={false}>
                 Acceso B2B
               </Link>
             </li>
