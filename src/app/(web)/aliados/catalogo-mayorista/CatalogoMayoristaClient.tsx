@@ -215,8 +215,8 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: "0.8rem", color: product.stock > 0 ? "var(--color-success)" : "var(--color-danger)", fontWeight: 700, marginBottom: "0.5rem" }}>
-                      Stock: {product.stock}
+                    <div style={{ fontSize: "0.8rem", color: product.stock > 10 ? "var(--color-success)" : product.stock > 0 ? "#eab308" : "var(--color-danger)", fontWeight: 700, marginBottom: "0.5rem" }}>
+                      {product.stock > 10 ? "Disponible" : product.stock > 0 ? "Pocas unidades" : "Agotado"}
                     </div>
                     <button 
                       onClick={() => addToCart(product)}
