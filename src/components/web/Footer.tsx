@@ -49,7 +49,11 @@ export default function Footer() {
           <h4 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.5rem" }}>Soluciones B2B</h4>
           <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem", color: "var(--color-light-gray)", fontSize: "0.9rem" }}>
             <li style={{ cursor: "pointer" }}>Ventas Corporativas</li>
-            <li style={{ cursor: "pointer" }}>Portal Constructores</li>
+            <li style={{ cursor: "pointer" }}>
+              <Link href="/aliados" style={{ textDecoration: "none", color: "inherit" }}>
+                Portal Aliado Experto
+              </Link>
+            </li>
             <li style={{ cursor: "pointer" }}>Cotización por Volumen</li>
           </ul>
         </div>
