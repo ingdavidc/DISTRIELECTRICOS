@@ -126,6 +126,8 @@ export async function generateQuotePdf(
   footerY += 5;
   doc.text("Validez de la cotización: 5 días hábiles.", 14, footerY);
   footerY += 5;
+  doc.text("Los precios de esta cotización solo aplican para pago de contado.", 14, footerY);
+  footerY += 5;
   doc.text("Cotización generada a través de la red de Aliados Expertos de Distrielectricos EYD.", 14, footerY);
   
   // Powered By DC Telematica
