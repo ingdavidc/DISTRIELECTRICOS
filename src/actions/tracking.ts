@@ -11,7 +11,7 @@ export async function trackOrder(orderId: string) {
 
     const order = await prisma.order.findFirst({
       where: { 
-        id: { startsWith: cleanId, mode: 'insensitive' }
+        id: { endsWith: cleanId, mode: 'insensitive' }
       },
       select: {
         id: true,
