@@ -115,6 +115,52 @@ export async function authenticateStaff(
   }
 }
 
+export async function authenticateExpert(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    const data = Object.fromEntries(formData.entries());
+    const parsed = loginSchema.safeParse(data);
+
+    if (!parsed.success) {
+      return "Credenciales inválidas.";
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+    const user = await prisma.user.findUnique({
+      where: { email: parsed.data.email }
+    });
+
+    if (user && user.role !== "EXPERT") {
+      return "Esta cuenta no tiene rol de Aliado Experto.";
+    }
+
+    if (user) {
+      await prisma.userLog.create({
+        data: { userId: user.id, action: "LOGIN", details: "Inició sesión en portal de Aliados" }
+      });
+    }
+
+    (await cookies()).set("show_welcome", "true", { path: "/", httpOnly: false });
+    await signIn("credentials", {
+      username: parsed.data.email,
+      password: parsed.data.password,
+      redirectTo: "/aliados/dashboard",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return "Credenciales inválidas.";
+        default:
+          return "Algo salió mal.";
+      }
+    }
+    throw error;
+  }
+}
+
 export async function logOut() {
   const session = await auth();
   if (session?.user?.id) {
