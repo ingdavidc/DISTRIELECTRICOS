@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, X, Search, FileText, Loader2, Building, Phone, Mail } from "lucide-react";
+import { Check, X, Search, FileText, Loader2, Building, Phone, Mail, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
-import { getB2BRequests, approveB2BRequest, rejectB2BRequest } from "@/actions/b2b";
+import { getB2BRequests, approveB2BRequest, rejectB2BRequest, approveAndCreateCustomer } from "@/actions/b2b";
 
 export default function B2BRequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -35,6 +35,46 @@ export default function B2BRequestsPage() {
       loadData();
     } else {
       toast.error(res.error || "Error al aprobar", { id: tid });
+    }
+  };
+
+  const handleApproveWithAI = async (request: any) => {
+    if (!request.rutUrl) {
+      toast.error("No hay RUT subido para analizar.");
+      return;
+    }
+    if (!confirm(`¿Analizar RUT con IA y aprobar automáticamente a ${request.companyName}?`)) return;
+
+    const tid = toast.loading("Analizando RUT con Inteligencia Artificial...");
+    
+    try {
+      // 1. Extraer datos con IA
+      const formDataToSend = new FormData();
+      formDataToSend.append("url", request.rutUrl);
+
+      const res = await fetch("/api/ai/parse-rut", {
+        method: "POST",
+        body: formDataToSend,
+      });
+      const json = await res.json();
+      
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Error al analizar el RUT");
+      }
+
+      toast.loading("RUT analizado. Creando cliente corporativo...", { id: tid });
+
+      // 2. Aprobar y Crear Cliente
+      const approveRes = await approveAndCreateCustomer(request.id, json.data);
+      
+      if (approveRes.success) {
+        toast.success("¡Magia IA! Cliente creado y aprobado exitosamente.", { id: tid });
+        loadData();
+      } else {
+        throw new Error(approveRes.error || "Error al crear cliente");
+      }
+    } catch (e: any) {
+      toast.error(e.message, { id: tid });
     }
   };
 
@@ -156,7 +196,17 @@ export default function B2BRequestsPage() {
                         <button className="btn btn-outline" style={{ padding: "0.4rem" }} title="Rechazar" onClick={() => handleReject(req.id, req.companyName)}>
                           <X size={18} color="var(--color-danger)" />
                         </button>
-                        <button className="btn btn-primary" style={{ padding: "0.4rem" }} title="Aprobar" onClick={() => handleApprove(req.id, req.companyName)}>
+                        {req.rutUrl && (
+                          <button 
+                            className="btn btn-outline" 
+                            style={{ padding: "0.4rem", borderColor: "#eab308", color: "#eab308" }} 
+                            title="Aprobar y Extraer con IA" 
+                            onClick={() => handleApproveWithAI(req)}
+                          >
+                            <Sparkles size={18} />
+                          </button>
+                        )}
+                        <button className="btn btn-primary" style={{ padding: "0.4rem" }} title="Aprobar Manualmente" onClick={() => handleApprove(req.id, req.companyName)}>
                           <Check size={18} />
                         </button>
                       </div>

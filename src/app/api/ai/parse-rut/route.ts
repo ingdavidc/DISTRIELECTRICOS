@@ -11,16 +11,26 @@ export async function POST(req: Request) {
     }
 
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file") as File | null;
+    const url = formData.get("url") as string | null;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    if (!file && !url) {
+      return NextResponse.json({ error: "No file or url provided" }, { status: 400 });
     }
 
-    // Convertir el archivo a base64
-    const buffer = await file.arrayBuffer();
-    const base64Data = Buffer.from(buffer).toString("base64");
-    const mimeType = file.type;
+    let base64Data = "";
+    let mimeType = "application/pdf";
+
+    if (file) {
+      const buffer = await file.arrayBuffer();
+      base64Data = Buffer.from(buffer).toString("base64");
+      mimeType = file.type;
+    } else if (url) {
+      const fetchRes = await fetch(url);
+      const buffer = await fetchRes.arrayBuffer();
+      base64Data = Buffer.from(buffer).toString("base64");
+      mimeType = fetchRes.headers.get("content-type") || "application/pdf";
+    }
 
     // Inicializar cliente de Google GenAI (toma automáticamente GEMINI_API_KEY)
     const ai = new GoogleGenAI({});

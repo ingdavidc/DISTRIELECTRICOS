@@ -128,6 +128,59 @@ export async function approveB2BRequest(id: string) {
   }
 }
 
+// 4.5 Admin: Approve and Create Customer with DIAN info
+export async function approveAndCreateCustomer(id: string, customerData: any) {
+  const session = await auth();
+  if (!session?.user) throw new Error("NO_AUTH");
+
+  try {
+    const request = await prisma.b2BRequest.findUnique({ where: { id } });
+    if (!request) return { success: false, error: "No encontrado" };
+
+    if (request.status === "APPROVED") return { success: false, error: "Ya estaba aprobado" };
+
+    // Generar código de cliente
+    const clientCode = "CORP-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    // 1. Aprobar Request
+    await prisma.b2BRequest.update({
+      where: { id },
+      data: { status: "APPROVED", clientCode }
+    });
+
+    // 2. Crear Customer (si no existe por NIT)
+    const existingCust = await prisma.customer.findUnique({ where: { identification: customerData.identification } });
+    if (!existingCust) {
+      await prisma.customer.create({
+        data: {
+          identification: customerData.identification,
+          name: customerData.name || request.companyName,
+          email: customerData.email || request.email,
+          phone: customerData.phone || request.phone,
+          address: customerData.address,
+          personType: customerData.personType,
+          taxRegime: customerData.taxRegime,
+          taxResponsibilities: customerData.taxResponsibilities,
+          ciiuCode: customerData.ciiuCode,
+          city: customerData.city,
+          department: customerData.department
+        }
+      });
+    }
+
+    revalidatePath("/(admin)/b2b-requests", "page");
+    revalidatePath("/(admin)/customers", "page");
+
+    // Enviar WA de aprobación con plantilla
+    await sendWhatsAppTemplate(request.phone, "cuenta_aprobada", [request.contactName]);
+
+    return { success: true, clientCode };
+  } catch (error: any) {
+    console.error("Error approving and creating customer:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 // 5. Admin: Reject Request
 export async function rejectB2BRequest(id: string) {
   const session = await auth();
