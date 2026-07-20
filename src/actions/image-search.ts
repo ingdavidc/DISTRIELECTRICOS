@@ -1,6 +1,5 @@
 "use server";
 
-import google from "googlethis";
 import { auth } from "@/auth";
 
 export async function searchProductImage(query: string) {
@@ -14,25 +13,49 @@ export async function searchProductImage(query: string) {
       return { success: false, error: "Término de búsqueda vacío" };
     }
 
-    const options = {
-      page: 0, 
-      safe: false, 
-      additional_params: { 
-        hl: "es" 
-      }
-    };
-    
-    // We append terms to find better quality product images
+    // Usaremos Bing Images porque Google bloquea las IPs de Vercel/Datacenters
     const searchQuery = `${query.trim()} alta calidad producto eléctrico`;
-    const response = await google.image(searchQuery, options);
+    const url = `https://www.bing.com/images/search?q=${encodeURIComponent(searchQuery)}`;
     
-    // Return top 8 to ensure we have fallbacks
-    const results = response.slice(0, 8).map((img: any) => ({
-      url: img.url,
-      preview: img.preview?.url || img.url,
-      title: img.origin?.title || "Imagen de producto",
-      website: img.origin?.website?.domain || ""
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Bing returned ${res.status}`);
+    }
+
+    const text = await res.text();
+    
+    // Extraer URLs de las imágenes usando regex sobre el payload de Bing
+    const murlRegex = /murl&quot;:&quot;(.*?)&quot;/g;
+    let match;
+    const urls: string[] = [];
+    
+    while ((match = murlRegex.exec(text)) !== null) {
+      if (urls.length < 8) {
+        // Filtrar algunos dominios que se sabe que bloquean hotlinking si se desea, 
+        // pero por ahora tomaremos las primeras 8.
+        if (!urls.includes(match[1])) {
+          urls.push(match[1]);
+        }
+      } else {
+        break;
+      }
+    }
+    
+    const results = urls.map(url => ({
+      url: url,
+      preview: url,
+      title: "Imagen de Bing",
+      website: ""
     }));
+
+    if (results.length === 0) {
+      return { success: false, error: "No se encontraron imágenes" };
+    }
 
     return { success: true, images: results };
   } catch (error: any) {

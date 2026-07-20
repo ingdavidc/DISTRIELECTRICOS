@@ -983,6 +983,9 @@ export default function InventoryPage() {
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src={img.preview} referrerPolicy="no-referrer" alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
+                                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.8)", color: "white", fontSize: "0.5rem", padding: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {img.preview ? img.preview.substring(0, 30) : "NO-URL"}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
