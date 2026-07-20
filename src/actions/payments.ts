@@ -3,6 +3,7 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { logUserAction } from './logs';
 
 // ── Shared guard ──────────────────────────────────────────────────────────────
 async function requireSession() {
@@ -231,6 +232,8 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
       console.error('WhatsApp Confirmation Failed', e);
     }
 
+    await logUserAction("PROCESAR_PAGO", `Orden #${result.id} | Monto: $${paymentData.amount.toLocaleString('de-DE')} | Método: ${paymentData.method}`);
+
     return { success: true, orderId: result.id };
   } catch (error: any) {
     if (error.message === 'NO_AUTH') return { success: false, error: 'No autorizado' };
@@ -253,6 +256,7 @@ export async function cancelOrder(orderId: string) {
       where: { id: orderId },
       data: { status: 'CANCELLED' }
     });
+    await logUserAction("CANCELAR_ORDEN", `Orden #${orderId}`);
     revalidatePath('/payments');
     return { success: true };
   } catch (error: any) {

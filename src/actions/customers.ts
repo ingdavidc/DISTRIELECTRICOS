@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { logUserAction } from "./logs";
 
 // ── Auth guard ─────────────────────────────────────────────────────────────────
 async function requireSession() {
@@ -94,6 +95,8 @@ export async function createCustomer(data: unknown) {
       }
     });
 
+    await logUserAction("REGISTRAR_CLIENTE", `Cliente: ${safe.name} | ID: ${safe.identification}`);
+
     revalidatePath("/customers");
     revalidatePath("/pos");
     return { success: true, customer };
@@ -132,6 +135,9 @@ export async function updateCustomer(id: string, data: unknown) {
       where: { id },
       data: updateData
     });
+    
+    await logUserAction("ACTUALIZAR_CLIENTE", `Cliente: ${customer.name}`);
+    
     revalidatePath("/customers");
     return { success: true, customer };
   } catch (error: any) {
@@ -158,7 +164,9 @@ export async function deleteCustomer(id: string) {
       return { success: false, error: `No se puede eliminar. El cliente tiene ${customer._count.orders} compras registradas.` };
     }
 
+    const cust = await prisma.customer.findUnique({ where: { id }});
     await prisma.customer.delete({ where: { id } });
+    await logUserAction("ELIMINAR_CLIENTE", `Cliente: ${cust?.name}`);
     revalidatePath("/customers");
     return { success: true };
   } catch (error: any) {

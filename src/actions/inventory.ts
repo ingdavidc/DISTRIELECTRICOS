@@ -76,6 +76,7 @@ export async function getCategories() {
 export async function createCategory(name: string) {
   try {
     const data = await prisma.category.create({ data: { name } });
+    await logUserAction("CREAR_CATEGORIA", `Nombre: ${name}`);
     revalidatePath('/inventory');
     return { success: true, data: JSON.parse(JSON.stringify(data)) };
   } catch (error: any) {
@@ -91,7 +92,9 @@ export async function deleteCategory(id: string) {
     if (productsCount > 0) {
       return { error: `No se puede eliminar. Hay ${productsCount} producto(s) usando esta categoría.` };
     }
+    const cat = await prisma.category.findUnique({ where: { id }});
     await prisma.category.delete({ where: { id } });
+    await logUserAction("ELIMINAR_CATEGORIA", `Nombre: ${cat?.name}`);
     revalidatePath('/inventory');
     return { success: true };
   } catch (error: any) {
@@ -183,7 +186,9 @@ export async function deleteProduct(id: string) {
     // Delete related records first to avoid foreign key constraints errors
     // Note: depending on the DB schema, cascade delete might be better configured in Prisma.
     // For now, let's just delete the product. If it has transactions/orders it might fail, which is good (we don't want to break history).
+    const prod = await prisma.product.findUnique({ where: { id }});
     await prisma.product.delete({ where: { id } });
+    await logUserAction("ELIMINAR_PRODUCTO", `SKU: ${prod?.sku} | Nombre: ${prod?.name}`);
     revalidatePath('/inventory');
     return { success: true };
   } catch (error) {
