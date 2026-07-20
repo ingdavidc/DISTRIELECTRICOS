@@ -32,7 +32,7 @@ export function generateQuotePdf(
 
   // Table
   const tableColumn = ["SKU / REF", "DESCRIPCIÓN", "CANTIDAD", "V. UNITARIO", "TOTAL"];
-  const tableRows = [];
+  const tableRows: string[][] = [];
 
   items.forEach(item => {
     const itemData = [
