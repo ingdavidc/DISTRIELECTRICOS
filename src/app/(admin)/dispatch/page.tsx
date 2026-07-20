@@ -356,7 +356,6 @@ export default function DispatchPage() {
             </div>
             <div style={{ textAlign: "right" }}>
               <strong>Tipo de Entrega:</strong> {selectedOrder.deliveryType === 'DOMICILIO' ? "Envío a Domicilio" : "Retiro en Tienda"}<br/>
-              <strong>Estado:</strong> {selectedOrder.status === 'READY' ? "Listo" : "En Preparación"}<br/>
             </div>
           </div>
 
