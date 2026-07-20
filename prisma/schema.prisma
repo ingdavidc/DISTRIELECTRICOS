@@ -180,15 +180,24 @@ model InventoryTransaction {
 }
 
 model Customer {
-  id             String   @id @default(uuid())
-  identification String   @unique // CC, NIT, etc.
-  name           String
-  email          String?
-  phone          String?
-  address        String?
-  orders         Order[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  identification      String   @unique // CC, NIT, etc.
+  name                String
+  email               String?
+  phone               String?
+  address             String?
+  
+  // Datos Fiscales DIAN (Facturación Electrónica)
+  personType          String? // Natural o Juridica
+  taxRegime           String? // ej. Responsable de IVA, No Responsable
+  taxResponsibilities String? // ej. O-13, O-47
+  ciiuCode            String? // ej. 4659
+  city                String? 
+  department          String?
+
+  orders              Order[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model Order {

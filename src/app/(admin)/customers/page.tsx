@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Users, Search, Plus, Edit2, Trash2, Mail, Phone, ShoppingCart } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Users, Search, Plus, Edit2, Trash2, Mail, Phone, ShoppingCart, Sparkles, Upload, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from "@/actions/customers";
 
@@ -20,8 +20,18 @@ export default function CustomersPage() {
     name: "",
     email: "",
     phone: "",
-    address: ""
+    address: "",
+    personType: "",
+    taxRegime: "",
+    taxResponsibilities: "",
+    ciiuCode: "",
+    city: "",
+    department: ""
   });
+  
+  // AI Scanner state
+  const [isScanning, setIsScanning] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const loadCustomers = async () => {
     setIsLoading(true);
@@ -47,7 +57,13 @@ export default function CustomersPage() {
         name: customer.name,
         email: customer.email || "",
         phone: customer.phone || "",
-        address: customer.address || ""
+        address: customer.address || "",
+        personType: customer.personType || "",
+        taxRegime: customer.taxRegime || "",
+        taxResponsibilities: customer.taxResponsibilities || "",
+        ciiuCode: customer.ciiuCode || "",
+        city: customer.city || "",
+        department: customer.department || ""
       });
     } else {
       setEditingId(null);
@@ -56,7 +72,13 @@ export default function CustomersPage() {
         name: "",
         email: "",
         phone: "",
-        address: ""
+        address: "",
+        personType: "",
+        taxRegime: "",
+        taxResponsibilities: "",
+        ciiuCode: "",
+        city: "",
+        department: ""
       });
     }
     setIsModalOpen(true);
@@ -97,6 +119,56 @@ export default function CustomersPage() {
       }
     } catch (err) {
       toast.error("Ocurrió un error inesperado", { id: tid });
+    } finally {
+      toast.dismiss(tid);
+    }
+  };
+
+  const handleScanRUT = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    const tid = toast.loading("Analizando RUT con Inteligencia Artificial...");
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("file", file);
+
+      const res = await fetch("/api/ai/parse-rut", {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      const json = await res.json();
+      
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Error al analizar");
+      }
+
+      const data = json.data;
+      setFormData(prev => ({
+        ...prev,
+        identification: data.identification || prev.identification,
+        name: data.name || prev.name,
+        email: data.email || prev.email,
+        phone: data.phone || prev.phone,
+        address: data.address || prev.address,
+        personType: data.personType || prev.personType,
+        taxRegime: data.taxRegime || prev.taxRegime,
+        taxResponsibilities: data.taxResponsibilities || prev.taxResponsibilities,
+        ciiuCode: data.ciiuCode || prev.ciiuCode,
+        city: data.city || prev.city,
+        department: data.department || prev.department,
+      }));
+
+      toast.success("¡Datos extraídos con éxito!", { id: tid });
+    } catch (error: any) {
+      toast.error(error.message, { id: tid });
+    } finally {
+      setIsScanning(false);
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -220,33 +292,101 @@ export default function CustomersPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h2 className="modal-title">{editingId ? 'Editar Cliente' : 'Nuevo Cliente'}</h2>
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" }}>
+                {editingId ? "Editar Cliente" : "Nuevo Cliente"}
+              </h2>
               <button className="btn-close" onClick={handleCloseModal}>×</button>
             </div>
-            <form className="modal-body" onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              <div className="form-group">
-                <label className="form-label">Identificación (CC / NIT) *</label>
-                <input type="text" className="form-input" value={formData.identification} onChange={e => setFormData({...formData, identification: e.target.value})} required disabled={!!editingId} />
-                {!!editingId && <span style={{fontSize: "0.75rem", color: "var(--color-text-muted)"}}>La identificación no se puede cambiar.</span>}
+            
+            {/* Botón Mágico IA */}
+            <div style={{ marginBottom: "1.5rem", padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "0.5rem", border: "1px dashed #d1d5db", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h4 style={{ fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-primary)" }}>
+                  <Sparkles size={16} color="#eab308" /> Autocompletar con IA
+                </h4>
+                <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", margin: 0, marginTop: "0.25rem" }}>
+                  Sube el PDF o Imagen del RUT y la IA extraerá todos los datos.
+                </p>
               </div>
-              <div className="form-group">
-                <label className="form-label">Nombre Completo o Razón Social *</label>
-                <input type="text" className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+              <div>
+                <input 
+                  type="file" 
+                  accept="application/pdf,image/*" 
+                  style={{ display: "none" }} 
+                  ref={fileInputRef}
+                  onChange={handleScanRUT}
+                  disabled={isScanning}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isScanning}
+                  className="btn btn-primary"
+                  style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem", opacity: isScanning ? 0.7 : 1 }}
+                >
+                  <Upload size={14} /> {isScanning ? "Analizando..." : "Subir RUT"}
+                </button>
               </div>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">Teléfono / Celular</label>
-                  <input type="text" className="form-input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            </div>
+
+            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label className="label">Identificación (NIT/CC) *</label>
+                  <input required className="input" value={formData.identification} onChange={e => setFormData({...formData, identification: e.target.value})} />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Correo Electrónico</label>
-                  <input type="email" className="form-input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                <div>
+                  <label className="label">Nombre / Razón Social *</label>
+                  <input required className="input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                </div>
+                
+                {/* Nuevos Campos DIAN */}
+                <div>
+                  <label className="label">Tipo de Persona</label>
+                  <select className="input" value={formData.personType} onChange={e => setFormData({...formData, personType: e.target.value})}>
+                    <option value="">Seleccione...</option>
+                    <option value="Natural">Natural</option>
+                    <option value="Juridica">Jurídica</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Régimen Tributario</label>
+                  <input className="input" placeholder="Ej. Responsable de IVA" value={formData.taxRegime} onChange={e => setFormData({...formData, taxRegime: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Responsabilidades Fiscales</label>
+                  <input className="input" placeholder="Ej. O-13, O-47" value={formData.taxResponsibilities} onChange={e => setFormData({...formData, taxResponsibilities: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Actividad Económica (CIIU)</label>
+                  <input className="input" placeholder="Ej. 4659" value={formData.ciiuCode} onChange={e => setFormData({...formData, ciiuCode: e.target.value})} />
+                </div>
+
+                <div>
+                  <label className="label">Correo Electrónico</label>
+                  <input type="email" className="input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Teléfono</label>
+                  <input type="tel" className="input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Dirección (Ciudad, Barrio, Calle)</label>
-                <input type="text" className="form-input" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+              
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label className="label">Dirección</label>
+                  <input className="input" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Ciudad</label>
+                  <input className="input" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Departamento</label>
+                  <input className="input" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} />
+                </div>
               </div>
+
               <div className="modal-footer" style={{ marginTop: "1rem", padding: "0" }}>
                 <button type="button" className="btn btn-outline" onClick={handleCloseModal}>Cancelar</button>
                 <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Guardar'} Cliente</button>

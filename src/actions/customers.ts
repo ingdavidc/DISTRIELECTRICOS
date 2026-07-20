@@ -19,6 +19,12 @@ const customerSchema = z.object({
   phone: z.string().max(20).optional().nullable(),
   email: z.string().email().max(120).optional().nullable(),
   address: z.string().max(250).optional().nullable(),
+  personType: z.string().max(50).optional().nullable(),
+  taxRegime: z.string().max(100).optional().nullable(),
+  taxResponsibilities: z.string().max(200).optional().nullable(),
+  ciiuCode: z.string().max(20).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  department: z.string().max(100).optional().nullable(),
 });
 
 export async function getCustomers() {
@@ -78,6 +84,12 @@ export async function createCustomer(data: unknown) {
         phone: safe.phone || null,
         email: safe.email || null,
         address: safe.address || null,
+        personType: safe.personType || null,
+        taxRegime: safe.taxRegime || null,
+        taxResponsibilities: safe.taxResponsibilities || null,
+        ciiuCode: safe.ciiuCode || null,
+        city: safe.city || null,
+        department: safe.department || null,
       }
     });
 
@@ -102,16 +114,22 @@ export async function updateCustomer(id: string, data: unknown) {
     }
     const safe = parsed.data;
 
-    // Explicit field whitelist — never pass raw data to Prisma
+    const updateData: any = {};
+    if (safe.identification !== undefined) updateData.identification = safe.identification;
+    if (safe.name !== undefined) updateData.name = safe.name;
+    if (safe.phone !== undefined) updateData.phone = safe.phone;
+    if (safe.email !== undefined) updateData.email = safe.email;
+    if (safe.address !== undefined) updateData.address = safe.address;
+    if (safe.personType !== undefined) updateData.personType = safe.personType;
+    if (safe.taxRegime !== undefined) updateData.taxRegime = safe.taxRegime;
+    if (safe.taxResponsibilities !== undefined) updateData.taxResponsibilities = safe.taxResponsibilities;
+    if (safe.ciiuCode !== undefined) updateData.ciiuCode = safe.ciiuCode;
+    if (safe.city !== undefined) updateData.city = safe.city;
+    if (safe.department !== undefined) updateData.department = safe.department;
+
     const customer = await prisma.customer.update({
       where: { id },
-      data: {
-        ...(safe.name !== undefined && { name: safe.name }),
-        ...(safe.identification !== undefined && { identification: safe.identification }),
-        ...(safe.phone !== undefined && { phone: safe.phone }),
-        ...(safe.email !== undefined && { email: safe.email }),
-        ...(safe.address !== undefined && { address: safe.address }),
-      }
+      data: updateData
     });
     revalidatePath("/customers");
     return { success: true, customer };
