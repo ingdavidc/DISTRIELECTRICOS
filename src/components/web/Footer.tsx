@@ -75,7 +75,9 @@ export default function Footer() {
 
       </div>
       <div style={{ marginTop: "4rem", paddingTop: "2rem", borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.25rem", color: "rgba(255,255,255,0.5)", fontSize: "0.85rem" }}>
-        <div>&copy; {new Date().getFullYear()} Distrielectricos E&D. Todos los derechos reservados.</div>
+        <div>
+          &copy; {new Date().getFullYear()} Distrielectricos E&D. <Link href="/login-corp" style={{ color: "inherit", textDecoration: "none" }}>Todos los derechos reservados.</Link>
+        </div>
         
         <a 
           href="https://www.dctelematica.com" 
