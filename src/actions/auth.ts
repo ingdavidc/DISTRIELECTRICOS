@@ -132,15 +132,17 @@ export async function authenticateExpert(
       where: { email: parsed.data.email }
     });
 
-    if (user && user.role !== "EXPERT") {
+    if (!user) {
+      return "Credenciales inválidas.";
+    }
+
+    if (user.role !== "EXPERT") {
       return "Esta cuenta no tiene rol de Aliado Experto.";
     }
 
-    if (user) {
-      await prisma.userLog.create({
-        data: { userId: user.id, action: "LOGIN", details: "Inició sesión en portal de Aliados" }
-      });
-    }
+    await prisma.userLog.create({
+      data: { userId: user.id, action: "LOGIN", details: "Inició sesión en portal de Aliados" }
+    });
 
     (await cookies()).set("show_welcome", "true", { path: "/", httpOnly: false });
     await signIn("credentials", {

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { requestExpertAccess, verifyExpertCode, loginExpert } from "@/actions/expert";
+import { useState, useActionState } from "react";
+import { requestExpertAccess, verifyExpertCode } from "@/actions/expert";
+import { authenticateExpert } from "@/actions/auth";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 
 export default function AliadosPage() {
   const router = useRouter();
@@ -11,10 +13,8 @@ export default function AliadosPage() {
   // Mode toggle
   const [mode, setMode] = useState<"register" | "login">("register");
 
-  // Login states
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  // NextAuth action state for login
+  const [loginError, loginDispatch, isLoggingIn] = useActionState(authenticateExpert, undefined);
 
   // Form states (Register)
   const [name, setName] = useState("");
@@ -29,25 +29,6 @@ export default function AliadosPage() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoggingIn(true);
-    const tid = toast.loading("Verificando credenciales...");
-    try {
-      const res = await loginExpert(loginEmail, loginPassword);
-      if (res.success) {
-        toast.success(`¡Bienvenido, ${res.name}!`, { id: tid });
-        router.push("/aliados/dashboard");
-      } else {
-        toast.error(res.error || "Credenciales incorrectas", { id: tid });
-      }
-    } catch (error: any) {
-      toast.error("Error del sistema", { id: tid });
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,17 +108,23 @@ export default function AliadosPage() {
         </div>
 
         {mode === "login" ? (
-          /* LOGIN FORM */
-          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          /* LOGIN FORM - uses NextAuth action that redirects to /aliados/dashboard */
+          <form action={loginDispatch} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
               <label className="label">Correo Electrónico</label>
-              <input type="email" required className="input" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="tu@correo.com" />
+              <input type="email" name="email" required className="input" placeholder="tu@correo.com" />
             </div>
             <div>
               <label className="label">Contraseña</label>
-              <input type="password" required className="input" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••" />
+              <input type="password" name="password" required className="input" placeholder="••••••••" />
             </div>
-            <button type="submit" disabled={isLoggingIn} className="btn btn-secondary" style={{ padding: "0.75rem", fontSize: "1.1rem", marginTop: "1rem" }}>
+            {loginError && (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-danger)", background: "#fef2f2", padding: "0.75rem", borderRadius: "var(--radius-md)", fontSize: "0.85rem", border: "1px solid #fecaca" }}>
+                <AlertCircle size={16} />
+                <p style={{ margin: 0 }}>{loginError}</p>
+              </div>
+            )}
+            <button type="submit" disabled={isLoggingIn} className="btn btn-secondary" style={{ padding: "0.75rem", fontSize: "1.1rem", marginTop: "0.5rem" }}>
               {isLoggingIn ? "Ingresando..." : "Ingresar a mi Portal"}
             </button>
           </form>

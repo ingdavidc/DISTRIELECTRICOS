@@ -33,10 +33,17 @@ export default function ProfileClient({ user, orders }: { user: any, orders: any
         </div>
 
         {isAdminOrStaff && (
-          <Link href="/dashboard" className="btn btn-primary" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", textDecoration: "none" }}>
-            <Settings size={18} />
-            Ir al Panel ERP
-          </Link>
+          user.role === "EXPERT" ? (
+            <Link href="/aliados/dashboard" className="btn" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", textDecoration: "none", background: "var(--color-secondary)", color: "white" }}>
+              <Settings size={18} />
+              Mi Portal de Aliado
+            </Link>
+          ) : (
+            <Link href="/dashboard" className="btn btn-primary" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", textDecoration: "none" }}>
+              <Settings size={18} />
+              Ir al Panel ERP
+            </Link>
+          )
         )}
 
         <button 

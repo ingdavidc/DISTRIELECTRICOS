@@ -1,11 +1,20 @@
 import { getExpertUser } from "@/actions/expert";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Calculator, ShoppingBag, FileText, Settings } from "lucide-react";
+import { Calculator, ShoppingBag, FileText, Settings, LogOut } from "lucide-react";
 
 export default async function ExpertDashboard() {
-  const user = await getExpertUser();
-  if (!user) {
+  // Accept EITHER the custom expert_session cookie OR a NextAuth session with EXPERT role
+  const [cookieUser, session] = await Promise.all([
+    getExpertUser(),
+    auth(),
+  ]);
+
+  const isExpertSession = (session?.user as any)?.role === "EXPERT";
+  const userName = cookieUser?.name ?? session?.user?.name ?? "Aliado";
+
+  if (!cookieUser && !isExpertSession) {
     redirect("/aliados");
   }
 
@@ -13,7 +22,7 @@ export default async function ExpertDashboard() {
     <div style={{ padding: "4rem 2rem", maxWidth: "1200px", margin: "0 auto", minHeight: "80vh" }}>
       <div style={{ marginBottom: "3rem" }}>
         <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
-          Hola, {user.name} 👋
+          Hola, {userName} 👋
         </h1>
         <p style={{ color: "var(--color-text-muted)" }}>
           Bienvenido a tu panel de Aliado Experto. ¿Qué deseas hacer hoy?
