@@ -178,5 +178,5 @@ export async function logOut() {
       console.error("Error logging out", e);
     }
   }
-  await signOut({ redirectTo: "/login" });
+  await signOut({ redirectTo: "/" });
 }
