@@ -42,7 +42,7 @@ Extrae la siguiente informaci√≥n en formato JSON estricto. Si no encuentras alg√
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3.5-flash",
       contents: [
         {
           role: "user",
