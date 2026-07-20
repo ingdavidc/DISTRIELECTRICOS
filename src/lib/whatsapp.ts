@@ -45,3 +45,64 @@ export async function sendWhatsAppMessage(toPhone: string, messageText: string) 
     return { success: false, error: "Internal Error" };
   }
 }
+
+export async function sendWhatsAppTemplate(toPhone: string, templateName: string, variables: string[]) {
+  try {
+    const token = process.env.META_WA_TOKEN;
+    const phoneId = process.env.META_WA_PHONE_ID;
+
+    if (!token || !phoneId) {
+      console.warn(`⚠️ [SIMULACIÓN WA TEMPLATE] ${templateName} a ${toPhone} con variables:`, variables);
+      return { success: true, simulated: true };
+    }
+
+    const cleanPhone = toPhone.replace(/\D/g, "");
+
+    const url = `https://graph.facebook.com/v17.0/${phoneId}/messages`;
+    
+    // Construct parameters array based on variables
+    const parameters = variables.map(v => ({
+      type: "text",
+      text: v
+    }));
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: cleanPhone,
+      type: "template",
+      template: {
+        name: templateName,
+        language: {
+          code: "es" // Must match the approved template language
+        },
+        components: parameters.length > 0 ? [
+          {
+            type: "body",
+            parameters: parameters
+          }
+        ] : []
+      }
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`❌ Error enviando WhatsApp Template ${templateName}:`, JSON.stringify(errorData, null, 2));
+      return { success: false, error: errorData };
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error("❌ Error interno en sendWhatsAppTemplate:", error);
+    return { success: false, error: "Internal Error" };
+  }
+}

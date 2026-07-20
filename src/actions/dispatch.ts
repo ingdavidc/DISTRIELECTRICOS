@@ -29,10 +29,36 @@ export async function getOrdersForDispatch() {
 
 export async function markOrderAsReady(orderId: string) {
   try {
-    await prisma.order.update({
+    const updated = await prisma.order.update({
       where: { id: orderId },
-      data: { status: 'READY' }
+      data: { status: 'READY' },
+      include: { customer: true }
     });
+
+    // Send Automatic WhatsApp
+    if (updated.customer?.phone) {
+      try {
+        const { sendWhatsAppTemplate } = await import('@/lib/whatsapp');
+        const shortId = updated.id.slice(0, 8).toUpperCase();
+        
+        if (updated.deliveryType === 'DOMICILIO') {
+          const avg = await getAverageDispatchTime();
+          await sendWhatsAppTemplate(updated.customer.phone, "pedido_enviado_domicilio", [
+            updated.customer.name, 
+            shortId, 
+            avg
+          ]);
+        } else {
+          await sendWhatsAppTemplate(updated.customer.phone, "pedido_listo_bodega", [
+            updated.customer.name, 
+            shortId
+          ]);
+        }
+      } catch (e) {
+        console.error('WhatsApp Dispatch Failed', e);
+      }
+    }
+
     revalidatePath('/dispatch');
     revalidatePath('/dashboard');
     return { success: true };

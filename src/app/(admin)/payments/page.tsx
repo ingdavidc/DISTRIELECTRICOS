@@ -235,17 +235,6 @@ export default function PaymentsPage() {
 
       const res = await processPayment(selectedOrder.id, paymentData, isPending ? editableItems : undefined);
       if (res.success) {
-        
-        // Enviar WhatsApp
-        const customer = selectedOrder.customer;
-        if (customer?.phone) {
-          const receiptUrl = `${window.location.origin}/receipt/${selectedOrder.id}`;
-          const text = `Hola ${customer.name}, hemos recibido tu pago de $${amountToPay.toLocaleString('de-DE')} en DISTRIELECTRICOS. 🧾 Puedes ver y descargar tu recibo aquí: ${receiptUrl}`;
-          const cleanPhone = customer.phone.replace(/\D/g, '');
-          const phonePrefix = cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`;
-          const waUrl = `https://wa.me/${phonePrefix}?text=${encodeURIComponent(text)}`;
-          window.open(waUrl, '_blank');
-        }
 
         if (amountToPay < currentBalance) {
           toast.success(`Abono exitoso. Saldo pendiente: $${(currentBalance - amountToPay).toLocaleString('de-DE')}`, { id: tid });

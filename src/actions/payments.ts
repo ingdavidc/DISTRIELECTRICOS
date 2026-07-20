@@ -99,7 +99,7 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
     const result = await prisma.$transaction(async (tx: any) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
-        include: { items: true, payments: true }
+        include: { items: true, payments: true, customer: true }
       });
 
       if (!order) throw new Error('Orden no encontrada');
@@ -203,6 +203,22 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
         receiptType: paymentData.receiptType
       });
     } catch { /* webhook errors are non-fatal */ }
+
+    // Send Automatic WhatsApp Payment Confirmation
+    try {
+      const fullOrder = await prisma.order.findUnique({ where: { id: orderId }, include: { customer: true } });
+      if (fullOrder?.customer?.phone) {
+        const { sendWhatsAppTemplate } = await import('@/lib/whatsapp');
+        const receiptUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.distrielectricoseyd.com'}/receipt/${result.id}`;
+        await sendWhatsAppTemplate(fullOrder.customer.phone, "confirmacion_pago", [
+          fullOrder.customer.name, 
+          paymentData.amount.toLocaleString('de-DE'), 
+          receiptUrl
+        ]);
+      }
+    } catch (e) {
+      console.error('WhatsApp Confirmation Failed', e);
+    }
 
     return { success: true, orderId: result.id };
   } catch (error: any) {

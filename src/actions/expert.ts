@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -49,8 +49,8 @@ export async function requestExpertAccess(data: {
       }
     });
 
-    // Send OTP
-    await sendWhatsAppMessage(data.phone, `¡Hola! Tu código de verificación para Aliados Expertos de DISTRIELECTRICOS es: *${otpCode}*\n\nEste código expirará en 15 minutos.`);
+    // Send OTP using template
+    await sendWhatsAppTemplate(data.phone, "codigo_verificacion_otp", [otpCode]);
 
     return { success: true, requestId: request.id };
   } catch (error: any) {
@@ -112,10 +112,7 @@ export async function approveExpertRequest(id: string) {
     });
 
     // Notify WhatsApp
-    await sendWhatsAppMessage(
-      request.phone,
-      `¡Hola ${request.name}! Tu solicitud como Aliado Experto ha sido APROBADA.\n\nYa puedes iniciar sesión en www.distrielectricoseyd.com/aliados usando tu correo electrónico y la contraseña que creaste.\n\n¡Bienvenido a los precios especiales!`
-    );
+    await sendWhatsAppTemplate(request.phone, "cuenta_aprobada", [request.name]);
 
     return { success: true };
   } catch (error: any) {

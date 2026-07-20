@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendWhatsAppTemplate, sendWhatsAppMessage } from "@/lib/whatsapp";
 import { auth } from "@/auth";
 
 export type B2BFormData = {
@@ -44,9 +44,8 @@ export async function requestB2BAccess(data: B2BFormData) {
       }
     });
 
-    // Enviar WhatsApp
-    const msg = `Hola ${data.contactName}, gracias por solicitar acceso corporativo en Distrieléctricos.\n\nTu código de verificación es: *${otp}*\n\nEste código expira en 15 minutos.`;
-    await sendWhatsAppMessage(data.phone, msg);
+    // Enviar WhatsApp OTP usando template
+    await sendWhatsAppTemplate(data.phone, "codigo_verificacion_otp", [otp]);
 
     return { success: true, requestId: request.id };
   } catch (error: any) {
@@ -76,7 +75,7 @@ export async function verifyB2BCode(requestId: string, code: string) {
       data: { isVerified: true, whatsappCode: null, codeExpiresAt: null }
     });
 
-    // Enviar WA de confirmación
+    // Enviar WA de confirmación (dejamos como text, si falla fuera de 24h no es crítico)
     const msg = `✅ ¡Código verificado!\n\nHemos recibido tu solicitud corporativa. Nuestro equipo la revisará y te notificaremos pronto con tu código de acceso.`;
     await sendWhatsAppMessage(request.phone, msg);
 
@@ -119,9 +118,8 @@ export async function approveB2BRequest(id: string) {
 
     revalidatePath("/(admin)/b2b-requests", "page");
 
-    // Enviar WA
-    const msg = `🎉 ¡Buenas noticias, ${request.contactName}!\n\nTu solicitud de cliente corporativo en Distrieléctricos ha sido aprobada.\n\nTu código de acceso único es: *${clientCode}*\n\nIngresa este código en nuestra página web para acceder automáticamente a los precios con descuento corporativo.\n\n🌐 https://www.distrielectricoseyd.com`;
-    await sendWhatsAppMessage(request.phone, msg);
+    // Enviar WA de aprobación con plantilla
+    await sendWhatsAppTemplate(request.phone, "cuenta_aprobada", [request.contactName]);
 
     return { success: true, clientCode };
   } catch (error: any) {
@@ -143,7 +141,7 @@ export async function rejectB2BRequest(id: string) {
 
     revalidatePath("/(admin)/b2b-requests", "page");
 
-    // Enviar WA
+    // Notificar al cliente (Texto libre, puede fallar por regla de 24h)
     const msg = `Hola ${request.contactName},\n\nTu solicitud de acceso corporativo no ha podido ser aprobada en este momento. Si tienes dudas, por favor contáctanos.`;
     await sendWhatsAppMessage(request.phone, msg);
 
