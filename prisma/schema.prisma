@@ -143,6 +143,7 @@ model Product {
   imageUrls         String[]  @default([]) // Múltiples imágenes (hasta 3 o más)
   technicalSheetUrl String? // Ficha técnica URL
   salesCount        Int       @default(0) // Productos vendidos/populares
+  popularity        Int       @default(0) // Estrellas de popularidad manual (0-5)
 
   // Relaciones históricas
   orderItems      OrderItem[]

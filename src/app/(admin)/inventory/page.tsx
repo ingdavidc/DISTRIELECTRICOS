@@ -123,7 +123,7 @@ export default function InventoryPage() {
     name: "", sku: "", commercialName: "", description: "", features: "", brand: "", categoryId: "",
     unit: "Und", stock: 0, minStockLimit: 10, maxStockLimit: 100, location: "",
     cost: 0, profitMargin: 30, freqClientDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
-    supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: "", salesCount: 0
+    supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: "", salesCount: 0, popularity: 0
   };
   
   const [formData, setFormData] = useState<ProductInputData>(initialProductState);
@@ -362,7 +362,7 @@ export default function InventoryPage() {
       name: prod.name, sku: prod.sku, commercialName: prod.commercialName || "", description: prod.description || "", features: prod.features || "", brand: prod.brand || "", categoryId: prod.categoryId,
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
       cost: prod.cost, profitMargin: prod.profitMargin, freqClientDiscount: prod.freqClientDiscount || 5, volumeDiscount: prod.volumeDiscount || 10, corporateDiscount: prod.corporateDiscount || 15, tax: prod.tax, price: prod.price,
-      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || "", imageUrls: prod.imageUrls || [], technicalSheetUrl: prod.technicalSheetUrl || "", salesCount: prod.salesCount || 0
+      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || "", imageUrls: prod.imageUrls || [], technicalSheetUrl: prod.technicalSheetUrl || "", salesCount: prod.salesCount || 0, popularity: prod.popularity || 0
     };
     setFormData(updatedFormData);
     setInitialFormData(updatedFormData);
@@ -651,7 +651,7 @@ export default function InventoryPage() {
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                      <label style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--color-primary)" }}>Popularidad / Ventas</label>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--color-primary)" }}>Ventas Reales</label>
                       <NumericFormat 
                         className="input"
                         value={formData.salesCount}
@@ -660,6 +660,22 @@ export default function InventoryPage() {
                         decimalScale={0}
                         placeholder="0"
                       />
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--color-primary)" }}>Popularidad Manual</label>
+                      <select 
+                        className="input" 
+                        value={formData.popularity} 
+                        onChange={(e) => setFormData({...formData, popularity: parseInt(e.target.value) || 0})}
+                      >
+                        <option value={0}>Sin destacar (0 Estrellas)</option>
+                        <option value={1}>⭐ (1 Estrella)</option>
+                        <option value={2}>⭐⭐ (2 Estrellas)</option>
+                        <option value={3}>⭐⭐⭐ (3 Estrellas)</option>
+                        <option value={4}>⭐⭐⭐⭐ (4 Estrellas)</option>
+                        <option value={5}>⭐⭐⭐⭐⭐ (5 Estrellas)</option>
+                      </select>
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>

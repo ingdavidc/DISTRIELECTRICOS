@@ -132,6 +132,7 @@ export type ProductInputData = {
   technicalSheetUrl?: string;
 
   salesCount?: number;
+  popularity?: number;
 };
 
 export async function createProduct(data: ProductInputData) {

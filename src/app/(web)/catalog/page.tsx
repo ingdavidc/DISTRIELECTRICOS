@@ -52,7 +52,8 @@ export default async function CatalogPage(props: {
     prisma.product.findMany({
       where,
       orderBy: [
-        { salesCount: 'desc' }, // Order by most popular/sold
+        { popularity: 'desc' }, // Manual popularity stars (0-5)
+        { salesCount: 'desc' }, // Organic sales count
         { createdAt: 'desc' }
       ],
       take,
