@@ -366,11 +366,13 @@ export default function DispatchPage() {
             </div>
           )}
 
-          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "3rem" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "3rem", fontSize: "0.9rem" }}>
             <thead>
               <tr>
-                <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "left", width: "40px" }}>OK</th>
-                <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "left", width: "80px" }}>Cant</th>
+                <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "center", width: "50px" }}>Bodega<br/>OK</th>
+                <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "center", width: "50px" }}>Cliente<br/>OK</th>
+                <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "center", width: "50px" }}>Cant</th>
+                <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "left", width: "120px" }}>Ubicación</th>
                 <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "left" }}>Código</th>
                 <th style={{ borderBottom: "2px solid black", padding: "0.5rem", textAlign: "left" }}>Descripción de Artículo</th>
               </tr>
@@ -378,10 +380,14 @@ export default function DispatchPage() {
             <tbody>
               {selectedOrder.items.map((item: any) => (
                 <tr key={item.id}>
-                  <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem" }}>
-                    <div style={{ width: "20px", height: "20px", border: "2px solid black", borderRadius: "3px" }}></div>
+                  <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem", textAlign: "center" }}>
+                    <div style={{ width: "20px", height: "20px", border: "2px solid black", borderRadius: "3px", margin: "0 auto" }}></div>
                   </td>
-                  <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem", fontWeight: "bold", fontSize: "1.1rem" }}>{item.quantity}</td>
+                  <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem", textAlign: "center" }}>
+                    <div style={{ width: "20px", height: "20px", border: "2px solid black", borderRadius: "3px", margin: "0 auto" }}></div>
+                  </td>
+                  <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem", fontWeight: "bold", fontSize: "1.1rem", textAlign: "center" }}>{item.quantity}</td>
+                  <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem", fontSize: "0.85rem", color: "#555" }}>{item.product.location || "N/A"}</td>
                   <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem", fontSize: "0.9rem" }}>{item.product.sku}</td>
                   <td style={{ borderBottom: "1px solid #ccc", padding: "0.75rem" }}>{item.product.name}</td>
                 </tr>
