@@ -8,6 +8,14 @@ import { useRouter } from "next/navigation";
 export default function AliadosPage() {
   const router = useRouter();
 
+  // Mode toggle
+  const [mode, setMode] = useState<"register" | "login">("register");
+
+  // Login states
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   // Form states (Register)
   const [name, setName] = useState("");
   const [document, setDocument] = useState("");
@@ -21,6 +29,25 @@ export default function AliadosPage() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    const tid = toast.loading("Verificando credenciales...");
+    try {
+      const res = await loginExpert(loginEmail, loginPassword);
+      if (res.success) {
+        toast.success(`¡Bienvenido, ${res.name}!`, { id: tid });
+        router.push("/aliados/dashboard");
+      } else {
+        toast.error(res.error || "Credenciales incorrectas", { id: tid });
+      }
+    } catch (error: any) {
+      toast.error("Error del sistema", { id: tid });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +87,6 @@ export default function AliadosPage() {
       if (res.success) {
         toast.success("¡Solicitud enviada con éxito! Te notificaremos cuando el administrador te apruebe.", { id: tid, duration: 6000 });
         setShowOtp(false);
-        // Clear form
         setName(""); setDocument(""); setPhone(""); setEmail(""); setPassword("");
       } else {
         toast.error(res.error || "Código incorrecto", { id: tid });
@@ -88,19 +114,36 @@ export default function AliadosPage() {
         {/* Header Options */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0, textAlign: "center", color: "var(--color-primary)" }}>
-            Solicitud de Acceso
+            {mode === "login" ? "Iniciar Sesión" : "Solicitud de Acceso"}
           </h2>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <button 
-              onClick={() => router.push("/login-aliados")}
+              onClick={() => setMode(mode === "login" ? "register" : "login")}
               style={{ padding: "0.5rem 1rem", background: "transparent", color: "var(--color-secondary)", border: "2px solid var(--color-secondary)", borderRadius: "0.5rem", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
             >
-              Ya tengo cuenta, iniciar sesión
+              {mode === "login" ? "¿No tienes cuenta? Solicitar acceso" : "Ya tengo cuenta, iniciar sesión"}
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        {mode === "login" ? (
+          /* LOGIN FORM */
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div>
+              <label className="label">Correo Electrónico</label>
+              <input type="email" required className="input" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="tu@correo.com" />
+            </div>
+            <div>
+              <label className="label">Contraseña</label>
+              <input type="password" required className="input" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••" />
+            </div>
+            <button type="submit" disabled={isLoggingIn} className="btn btn-secondary" style={{ padding: "0.75rem", fontSize: "1.1rem", marginTop: "1rem" }}>
+              {isLoggingIn ? "Ingresando..." : "Ingresar a mi Portal"}
+            </button>
+          </form>
+        ) : (
+          /* REGISTER FORM */
+          <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
               <label className="label">Nombre Completo</label>
               <input type="text" required className="input" value={name} onChange={e => setName(e.target.value)} />
@@ -125,6 +168,7 @@ export default function AliadosPage() {
               {isRegistering ? "Procesando..." : "Solicitar Cuenta"}
             </button>
           </form>
+        )}
       </div>
 
       {/* Modal OTP */}
