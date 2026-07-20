@@ -219,3 +219,23 @@ export async function requestCustomerRUT(customerId: string) {
     return { success: false, error: "Error interno" };
   }
 }
+
+export async function requestCustomerRUTManual(phone: string) {
+  try {
+    await requireSession();
+    if (!phone) return { success: false, error: "Número inválido" };
+
+    const cleanPhone = phone.replace(/\D/g, "");
+    const msg = `Hola, para emitir tu Factura Electrónica necesitamos tus datos DIAN actualizados. Por favor responde a este chat enviándonos el archivo PDF o Imagen de tu RUT. ¡Gracias!`;
+    const res = await sendWhatsAppMessage(cleanPhone, msg);
+
+    if (res.success) {
+      return { success: true };
+    } else {
+      return { success: false, error: "No se pudo enviar el WhatsApp" };
+    }
+  } catch (error: any) {
+    console.error("Error requesting RUT manually:", error);
+    return { success: false, error: "Error interno" };
+  }
+}

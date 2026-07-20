@@ -261,4 +261,35 @@ export async function cancelOrder(orderId: string) {
   }
 }
 
+export async function assignCustomerToOrder(orderId: string, search: string) {
+  try {
+    await requireSession();
+    
+    // Buscar cliente por teléfono o NIT
+    const cleanSearch = search.replace(/\D/g, "");
+    let customer = await prisma.customer.findFirst({
+      where: {
+        OR: [
+          { phone: { contains: cleanSearch } },
+          { phone: search },
+          { identification: search }
+        ]
+      }
+    });
 
+    if (!customer) {
+      return { success: false, error: "not_found" };
+    }
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { customerId: customer.id }
+    });
+
+    revalidatePath('/(admin)/payments', 'page');
+    return { success: true, customer };
+  } catch (error: any) {
+    console.error("Error assigning customer:", error);
+    return { success: false, error: "Error interno" };
+  }
+}

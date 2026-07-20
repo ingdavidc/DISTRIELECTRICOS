@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store, X, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
-import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment } from "@/actions/payments";
-import { getCustomerOrders, requestCustomerRUT } from "@/actions/customers";
+import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment, assignCustomerToOrder } from "@/actions/payments";
+import { getCustomerOrders, requestCustomerRUT, requestCustomerRUTManual } from "@/actions/customers";
 
 type Order = Awaited<ReturnType<typeof getPendingOrders>>[0];
 type CustomerOrder = Awaited<ReturnType<typeof getCustomerOrders>>[0];
@@ -35,6 +35,10 @@ export default function PaymentsPage() {
   // Cash Modal State
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
   const [keypadValue, setKeypadValue] = useState("0");
+
+  // Missing Customer State
+  const [manualPhone, setManualPhone] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
 
   const handlePriceTierChange = (newTier: string) => {
     setPriceTier(newTier as any);
@@ -72,6 +76,44 @@ export default function PaymentsPage() {
       }
     } catch (e: any) {
       toast.error("Error al conectar con el servidor", { id: tid });
+    }
+  };
+
+  const handleAssignCustomer = async () => {
+    if (!selectedOrder) return;
+    if (!manualPhone.trim()) {
+      toast.error("Ingrese el número de celular o NIT a buscar");
+      return;
+    }
+    
+    setIsAssigning(true);
+    const tid = toast.loading("Buscando cliente...");
+    try {
+      const res = await assignCustomerToOrder(selectedOrder.id, manualPhone);
+      if (res.success) {
+        toast.success(`Cliente ${res.customer.name} asignado a la orden`, { id: tid });
+        setManualPhone("");
+        loadOrders();
+      } else {
+        if (res.error === "not_found") {
+          toast.dismiss(tid);
+          if (confirm("No se encontró ningún cliente con ese número. ¿Desea enviarle un WhatsApp para solicitar su RUT y crearlo automáticamente?")) {
+            const tid2 = toast.loading("Enviando WhatsApp...");
+            const reqRes = await requestCustomerRUTManual(manualPhone);
+            if (reqRes.success) {
+              toast.success("Solicitud enviada. Una vez el cliente envíe su RUT, vuelva a buscarlo.", { id: tid2 });
+            } else {
+              toast.error("Error al enviar WhatsApp", { id: tid2 });
+            }
+          }
+        } else {
+          toast.error(res.error || "Error al asignar cliente", { id: tid });
+        }
+      }
+    } catch (e: any) {
+      toast.error("Error del servidor", { id: tid });
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -542,19 +584,51 @@ export default function PaymentsPage() {
                     <span style={{ fontWeight: 500 }}>Factura Electrónica (API)</span>
                   </label>
                 </div>
-                {receiptType === 'FACTURA' && selectedOrder?.customer && (
+                {receiptType === 'FACTURA' && (
                   <div style={{ marginTop: "1rem", padding: "1rem", background: "#fefce8", border: "1px solid #fef08a", borderRadius: "var(--radius-md)" }}>
-                    <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem" }}>
-                      Para emitir Factura Electrónica, el cliente necesita tener registrado su RUT. 
-                      Si no lo tiene o le faltan datos DIAN, solicítelo aquí para actualizarlo automáticamente con Inteligencia Artificial.
-                    </p>
-                    <button 
-                      className="btn" 
-                      style={{ background: "#eab308", color: "white", padding: "0.5rem 1rem", border: "none", display: "inline-flex", gap: "0.5rem", alignItems: "center" }}
-                      onClick={() => handleRequestRUT(selectedOrder.customer!.id)}
-                    >
-                      <Sparkles size={16} /> Solicitar RUT por WhatsApp
-                    </button>
+                    {selectedOrder?.customer ? (
+                      <>
+                        <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem" }}>
+                          Para emitir Factura Electrónica, el cliente necesita tener registrado su RUT. 
+                          Si le faltan datos DIAN, solicítelo aquí para actualizarlo automáticamente con Inteligencia Artificial.
+                        </p>
+                        <button 
+                          className="btn" 
+                          style={{ background: "#eab308", color: "white", padding: "0.5rem 1rem", border: "none", display: "inline-flex", gap: "0.5rem", alignItems: "center" }}
+                          onClick={() => handleRequestRUT(selectedOrder.customer!.id)}
+                        >
+                          <Sparkles size={16} /> Solicitar RUT a {selectedOrder.customer.name}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{ fontSize: "0.85rem", color: "#854d0e", marginBottom: "0.5rem", fontWeight: 500 }}>
+                          No se puede emitir Factura a "Consumidor Final". Debe asignar un cliente.
+                        </p>
+                        <p style={{ fontSize: "0.8rem", color: "#854d0e", marginBottom: "0.75rem" }}>
+                          Ingrese el celular del cliente. Si no existe, le solicitaremos el RUT por WhatsApp para crearlo con Inteligencia Artificial.
+                        </p>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="Ej: 3001234567" 
+                            value={manualPhone} 
+                            onChange={(e) => setManualPhone(e.target.value)}
+                            style={{ maxWidth: "200px" }}
+                          />
+                          <button 
+                            className="btn btn-primary" 
+                            style={{ padding: "0.5rem 1rem" }}
+                            onClick={handleAssignCustomer}
+                            disabled={isAssigning}
+                          >
+                            <Search size={16} style={{ marginRight: "0.25rem" }} />
+                            Asignar Cliente / Solicitar RUT
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
