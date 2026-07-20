@@ -982,7 +982,7 @@ export default function InventoryPage() {
                                     title={img.title}
                                   >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={img.preview} alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
+                                    <img src={img.preview} referrerPolicy="no-referrer" alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
                                   </div>
                                 ))}
                               </div>
