@@ -18,6 +18,7 @@ export default function Sidebar({ role, modules = [] }: { role: string; modules?
     { name: "Cotizaciones", href: "/quotes", icon: FileText, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Órdenes de Compra", href: "/purchases", icon: ClipboardList, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Proveedores", href: "/suppliers", icon: Building2, roles: ["ADMIN", "OPERATIVE"] },
+    { name: "Clientes Corp. (B2B)", href: "/b2b-requests", icon: Building2, roles: ["ADMIN"] },
     { name: "Recursos Humanos", href: "/hr", icon: Users, roles: ["ADMIN"] },
   ];
 

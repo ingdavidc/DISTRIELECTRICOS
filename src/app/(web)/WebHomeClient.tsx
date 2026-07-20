@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Zap, Truck, ShieldCheck, Wrench, ArrowRight, ShoppingCart } from "lucide-react";
 import { useCart } from "@/components/web/CartContext";
 
-export default function WebHomeClient({ config, gallery, products }: { config: any, gallery: any[], products: any[] }) {
+export default function WebHomeClient({ config, gallery, products, promoProducts = [] }: { config: any, gallery: any[], products: any[], promoProducts?: any[] }) {
   const { addToCart } = useCart();
 
   const featuredCategories = [
@@ -167,6 +167,52 @@ export default function WebHomeClient({ config, gallery, products }: { config: a
           </div>
         </div>
       </section>
+      {/* Herramientas y Novedades Promocionadas */}
+      {promoProducts && promoProducts.length > 0 && (
+        <section style={{ background: "white", padding: "5rem 2rem", borderTop: "1px solid var(--color-border)" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+              <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
+                Herramientas y Novedades 🔥
+              </h2>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+              {promoProducts.map((prod) => (
+                <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", border: "2px solid var(--color-secondary)", position: "relative" }}>
+                  <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.8rem", fontWeight: 800, zIndex: 10 }}>
+                    NUEVO
+                  </div>
+                  <div style={{ height: "250px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+                    {prod.imageUrl ? (
+                      <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.3s" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} />
+                    ) : (
+                      <Wrench size={80} color="var(--color-medium-gray)" />
+                    )}
+                  </div>
+                  <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "linear-gradient(to bottom, #ffffff, #f8fafc)" }}>
+                    <div style={{ fontSize: "0.9rem", color: "var(--color-text-muted)", marginBottom: "0.5rem", fontWeight: 600 }}>{prod.brand || "Especial"}</div>
+                    <div style={{ fontWeight: 800, fontSize: "1.3rem", marginBottom: "0.5rem", color: "var(--color-text-main)", lineHeight: 1.2 }}>{prod.name}</div>
+                    <p style={{ fontSize: "0.95rem", color: "var(--color-text-muted)", marginBottom: "1.5rem", flex: 1 }}>
+                      {prod.description || "Equipamiento profesional de alto rendimiento para proyectos eléctricos de cualquier magnitud."}
+                    </p>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "auto" }}>
+                      <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
+                      <button 
+                        className="btn btn-secondary" 
+                        style={{ padding: "0.75rem 1.5rem", borderRadius: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                        onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
+                      >
+                        Comprar <ArrowRight size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

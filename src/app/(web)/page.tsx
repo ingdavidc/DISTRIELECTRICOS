@@ -32,5 +32,30 @@ export default async function WebHomePage() {
     });
   }
 
-  return <WebHomeClient config={config} gallery={gallery} products={products} />;
+  // Fetch promo products
+  let promoProducts: any[] = [];
+  if (config.promoProductIds && config.promoProductIds.length > 0) {
+    promoProducts = await prisma.product.findMany({
+      where: { id: { in: config.promoProductIds } }
+    });
+  }
+
+  const { getB2BUser } = await import("@/actions/b2b-login");
+  const b2bUser = await getB2BUser();
+
+  const applyDiscount = (p: any) => {
+    if (b2bUser && p.corporateDiscount > 0) {
+      return {
+        ...p,
+        price: p.price * (1 - p.corporateDiscount / 100),
+        originalPrice: p.price
+      };
+    }
+    return p;
+  };
+
+  const finalProducts = products.map(applyDiscount);
+  const finalPromoProducts = promoProducts.map(applyDiscount);
+
+  return <WebHomeClient config={config} gallery={gallery} products={finalProducts} promoProducts={finalPromoProducts} />;
 }

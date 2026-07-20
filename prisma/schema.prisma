@@ -304,6 +304,7 @@ model WebConfig {
   featuredAuto       Boolean  @default(true) // true = automáticos, false = manuales
   featuredProductIds String[] @default([]) // Array de IDs de productos seleccionados manualmente
   flashOfferIds      String[] @default([]) // Array de IDs de ofertas flash seleccionadas manualmente
+  promoProductIds    String[] @default([]) // Array de IDs de herramientas/productos nuevos promocionados
   
   updatedAt          DateTime @updatedAt
 }
@@ -325,4 +326,21 @@ model QuoteRequest {
   status      String   @default("PENDING") // PENDING, REVIEWED, QUOTED, REJECTED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model B2BRequest {
+  id            String   @id @default(uuid())
+  companyName   String
+  nit           String
+  contactName   String
+  email         String
+  phone         String
+  rutUrl        String?  // Documento RUT
+  whatsappCode  String?  // OTP
+  codeExpiresAt DateTime?
+  isVerified    Boolean  @default(false)
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  clientCode    String?  @unique // Código para acceder a precios corporativos
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

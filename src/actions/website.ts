@@ -32,6 +32,7 @@ export async function updateWebConfig(data: {
   autoFeaturedCount?: number;
   featuredProductIds?: string[];
   flashOfferIds?: string[];
+  promoProductIds?: string[];
 }) {
   await getSession();
 

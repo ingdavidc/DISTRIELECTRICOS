@@ -6,10 +6,41 @@ import { useRouter } from "next/navigation";
 import { ShoppingCart, Search, Menu, User, Phone } from "lucide-react";
 import { useCart } from "./CartContext";
 
-export default function PublicNavbar() {
+import { loginB2B, logoutB2B } from "@/actions/b2b-login";
+import toast from "react-hot-toast";
+
+export default function PublicNavbar({ b2bUser }: { b2bUser?: any }) {
   const { totalItems, totalPrice, openCart } = useCart();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showB2BModal, setShowB2BModal] = useState(false);
+  const [clientCode, setClientCode] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleB2BLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    try {
+      const res = await loginB2B(clientCode);
+      if (res.success) {
+        toast.success(`Bienvenido, ${res.companyName}`);
+        setShowB2BModal(false);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Código inválido");
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleB2BLogout = async () => {
+    await logoutB2B();
+    toast.success("Sesión cerrada");
+    router.refresh();
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +52,26 @@ export default function PublicNavbar() {
   };
 
   return (
+    <>
     <header style={{ position: "sticky", top: 0, zIndex: 50, background: "white", boxShadow: "var(--shadow-sm)" }}>
       {/* Top Bar for B2B/Contact */}
       <div style={{ background: "var(--color-primary)", color: "white", padding: "0.5rem 2rem", display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-        <div style={{ display: "flex", gap: "1.5rem" }}>
-          <Link href="/cotizar" style={{ color: "white", textDecoration: "none" }}>Ventas Corporativas B2B</Link>
+        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+          {b2bUser ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <span style={{ fontWeight: 600, color: "var(--color-secondary)" }}>
+                🏢 B2B: {b2bUser.companyName}
+              </span>
+              <button onClick={handleB2BLogout} style={{ background: "none", border: "none", color: "var(--color-text-muted)", cursor: "pointer", fontSize: "0.75rem", textDecoration: "underline" }}>
+                Cerrar Sesión
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setShowB2BModal(true)} style={{ background: "none", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem", fontWeight: 600 }}>
+              <User size={14} /> Acceso Corporativo (Código)
+            </button>
+          )}
+          <Link href="/cotizar" style={{ color: "white", textDecoration: "none" }}>Solicitar B2B</Link>
           <Link href="/cotizar" style={{ color: "white", textDecoration: "none" }}>Cotiza tus Proyectos</Link>
         </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
@@ -110,5 +156,45 @@ export default function PublicNavbar() {
         <a href="/catalog?flash=true" style={{ textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, color: "var(--color-danger)" }}>Ofertas Flash</a>
       </nav>
     </header>
+    
+    {/* Modal de B2B */}
+    {showB2BModal && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", padding: "1rem" }}>
+        <div className="card" style={{ width: "100%", maxWidth: "400px", padding: "2rem", position: "relative" }}>
+          <button 
+            onClick={() => setShowB2BModal(false)}
+            style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", cursor: "pointer", fontSize: "1.5rem", color: "var(--color-text-muted)" }}
+          >
+            &times;
+          </button>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)", textAlign: "center" }}>Acceso Corporativo</h2>
+          <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", textAlign: "center", marginBottom: "1.5rem" }}>
+            Ingresa tu código único para acceder a los precios especiales.
+          </p>
+          <form onSubmit={handleB2BLogin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <input 
+                required
+                type="text" 
+                className="input" 
+                placeholder="Ej: CORP-ABCD"
+                value={clientCode}
+                onChange={e => setClientCode(e.target.value)}
+                style={{ textAlign: "center", letterSpacing: "2px", fontWeight: 700, textTransform: "uppercase" }}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={isLoggingIn} style={{ padding: "0.75rem", fontWeight: 600 }}>
+              {isLoggingIn ? "Verificando..." : "Ingresar"}
+            </button>
+          </form>
+          <div style={{ textAlign: "center", marginTop: "1rem" }}>
+            <Link href="/cotizar" onClick={() => setShowB2BModal(false)} style={{ fontSize: "0.85rem", color: "var(--color-secondary)", fontWeight: 600 }}>
+              ¿No tienes código? Solicítalo aquí
+            </Link>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

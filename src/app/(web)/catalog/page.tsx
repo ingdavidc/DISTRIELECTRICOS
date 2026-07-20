@@ -65,12 +65,26 @@ export default async function CatalogPage(props: {
     })
   ]);
 
+  const { getB2BUser } = await import("@/actions/b2b-login");
+  const b2bUser = await getB2BUser();
+
+  const finalProducts = products.map(p => {
+    if (b2bUser && p.corporateDiscount > 0) {
+      return {
+        ...p,
+        price: p.price * (1 - p.corporateDiscount / 100),
+        originalPrice: p.price
+      };
+    }
+    return p;
+  });
+
   const totalPages = Math.ceil(totalCount / take);
 
   return (
     <Suspense fallback={<div style={{ padding: "4rem", textAlign: "center" }}>Cargando catálogo...</div>}>
       <CatalogClient 
-        products={products} 
+        products={finalProducts} 
         categories={categories} 
         currentCategory={categoryId || 'all'}
         currentQuery={q || ''}

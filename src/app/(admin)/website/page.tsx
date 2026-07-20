@@ -7,6 +7,7 @@ export default async function WebsiteAdminPage() {
 
   const flashProducts = await getProductsByIds(config.flashOfferIds || []);
   const featuredProducts = await getProductsByIds(config.featuredProductIds || []);
+  const promoProducts = await getProductsByIds(config.promoProductIds || []);
 
   return (
     <div className="page-container">
@@ -21,6 +22,7 @@ export default async function WebsiteAdminPage() {
           initialGallery={gallery} 
           initialFlashProducts={flashProducts}
           initialFeaturedProducts={featuredProducts}
+          initialPromoProducts={promoProducts}
         />
       </div>
     </div>

@@ -9,12 +9,14 @@ export default function WebsiteManager({
   initialConfig, 
   initialGallery,
   initialFlashProducts,
-  initialFeaturedProducts
+  initialFeaturedProducts,
+  initialPromoProducts
 }: { 
   initialConfig: any, 
   initialGallery: any[],
   initialFlashProducts: any[],
-  initialFeaturedProducts: any[]
+  initialFeaturedProducts: any[],
+  initialPromoProducts: any[]
 }) {
   const [activeTab, setActiveTab] = useState("hero");
   const [config, setConfig] = useState(initialConfig);
@@ -24,6 +26,7 @@ export default function WebsiteManager({
 
   // Flash Offers State
   const [flashProducts, setFlashProducts] = useState<any[]>(initialFlashProducts);
+  const [promoProducts, setPromoProducts] = useState<any[]>(initialPromoProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -35,7 +38,8 @@ export default function WebsiteManager({
         heroTitle: config.heroTitle,
         heroSubtitle: config.heroSubtitle,
         useAutoFeatured: config.useAutoFeatured,
-        flashOfferIds: flashProducts.map(p => p.id)
+        flashOfferIds: flashProducts.map(p => p.id),
+        promoProductIds: promoProducts.map(p => p.id)
       });
       alert("Configuración guardada exitosamente");
     } catch (e: any) {
@@ -132,6 +136,12 @@ export default function WebsiteManager({
           style={{ padding: "1rem", fontWeight: 600, borderBottom: activeTab === "flash" ? "2px solid var(--color-primary)" : "2px solid transparent", color: activeTab === "flash" ? "var(--color-primary)" : "var(--color-text-muted)", background: "none", cursor: "pointer", whiteSpace: "nowrap" }}
         >
           Ofertas Flash
+        </button>
+        <button 
+          onClick={() => setActiveTab("promo")}
+          style={{ padding: "1rem", fontWeight: 600, borderBottom: activeTab === "promo" ? "2px solid var(--color-primary)" : "2px solid transparent", color: activeTab === "promo" ? "var(--color-primary)" : "var(--color-text-muted)", background: "none", cursor: "pointer", whiteSpace: "nowrap" }}
+        >
+          Herramientas y Novedades
         </button>
         <button 
           onClick={() => setActiveTab("gallery")}
@@ -266,6 +276,96 @@ export default function WebsiteManager({
             <button className="btn btn-primary" onClick={handleSaveConfig} disabled={isSaving}>
               {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
               Guardar Ofertas Flash
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: Promo */}
+      {activeTab === "promo" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          <div style={{ background: "var(--color-background)", padding: "1.5rem", borderRadius: "var(--radius-lg)" }}>
+            <h3 style={{ fontWeight: 600, marginBottom: "1rem" }}>Buscar Productos Promocionados</h3>
+            <form onSubmit={handleSearchProduct} style={{ display: "flex", gap: "1rem" }}>
+              <div style={{ position: "relative", flex: 1 }}>
+                <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
+                <input 
+                  type="text" 
+                  className="input" 
+                  style={{ paddingLeft: "2.5rem" }} 
+                  placeholder="Buscar por nombre o código..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn btn-secondary" disabled={isSearching}>
+                {isSearching ? "Buscando..." : "Buscar"}
+              </button>
+            </form>
+
+            {searchResults.length > 0 && (
+              <div style={{ marginTop: "1rem", display: "grid", gap: "0.5rem", maxHeight: "300px", overflowY: "auto", padding: "0.5rem", background: "white", borderRadius: "var(--radius-md)" }}>
+                {searchResults.map(p => (
+                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem", borderBottom: "1px solid var(--color-border)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                      <div style={{ width: "40px", height: "40px", background: "var(--color-background)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                        {p.imageUrl ? <img src={p.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <ImageIcon size={20} />}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{p.name}</div>
+                        <div style={{ color: "var(--color-primary)", fontWeight: 700, fontSize: "0.85rem" }}>${p.price.toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if (promoProducts.some(pp => pp.id === p.id)) return;
+                        setPromoProducts([...promoProducts, p]);
+                      }}
+                      className="btn" 
+                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem", background: "var(--color-light-gray)", border: "1px solid var(--color-border)" }}
+                      disabled={promoProducts.some(pp => pp.id === p.id)}
+                    >
+                      <Plus size={16} /> Agregar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h3 style={{ fontWeight: 600, marginBottom: "1rem" }}>Herramientas y Novedades Seleccionadas ({promoProducts.length})</h3>
+            {promoProducts.length === 0 ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-muted)", border: "2px dashed var(--color-border)", borderRadius: "var(--radius-lg)" }}>
+                No has seleccionado ningún producto para la sección de Novedades.
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: "0.5rem" }}>
+                {promoProducts.map(p => (
+                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", background: "white", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                      <div style={{ width: "40px", height: "40px", background: "var(--color-background)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                        {p.imageUrl ? <img src={p.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <ImageIcon size={20} />}
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>{p.name}</div>
+                    </div>
+                    <button 
+                      onClick={() => setPromoProducts(promoProducts.filter(pp => pp.id !== p.id))}
+                      style={{ background: "none", border: "none", color: "var(--color-danger)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "0.5rem", borderRadius: "50%" }}
+                      className="hover-bg-light"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+            <button className="btn btn-primary" onClick={handleSaveConfig} disabled={isSaving}>
+              {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+              Guardar Novedades
             </button>
           </div>
         </div>
