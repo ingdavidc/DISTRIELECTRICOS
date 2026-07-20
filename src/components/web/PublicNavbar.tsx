@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, Search, Menu, User, Phone, X, LayoutGrid, Zap } from "lucide-react";
 import { useCart } from "./CartContext";
+import { signOut } from "next-auth/react";
 
 import { loginB2B, logoutB2B } from "@/actions/b2b-login";
 import toast from "react-hot-toast";
@@ -44,10 +45,8 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
   };
 
   const handleExpertLogout = async () => {
-    const { logoutExpert } = await import("@/actions/expert");
-    await logoutExpert();
     toast.success("Sesión cerrada");
-    router.refresh();
+    await signOut({ callbackUrl: '/' });
   };
 
   const handleSearch = (e: React.FormEvent) => {
