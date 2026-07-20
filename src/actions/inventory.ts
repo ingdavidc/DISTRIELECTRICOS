@@ -118,7 +118,7 @@ export type ProductInputData = {
   // Costos
   cost: number;
   profitMargin: number;
-  freqClientDiscount: number;
+  expertDiscount: number;
   volumeDiscount: number;
   corporateDiscount: number;
   tax: number;

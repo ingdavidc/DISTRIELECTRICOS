@@ -129,10 +129,9 @@ model Product {
   // 3. Costos y Precios
   cost               Float @default(0)
   profitMargin       Float @default(30) // Porcentaje de ganancia, ej 30%
-  freqClientDiscount Float @default(5) // Descuento Cliente Frecuente
   volumeDiscount     Float @default(10) // Descuento por Volumen
   corporateDiscount  Float @default(15) // Descuento Corporativo
-  expertDiscount     Float @default(20) // Descuento Aliado Experto
+  expertDiscount     Float @default(5) // Descuento Aliado Experto
   tax                Float @default(19) // IVA, ej 19%
   price              Float // Precio Venta Público (PVP)
 

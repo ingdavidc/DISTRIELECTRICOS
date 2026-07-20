@@ -30,7 +30,7 @@ export default function PaymentsPage() {
   const [creditDays, setCreditDays] = useState(30);
   const [receiptType, setReceiptType] = useState("VOUCHER"); // FACTURA, VOUCHER
   const [amountToPay, setAmountToPay] = useState(0);
-  const [priceTier, setPriceTier] = useState<"NORMAL" | "FRECUENTE" | "VOLUMEN" | "CORPORATIVO">("NORMAL");
+  const [priceTier, setPriceTier] = useState<"NORMAL" | "EXPERTO" | "VOLUMEN" | "CORPORATIVO">("NORMAL");
 
   // Cash Modal State
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
@@ -50,11 +50,11 @@ export default function PaymentsPage() {
       
       let finalPrice = original.product.price;
       if (!original.product.sku.startsWith("ESP-")) {
-        const freq = original.product.freqClientDiscount ?? 5;
+        const expert = original.product.expertDiscount ?? 5;
         const vol = original.product.volumeDiscount ?? 10;
         const corp = original.product.corporateDiscount ?? 15;
         
-        if (newTier === "FRECUENTE") finalPrice = finalPrice - (finalPrice * freq / 100);
+        if (newTier === "EXPERTO") finalPrice = finalPrice - (finalPrice * expert / 100);
         else if (newTier === "VOLUMEN") finalPrice = finalPrice - (finalPrice * vol / 100);
         else if (newTier === "CORPORATIVO") finalPrice = finalPrice - (finalPrice * corp / 100);
       } else {
@@ -482,7 +482,20 @@ export default function PaymentsPage() {
                   <FileText color="#f59e0b" size={20} style={{ marginTop: "0.2rem" }} />
                   <div>
                     <h3 style={{ fontSize: "0.9rem", fontWeight: 600, color: "#d97706", margin: 0 }}>Observaciones del Pedido</h3>
-                    <p style={{ fontSize: "0.9rem", color: "var(--color-text-main)", marginTop: "0.25rem", margin: 0 }}>{selectedOrder.notes}</p>
+                    <p style={{ fontSize: "0.9rem", color: "var(--color-text-main)", marginTop: "0.25rem", margin: 0, whiteSpace: "pre-wrap" }}>{selectedOrder.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Mostrar Comprobante de Aliado si existe */}
+              {selectedOrder.payments && selectedOrder.payments.length > 0 && selectedOrder.payments[0].reference?.startsWith("http") && (
+                <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid var(--color-border)", background: "#e0f2fe", display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <Receipt color="#0369a1" size={20} style={{ marginTop: "0.2rem" }} />
+                  <div>
+                    <h3 style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0369a1", margin: 0 }}>Comprobante de Pago (Aliado Experto)</h3>
+                    <a href={selectedOrder.payments[0].reference} target="_blank" rel="noreferrer" style={{ fontSize: "0.9rem", color: "#0284c7", marginTop: "0.25rem", display: "inline-block", textDecoration: "underline", fontWeight: 600 }}>
+                      Ver Soporte de Pago Subido
+                    </a>
                   </div>
                 </div>
               )}
@@ -516,7 +529,7 @@ export default function PaymentsPage() {
                       style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)" }}
                     >
                       <option value="NORMAL">Precio Público (Normal)</option>
-                      <option value="FRECUENTE">Cliente Frecuente</option>
+                      <option value="EXPERTO">Aliado Experto</option>
                       <option value="VOLUMEN">Precio Volumen</option>
                       <option value="CORPORATIVO">Precio Corporativo</option>
                     </select>

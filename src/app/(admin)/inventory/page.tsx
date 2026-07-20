@@ -122,7 +122,7 @@ export default function InventoryPage() {
   const initialProductState: ProductInputData = {
     name: "", sku: "", commercialName: "", description: "", features: "", brand: "", categoryId: "",
     unit: "Und", stock: 0, minStockLimit: 10, maxStockLimit: 100, location: "",
-    cost: 0, profitMargin: 30, freqClientDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
+    cost: 0, profitMargin: 30, expertDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
     supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: "", salesCount: 0, popularity: 0
   };
   
@@ -786,9 +786,9 @@ export default function InventoryPage() {
                   {/* Fila de Descuentos (Multi-tier Pricing) */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Dcto. Cliente Frecuente</label>
+                      <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Dcto. Aliado Experto</label>
                       <div style={{ position: "relative" }}>
-                        <input type="number" min="0" max="100" className="input" value={formData.freqClientDiscount} onChange={(e) => setFormData({...formData, freqClientDiscount: parseFloat(e.target.value) || 0})} />
+                        <input type="number" min="0" max="100" className="input" value={formData.expertDiscount} onChange={(e) => setFormData({...formData, expertDiscount: parseFloat(e.target.value) || 0})} />
                         <span style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", fontWeight: 600 }}>%</span>
                       </div>
                     </div>

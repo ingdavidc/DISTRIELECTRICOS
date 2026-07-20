@@ -61,13 +61,13 @@ export async function submitOrderToCashier(
       let realUnitPrice = product.price;
       if (!product.sku.startsWith("ESP-")) {
         // @ts-ignore - Prisma types might not be perfectly synced yet
-        const freqDcto = product.freqClientDiscount ?? 5;
+        const expertDcto = product.expertDiscount ?? 5;
         // @ts-ignore
         const volDcto = product.volumeDiscount ?? 10;
         // @ts-ignore
         const corpDcto = product.corporateDiscount ?? 15;
 
-        if (priceTier === "FRECUENTE") realUnitPrice = product.price - (product.price * freqDcto / 100);
+        if (priceTier === "EXPERTO") realUnitPrice = product.price - (product.price * expertDcto / 100);
         else if (priceTier === "VOLUMEN") realUnitPrice = product.price - (product.price * volDcto / 100);
         else if (priceTier === "CORPORATIVO") realUnitPrice = product.price - (product.price * corpDcto / 100);
         

@@ -43,7 +43,7 @@ export default async function ExpertDashboard() {
         
         {/* Catálogo con Descuento */}
         <Link
-          href="/catalog"
+          href="/aliados/catalogo-mayorista"
           className="card expert-card"
           style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit" }}
         >
