@@ -10,33 +10,39 @@ export async function generateQuotePdf(
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Helper to load image as base64
+  // Helper to load image as base64 and get its aspect ratio
   const loadImage = async (url: string) => {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      return new Promise<string>((resolve, reject) => {
+      const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
+      
+      const img = new Image();
+      img.src = base64;
+      await new Promise((resolve) => { img.onload = resolve; });
+      
+      return { base64, ratio: img.width / img.height };
     } catch (e) {
       console.error("Error loading image", e);
       return null;
     }
   };
 
-  const logoBase64 = await loadImage("/logo.png");
-  const dcLogoBase64 = await loadImage("/dc-telematica.png");
+  const logoData = await loadImage("/logo.png");
+  const dcLogoData = await loadImage("/dc-telematica.png");
 
   let currentY = 15;
 
   // Header (same as CAJA/PAGOS receipt)
-  if (logoBase64) {
-    const imgWidth = 50;
+  if (logoData) {
     const imgHeight = 16;
-    doc.addImage(logoBase64, "PNG", (pageWidth - imgWidth) / 2, currentY, imgWidth, imgHeight);
+    const imgWidth = imgHeight * logoData.ratio;
+    doc.addImage(logoData.base64, "PNG", (pageWidth - imgWidth) / 2, currentY, imgWidth, imgHeight);
     currentY += imgHeight + 8;
   } else {
     doc.setFontSize(20);
@@ -127,10 +133,10 @@ export async function generateQuotePdf(
   doc.setFontSize(8);
   doc.setTextColor(180, 180, 180);
   doc.text("Powered By", pageWidth / 2, footerY, { align: "center" });
-  if (dcLogoBase64) {
-    const dcWidth = 30;
-    const dcHeight = 10;
-    doc.addImage(dcLogoBase64, "PNG", (pageWidth - dcWidth) / 2, footerY + 2, dcWidth, dcHeight);
+  if (dcLogoData) {
+    const dcHeight = 6;
+    const dcWidth = dcHeight * dcLogoData.ratio;
+    doc.addImage(dcLogoData.base64, "PNG", (pageWidth - dcWidth) / 2, footerY + 2, dcWidth, dcHeight);
   } else {
     doc.text("DC Telematica", pageWidth / 2, footerY + 5, { align: "center" });
   }
