@@ -2,7 +2,7 @@ import { getExpertUser } from "@/actions/expert";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Calculator, ShoppingBag, FileText, Settings, LogOut } from "lucide-react";
+import { Calculator, ShoppingBag, Settings } from "lucide-react";
 
 export default async function ExpertDashboard() {
   // Accept EITHER the custom expert_session cookie OR a NextAuth session with EXPERT role
@@ -20,6 +20,16 @@ export default async function ExpertDashboard() {
 
   return (
     <div style={{ padding: "4rem 2rem", maxWidth: "1200px", margin: "0 auto", minHeight: "80vh" }}>
+      <style>{`
+        .expert-card {
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .expert-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+        }
+      `}</style>
+
       <div style={{ marginBottom: "3rem" }}>
         <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
           Hola, {userName} 👋
@@ -32,7 +42,11 @@ export default async function ExpertDashboard() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
         
         {/* Catálogo con Descuento */}
-        <Link href="/catalog" className="card" style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-5px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+        <Link
+          href="/catalog"
+          className="card expert-card"
+          style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit" }}
+        >
           <div style={{ background: "var(--color-background-alt)", width: "60px", height: "60px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)" }}>
             <ShoppingBag size={30} />
           </div>
@@ -43,7 +57,11 @@ export default async function ExpertDashboard() {
         </Link>
 
         {/* Cotizador para Clientes Finales */}
-        <Link href="/aliados/cotizador" className="card" style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit", transition: "transform 0.2s", border: "2px solid var(--color-secondary)" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-5px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+        <Link
+          href="/aliados/cotizador"
+          className="card expert-card"
+          style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit", border: "2px solid var(--color-secondary)" }}
+        >
           <div style={{ background: "var(--color-secondary)", width: "60px", height: "60px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
             <Calculator size={30} />
           </div>
