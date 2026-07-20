@@ -19,11 +19,13 @@ export default function OrderTrackingPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Ensure the page scrolls to top and focuses the input
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    if (inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 300); // Slight delay for smooth transition
-    }
+    // Force immediate scroll to top and focus
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 50);
   }, []);
 
   const handleSearch = async (e: React.FormEvent) => {

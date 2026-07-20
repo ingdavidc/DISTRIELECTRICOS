@@ -37,9 +37,9 @@ export default function Footer() {
           <h4 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.5rem" }}>Servicio al Cliente</h4>
           <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem", color: "var(--color-light-gray)", fontSize: "0.9rem" }}>
             <li style={{ cursor: "pointer" }}>
-              <Link href="/estado-pedido" style={{ textDecoration: "none", color: "inherit" }}>
+              <a href="/estado-pedido" style={{ textDecoration: "none", color: "inherit" }}>
                 Estado de mi pedido
-              </Link>
+              </a>
             </li>
             <li style={{ cursor: "pointer" }}>Cambios y devoluciones</li>
             <li style={{ cursor: "pointer" }}>Preguntas Frecuentes</li>
