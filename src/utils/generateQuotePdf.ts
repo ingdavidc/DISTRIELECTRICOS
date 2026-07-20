@@ -34,7 +34,7 @@ export async function generateQuotePdf(
   };
 
   const logoData = await loadImage("/logo.png");
-  const dcLogoData = await loadImage("/dc-telematica.png");
+  const dcLogoData = await loadImage("/dc-telematica-oscuro.png");
 
   let currentY = 15;
 
