@@ -36,10 +36,12 @@ export async function searchProductImage(query: string) {
     
     while ((match = murlRegex.exec(text)) !== null) {
       if (urls.length < 8) {
-        // Filtrar algunos dominios que se sabe que bloquean hotlinking si se desea, 
-        // pero por ahora tomaremos las primeras 8.
-        if (!urls.includes(match[1])) {
-          urls.push(match[1]);
+        let extractedUrl = match[1];
+        if (extractedUrl.startsWith("http://")) {
+          extractedUrl = extractedUrl.replace("http://", "https://");
+        }
+        if (!urls.includes(extractedUrl)) {
+          urls.push(extractedUrl);
         }
       } else {
         break;

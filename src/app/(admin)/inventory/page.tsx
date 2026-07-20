@@ -969,6 +969,7 @@ export default function InventoryPage() {
                                       toast.success("¡Imagen asignada!");
                                     }}
                                     style={{ 
+                                      position: "relative",
                                       aspectRatio: "1", 
                                       borderRadius: "var(--radius-sm)", 
                                       overflow: "hidden", 
