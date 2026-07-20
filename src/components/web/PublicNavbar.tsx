@@ -90,7 +90,6 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
           )}
           {!b2bUser && !expertUser && (
             <>
-              <Link href="/cotizar" style={{ color: "white", textDecoration: "none" }}>Solicitar B2B</Link>
               <Link href="/aliados" style={{ color: "white", textDecoration: "none" }}>Portal Aliados Expertos</Link>
             </>
           )}
@@ -259,7 +258,7 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
           >
             &times;
           </button>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)", textAlign: "center" }}>Acceso Corporativo</h2>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)", textAlign: "center" }}>Acceso B2B</h2>
           <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", textAlign: "center", marginBottom: "1.5rem" }}>
             Ingresa tu código único para acceder a los precios especiales.
           </p>
