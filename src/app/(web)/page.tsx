@@ -43,11 +43,21 @@ export default async function WebHomePage() {
   const { getB2BUser } = await import("@/actions/b2b-login");
   const b2bUser = await getB2BUser();
 
+  const { getExpertUser } = await import("@/actions/expert");
+  const expertUser = await getExpertUser();
+
   const applyDiscount = (p: any) => {
+    let finalPrice = p.price;
     if (b2bUser && p.corporateDiscount > 0) {
+      finalPrice = p.price * (1 - p.corporateDiscount / 100);
+    } else if (expertUser && p.expertDiscount > 0) {
+      finalPrice = p.price * (1 - p.expertDiscount / 100);
+    }
+
+    if (finalPrice !== p.price) {
       return {
         ...p,
-        price: p.price * (1 - p.corporateDiscount / 100),
+        price: finalPrice,
         originalPrice: p.price
       };
     }

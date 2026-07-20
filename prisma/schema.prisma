@@ -14,6 +14,7 @@ enum Role {
   FINANCE
   OPERATIVE
   CUSTOMER
+  EXPERT
 }
 
 enum OrderStatus {
@@ -131,6 +132,7 @@ model Product {
   freqClientDiscount Float @default(5) // Descuento Cliente Frecuente
   volumeDiscount     Float @default(10) // Descuento por Volumen
   corporateDiscount  Float @default(15) // Descuento Corporativo
+  expertDiscount     Float @default(20) // Descuento Aliado Experto
   tax                Float @default(19) // IVA, ej 19%
   price              Float // Precio Venta Público (PVP)
 
@@ -341,6 +343,21 @@ model B2BRequest {
   isVerified    Boolean  @default(false)
   status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
   clientCode    String?  @unique // Código para acceder a precios corporativos
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ExpertRequest {
+  id            String   @id @default(uuid())
+  name          String
+  document      String
+  email         String
+  phone         String
+  password      String   // Hashed password chosen by user
+  whatsappCode  String?
+  codeExpiresAt DateTime?
+  isVerified    Boolean  @default(false)
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

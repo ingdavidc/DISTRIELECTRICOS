@@ -9,7 +9,7 @@ import { useCart } from "./CartContext";
 import { loginB2B, logoutB2B } from "@/actions/b2b-login";
 import toast from "react-hot-toast";
 
-export default function PublicNavbar({ b2bUser }: { b2bUser?: any }) {
+export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, expertUser?: any }) {
   const { totalItems, totalPrice, openCart } = useCart();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +42,13 @@ export default function PublicNavbar({ b2bUser }: { b2bUser?: any }) {
     router.refresh();
   };
 
+  const handleExpertLogout = async () => {
+    const { logoutExpert } = await import("@/actions/expert");
+    await logoutExpert();
+    toast.success("Sesión cerrada");
+    router.refresh();
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
@@ -66,13 +73,27 @@ export default function PublicNavbar({ b2bUser }: { b2bUser?: any }) {
                 Cerrar Sesión
               </button>
             </div>
+          ) : expertUser ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <span style={{ fontWeight: 600, color: "var(--color-secondary)" }}>
+                ⚡ Aliado: {expertUser.name}
+              </span>
+              <Link href="/aliados/cotizador" style={{ color: "white", textDecoration: "underline", fontSize: "0.75rem" }}>Ir al Cotizador</Link>
+              <button onClick={handleExpertLogout} style={{ background: "none", border: "none", color: "var(--color-text-muted)", cursor: "pointer", fontSize: "0.75rem", textDecoration: "underline" }}>
+                Cerrar Sesión
+              </button>
+            </div>
           ) : (
             <button onClick={() => setShowB2BModal(true)} style={{ background: "none", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem", fontWeight: 600 }}>
-              <User size={14} /> Acceso Corporativo (Código)
+              <User size={14} /> Acceso B2B
             </button>
           )}
-          <Link href="/cotizar" style={{ color: "white", textDecoration: "none" }}>Solicitar B2B</Link>
-          <Link href="/cotizar" style={{ color: "white", textDecoration: "none" }}>Cotiza tus Proyectos</Link>
+          {!b2bUser && !expertUser && (
+            <>
+              <Link href="/cotizar" style={{ color: "white", textDecoration: "none" }}>Solicitar B2B</Link>
+              <Link href="/aliados" style={{ color: "white", textDecoration: "none" }}>Portal Aliados Expertos</Link>
+            </>
+          )}
         </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <Phone size={14} />

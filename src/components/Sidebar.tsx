@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Package, Users, LayoutDashboard, ShoppingCart, Truck, FileText, ClipboardList, Building2, Banknote, Globe } from "lucide-react";
+import { Package, Users, LayoutDashboard, ShoppingCart, Truck, FileText, ClipboardList, Building2, Banknote, Globe, Zap } from "lucide-react";
 
 export default function Sidebar({ role, modules = [] }: { role: string; modules?: string[] }) {
   const pathname = usePathname();
@@ -19,6 +19,7 @@ export default function Sidebar({ role, modules = [] }: { role: string; modules?
     { name: "Órdenes de Compra", href: "/purchases", icon: ClipboardList, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Proveedores", href: "/suppliers", icon: Building2, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Clientes Corp. (B2B)", href: "/b2b-requests", icon: Building2, roles: ["ADMIN"] },
+    { name: "Aliados Expertos", href: "/expert-requests", icon: Zap, roles: ["ADMIN"] },
     { name: "Recursos Humanos", href: "/hr", icon: Users, roles: ["ADMIN"] },
   ];
 
