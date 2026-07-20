@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trackOrder } from "@/actions/tracking";
 import { Search, Package, Clock, CheckCircle, Truck, XCircle, ShoppingBag, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -16,6 +16,15 @@ export default function OrderTrackingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Ensure the page scrolls to top and focuses the input
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 300); // Slight delay for smooth transition
+    }
+  }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +68,7 @@ export default function OrderTrackingPage() {
   const isCancelled = orderData?.status === "CANCELLED";
 
   return (
-    <div style={{ maxWidth: "800px", margin: "4rem auto", padding: "0 2rem", minHeight: "60vh" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "4rem 2rem", minHeight: "calc(100vh - 400px)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <div style={{ textAlign: "center", marginBottom: "3rem" }}>
         <h1 style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--color-primary)", marginBottom: "1rem" }}>
           Rastrea tu Pedido
@@ -73,6 +82,7 @@ export default function OrderTrackingPage() {
         <div style={{ position: "relative", flex: 1 }}>
           <Search size={20} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
           <input 
+            ref={inputRef}
             type="text" 
             placeholder="Ej: 2634DA"
             value={ticketId}
