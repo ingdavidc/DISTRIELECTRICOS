@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, ShoppingCart, Plus, Minus, Trash2, CheckCircle, Upload, FileImage, ArrowLeft } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, CheckCircle, Upload, FileImage, ArrowLeft, FileText, X } from "lucide-react";
 import Link from "next/link";
 import { searchProductsForExpert, createExpertWholesaleOrder } from "@/actions/expert-catalog";
 import toast from "react-hot-toast";
@@ -28,6 +28,12 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderCreated, setOrderCreated] = useState(false);
+
+  // Quote State
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [quoteClientName, setQuoteClientName] = useState("");
+  const [quoteClientPhone, setQuoteClientPhone] = useState("");
+  const [isSavingQuote, setIsSavingQuote] = useState(false);
 
   // Debounced search
   useEffect(() => {
@@ -140,6 +146,49 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
       toast.error(e.message || "Ocurrió un error al procesar la compra", { id: tid });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveQuote = async () => {
+    if (!quoteClientName.trim()) return toast.error("El nombre del cliente es obligatorio");
+    if (cart.length === 0) return toast.error("El carrito está vacío");
+    
+    setIsSavingQuote(true);
+    try {
+      const { createExpertQuote } = await import("@/actions/expert-quotes");
+      
+      const totalPvp = cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+      const totalWholesale = subtotal;
+      const margin = totalPvp - totalWholesale;
+
+      const res = await createExpertQuote({
+        expertUserId: userId,
+        clientName: quoteClientName,
+        clientPhone: quoteClientPhone,
+        notes: notes,
+        totalPvp,
+        totalWholesale,
+        margin,
+        items: cart.map(i => ({
+          productId: i.product.id,
+          quantity: i.quantity,
+          pvpPrice: i.product.price,
+          wholesalePrice: i.product.discountedPrice
+        }))
+      });
+
+      if (res.success) {
+        toast.success("Cotización guardada exitosamente");
+        setCart([]);
+        setShowQuoteModal(false);
+        router.push("/aliados/mis-cotizaciones");
+      } else {
+        toast.error(res.error || "Error al guardar la cotización");
+      }
+    } catch (e) {
+      toast.error("Error al guardar la cotización");
+    } finally {
+      setIsSavingQuote(false);
     }
   };
 
@@ -367,12 +416,90 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
                       </>
                     )}
                   </button>
+
+                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+                    <button 
+                      onClick={() => setShowQuoteModal(true)}
+                      disabled={isSubmitting}
+                      className="btn btn-outline" 
+                      style={{ flex: 1, padding: "0.75rem", fontSize: "0.95rem", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}
+                    >
+                      <FileText size={18} /> Guardar Cotización
+                    </button>
+                    <Link href="/aliados/mis-cotizaciones" className="btn btn-outline" style={{ display: "flex", alignItems: "center", padding: "0.75rem", color: "var(--color-primary)", borderColor: "var(--color-border)" }} title="Mis Cotizaciones">
+                      Ver Mis Cotizaciones
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {showQuoteModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", padding: "1rem" }}>
+          <div className="card" style={{ width: "100%", maxWidth: "450px", padding: "2rem", position: "relative" }}>
+            <button 
+              onClick={() => setShowQuoteModal(false)}
+              style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)" }}
+            >
+              <X size={24} />
+            </button>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <FileText size={24} /> Guardar Cotización
+            </h2>
+            <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+              Guarda esta cotización para esperar la aprobación de tu cliente final. Los precios del PDF se calcularán con el Precio de Venta al Público (PVP).
+            </p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "block" }}>Nombre del Cliente Final <span style={{color: "var(--color-danger)"}}>*</span></label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  placeholder="Ej: Constructora ABC o Juan Pérez"
+                  value={quoteClientName}
+                  onChange={e => setQuoteClientName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "block" }}>Teléfono (Opcional)</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  placeholder="Ej: 3001234567"
+                  value={quoteClientPhone}
+                  onChange={e => setQuoteClientPhone(e.target.value)}
+                />
+              </div>
+
+              <div style={{ background: "#f0f9ff", padding: "1rem", borderRadius: "8px", marginTop: "0.5rem", border: "1px solid #bae6fd" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                  <span style={{ fontSize: "0.85rem", color: "#0284c7", fontWeight: 600 }}>Costo para ti:</span>
+                  <span style={{ fontWeight: 700, color: "#0284c7" }}>${subtotal.toLocaleString()}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: "0.85rem", color: "var(--color-primary)", fontWeight: 600 }}>Valor a cobrar (PVP):</span>
+                  <span style={{ fontWeight: 800, color: "var(--color-primary)" }}>
+                    ${cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleSaveQuote}
+                disabled={isSavingQuote}
+                className="btn btn-primary" 
+                style={{ padding: "1rem", fontSize: "1.1rem", display: "flex", justifyContent: "center", gap: "0.5rem", width: "100%", marginTop: "1rem" }}
+              >
+                {isSavingQuote ? "Guardando..." : "Confirmar y Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

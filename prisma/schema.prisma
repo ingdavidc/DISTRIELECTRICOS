@@ -127,13 +127,13 @@ model Product {
   location      String? // Ej: Pasillo 3, Estante A
 
   // 3. Costos y Precios
-  cost               Float @default(0)
-  profitMargin       Float @default(30) // Porcentaje de ganancia, ej 30%
-  volumeDiscount     Float @default(10) // Descuento por Volumen
-  corporateDiscount  Float @default(15) // Descuento Corporativo
-  expertDiscount     Float @default(5) // Descuento Aliado Experto
-  tax                Float @default(19) // IVA, ej 19%
-  price              Float // Precio Venta Público (PVP)
+  cost              Float @default(0)
+  profitMargin      Float @default(30) // Porcentaje de ganancia, ej 30%
+  volumeDiscount    Float @default(10) // Descuento por Volumen
+  corporateDiscount Float @default(15) // Descuento Corporativo
+  expertDiscount    Float @default(5) // Descuento Aliado Experto
+  tax               Float @default(19) // IVA, ej 19%
+  price             Float // Precio Venta Público (PVP)
 
   // 4. Proveedores e Imagen
   supplierId        String?
@@ -152,8 +152,9 @@ model Product {
   purchaseItems   PurchaseOrderItem[]
   counterRequests CounterRequest[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  expertQuoteItems ExpertQuoteItem[]
 }
 
 model UserLog {
@@ -179,24 +180,24 @@ model InventoryTransaction {
 }
 
 model Customer {
-  id                  String   @id @default(uuid())
-  identification      String   @unique // CC, NIT, etc.
-  name                String
-  email               String?
-  phone               String?
-  address             String?
-  
+  id             String  @id @default(uuid())
+  identification String  @unique // CC, NIT, etc.
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+
   // Datos Fiscales DIAN (Facturación Electrónica)
   personType          String? // Natural o Juridica
   taxRegime           String? // ej. Responsable de IVA, No Responsable
   taxResponsibilities String? // ej. O-13, O-47
   ciiuCode            String? // ej. 4659
-  city                String? 
+  city                String?
   department          String?
 
-  orders              Order[]
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Order {
@@ -303,20 +304,20 @@ model CounterRequest {
 // -----------------------------------------
 
 model WebConfig {
-  id                 String   @id @default("default")
-  
+  id String @id @default("default")
+
   // Hero
-  heroTitle          String   @default("Todo el Material Eléctrico para tus Grandes Proyectos")
-  heroSubtitle       String   @default("Encuentra marcas líderes mundiales, disponibilidad de inventario en tiempo real y asesoría experta.")
-  heroImageUrl       String?
-  
+  heroTitle    String  @default("Todo el Material Eléctrico para tus Grandes Proyectos")
+  heroSubtitle String  @default("Encuentra marcas líderes mundiales, disponibilidad de inventario en tiempo real y asesoría experta.")
+  heroImageUrl String?
+
   // Featured Products
   featuredAuto       Boolean  @default(true) // true = automáticos, false = manuales
   featuredProductIds String[] @default([]) // Array de IDs de productos seleccionados manualmente
   flashOfferIds      String[] @default([]) // Array de IDs de ofertas flash seleccionadas manualmente
   promoProductIds    String[] @default([]) // Array de IDs de herramientas/productos nuevos promocionados
-  
-  updatedAt          DateTime @updatedAt
+
+  updatedAt DateTime @updatedAt
 }
 
 model WebGallery {
@@ -339,33 +340,59 @@ model QuoteRequest {
 }
 
 model B2BRequest {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   companyName   String
   nit           String
   contactName   String
   email         String
   phone         String
-  rutUrl        String?  // Documento RUT
-  whatsappCode  String?  // OTP
+  rutUrl        String? // Documento RUT
+  whatsappCode  String? // OTP
   codeExpiresAt DateTime?
-  isVerified    Boolean  @default(false)
-  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  clientCode    String?  @unique // Código para acceder a precios corporativos
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isVerified    Boolean   @default(false)
+  status        String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  clientCode    String?   @unique // Código para acceder a precios corporativos
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model ExpertRequest {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String
   document      String
   email         String
   phone         String
-  password      String   // Hashed password chosen by user
+  password      String // Hashed password chosen by user
   whatsappCode  String?
   codeExpiresAt DateTime?
-  isVerified    Boolean  @default(false)
-  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isVerified    Boolean   @default(false)
+  status        String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model ExpertQuote {
+  id             String            @id @default(uuid())
+  expertUserId   String
+  clientName     String // Nombre del cliente final
+  clientPhone    String? // Teléfono del cliente final
+  status         String            @default("DRAFT") // DRAFT, SENT, APPROVED, REJECTED, EXPIRED
+  totalPvp       Float // Total con precios de venta al público (PVP)
+  totalWholesale Float // Total con precios mayoristas (costo para el aliado)
+  margin         Float // Margen de ganancia calculado
+  notes          String?           @db.Text
+  items          ExpertQuoteItem[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model ExpertQuoteItem {
+  id             String      @id @default(uuid())
+  quoteId        String
+  quote          ExpertQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product     @relation(fields: [productId], references: [id])
+  quantity       Int
+  pvpPrice       Float // Precio de venta al público cobrado al cliente
+  wholesalePrice Float // Precio mayorista cobrado al aliado
 }
