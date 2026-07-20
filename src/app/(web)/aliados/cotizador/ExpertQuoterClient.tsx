@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Search, Plus, Trash2, FileText, Send, Mail } from "lucide-react";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generateQuotePdf } from "@/utils/generateQuotePdf";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
@@ -50,71 +49,28 @@ export default function ExpertQuoterClient({ expertUser, products }: { expertUse
 
   const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
-  const generatePDF = () => {
+  const downloadPDF = async () => {
     if (!clientName) {
       toast.error("Ingresa el nombre del cliente final");
-      return null;
+      return;
     }
     if (cart.length === 0) {
       toast.error("La cotización está vacía");
-      return null;
+      return;
     }
-
-    const doc = new jsPDF();
-
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(30, 58, 138); // primary color
-    doc.text("DISTRIELECTRICOS E&D", 14, 20);
     
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Ideas con Energía", 14, 26);
-
-    doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0);
-    doc.text("COTIZACIÓN", 150, 20);
-
-    doc.setFontSize(10);
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 150, 26);
-    doc.text(`Cotizado por: ${expertUser.name}`, 150, 32);
-    
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Cliente: ${clientName}`, 14, 40);
-
-    // Table
-    const tableData = cart.map(item => [
-      item.product.sku,
-      item.product.name,
-      item.product.brand || "-",
-      item.quantity.toString(),
-      `$${item.product.price.toLocaleString('de-DE')}`,
-      `$${(item.product.price * item.quantity).toLocaleString('de-DE')}`
-    ]);
-
-    autoTable(doc, {
-      startY: 45,
-      head: [['SKU', 'Producto', 'Marca', 'Cant.', 'Precio Unit.', 'Subtotal']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [30, 58, 138] }
-    });
-
-    // Total
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFontSize(14);
-    doc.text(`Total: $${total.toLocaleString('de-DE')}`, 150, finalY);
-
-    return doc;
-  };
-
-  const downloadPDF = () => {
-    const doc = generatePDF();
-    if (doc) {
-      doc.save(`Cotizacion_${clientName.replace(/\s+/g, '_')}.pdf`);
-      toast.success("PDF Descargado");
-    }
+    await generateQuotePdf(
+      clientName,
+      expertUser.name,
+      cart.map(item => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        pvpPrice: item.product.price,
+        sku: item.product.sku
+      })),
+      total
+    );
+    toast.success("PDF Descargado");
   };
 
   const sendByWhatsApp = () => {
@@ -135,7 +91,7 @@ export default function ExpertQuoterClient({ expertUser, products }: { expertUse
   };
 
   return (
-    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem", display: "grid", gridTemplateColumns: "1fr 400px", gap: "2rem", alignItems: "start" }}>
+    <div className="stack-on-mobile mobile-padding" style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem", display: "grid", gridTemplateColumns: "1fr 400px", gap: "2rem", alignItems: "start" }}>
       
       {/* Left Column: Search & Add */}
       <div className="card" style={{ padding: "2rem" }}>

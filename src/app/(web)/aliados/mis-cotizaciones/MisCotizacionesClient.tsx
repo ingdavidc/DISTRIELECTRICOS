@@ -32,7 +32,7 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
     });
     
     message += `\n*TOTAL: $${quote.totalPvp.toLocaleString()}*\n\n`;
-    message += `(Este mensaje es informativo, puedes descargar el PDF formal adjunto).`;
+    message += `(Este es un resumen rápido. Si lo deseas, puedo enviarte el PDF formal con el detalle completo de la cotización).`;
 
     const url = `https://wa.me/${quote.clientPhone?.replace(/[^0-9]/g, "") || ""}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
@@ -55,8 +55,8 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
   };
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+    <div className="mobile-padding" style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
+      <div className="flex-col-mobile" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
         <div>
           <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>Mis Cotizaciones</h1>
           <p style={{ color: "var(--color-text-muted)" }}>Administra las cotizaciones guardadas para tus clientes finales.</p>
@@ -75,8 +75,8 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {quoteList.map((quote) => (
-            <div key={quote.id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem" }}>
-              <div>
+            <div key={quote.id} className="card flex-col-mobile" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem", gap: "1rem" }}>
+              <div style={{ width: "100%" }}>
                 <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--color-primary)", marginBottom: "0.25rem" }}>
                   {quote.clientName}
                 </div>
@@ -88,11 +88,13 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: "0.5rem" }}>
+
+
+              <div style={{ display: "flex", gap: "0.5rem", width: "100%", justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <button 
                   onClick={() => handleDownload(quote)}
                   className="btn btn-outline"
-                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem" }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", flex: "1 1 auto", justifyContent: "center" }}
                   title="Descargar PDF"
                 >
                   <Download size={18} /> PDF
@@ -100,7 +102,7 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
                 <button 
                   onClick={() => handleSendWhatsApp(quote)}
                   className="btn btn-secondary"
-                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", background: "#25D366", borderColor: "#25D366", color: "white" }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", background: "#25D366", borderColor: "#25D366", color: "white", flex: "1 1 auto", justifyContent: "center" }}
                   title="Enviar por WhatsApp"
                 >
                   <Send size={18} /> WhatsApp
@@ -108,7 +110,7 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
                 <button 
                   onClick={() => handleDelete(quote.id)}
                   className="btn btn-outline"
-                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem", color: "var(--color-danger)", borderColor: "transparent" }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem", color: "var(--color-danger)", borderColor: "var(--color-border)", justifyContent: "center" }}
                   title="Eliminar"
                 >
                   <Trash2 size={18} />

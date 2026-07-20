@@ -201,7 +201,7 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
           Tu pago ha sido enviado y la orden está pendiente de aprobación en Caja.
           Una vez validada, pasará automáticamente a Bodega para su preparación.
         </p>
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+        <div className="stack-on-mobile" style={{ display: "flex", gap: "2rem", justifyContent: "center" }}>
           <Link href="/aliados/dashboard" className="btn btn-outline" style={{ textDecoration: "none" }}>Volver al Panel</Link>
           <button onClick={() => setOrderCreated(false)} className="btn btn-secondary">Hacer nueva compra</button>
         </div>
@@ -210,7 +210,7 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
   }
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "1400px", margin: "0 auto", minHeight: "80vh" }}>
+    <div className="mobile-padding" style={{ padding: "2rem", maxWidth: "1400px", margin: "0 auto", minHeight: "80vh" }}>
       
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
         <Link href="/aliados/dashboard" style={{ color: "var(--color-text-muted)", textDecoration: "none" }}>
@@ -221,7 +221,7 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
         </h1>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "2rem" }}>
+      <div className="stack-on-mobile" style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "2rem" }}>
         
         {/* Lado Izquierdo: Buscador y Resultados */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

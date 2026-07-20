@@ -468,3 +468,126 @@ button {
     margin: 0.5cm;
   }
 }
+
+/* =====================================================================
+   RESPONSIVE (MOBILE OPTIMIZATION)
+   ===================================================================== */
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  .flex-col-mobile {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .grid-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .card {
+    padding: 1rem;
+  }
+  
+  .page-container {
+    padding: 1rem;
+  }
+
+  /* Specific Layouts that need stacking */
+  .stack-on-mobile {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .stack-on-mobile > * {
+    width: 100% !important;
+  }
+
+  /* Adjust typography for mobile */
+  h1 { font-size: 1.75rem !important; }
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.1rem !important; }
+
+  /* Navbar specific utilities for layout */
+  .mobile-padding {
+    padding: 1rem !important;
+  }
+
+  /* Full width button on mobile */
+  .btn-full-mobile {
+    width: 100% !important;
+  }
+  
+  /* Navbar Mobile Layout */
+  .navbar-top {
+    display: none !important; /* Hide top bar on mobile */
+  }
+  
+  .navbar-main {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 1rem !important;
+    gap: 1rem !important;
+  }
+  
+  .navbar-header-mobile {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100%;
+  }
+
+  .navbar-search {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .navbar-actions {
+    display: none !important; /* Move to hamburger */
+  }
+
+  .mobile-menu-btn {
+    display: block !important;
+  }
+
+  .categories-nav {
+    display: none !important; /* Hide standard categories on mobile */
+  }
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-menu-content {
+  background: white;
+  width: 80vw;
+  max-width: 300px;
+  height: 100%;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}

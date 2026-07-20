@@ -71,16 +71,20 @@ export default async function ExpertDashboard() {
           </p>
         </Link>
 
-        {/* Perfil */}
-        <div className="card" style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", opacity: 0.7 }}>
-          <div style={{ background: "var(--color-background-alt)", width: "60px", height: "60px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-muted)" }}>
+        {/* Cotizaciones Guardadas */}
+        <Link
+          href="/aliados/mis-cotizaciones"
+          className="card expert-card"
+          style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit" }}
+        >
+          <div style={{ background: "var(--color-background-alt)", width: "60px", height: "60px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)" }}>
             <Settings size={30} />
           </div>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text-main)" }}>Mi Perfil (Próximamente)</h2>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)" }}>Mis Cotizaciones Guardadas</h2>
           <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-            Actualiza tus datos de contacto y revisa el historial de cotizaciones que has generado.
+            Administra, descarga en PDF o envía por WhatsApp las cotizaciones que has guardado para tus clientes finales.
           </p>
-        </div>
+        </Link>
 
       </div>
     </div>

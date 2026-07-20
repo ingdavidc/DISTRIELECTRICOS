@@ -17,7 +17,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
   return (
     <div>
       {/* Hero Section */}
-      <section style={{ 
+      <section className="mobile-padding" style={{ 
         background: "linear-gradient(135deg, var(--color-primary) 0%, #172646 100%)", 
         color: "white", padding: "6rem 2rem", position: "relative", overflow: "hidden" 
       }}>
@@ -29,12 +29,12 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
             <p style={{ fontSize: "1.2rem", color: "var(--color-light-gray)", marginBottom: "2.5rem", lineHeight: 1.6 }}>
               {config.heroSubtitle}
             </p>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <Link href="/catalog" className="btn btn-secondary" style={{ fontSize: "1.1rem", padding: "1rem 2rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+            <div className="flex-col-mobile" style={{ display: "flex", gap: "1rem" }}>
+              <Link href="/catalog" className="btn btn-secondary btn-full-mobile" style={{ fontSize: "1.1rem", padding: "1rem 2rem", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
                 Ver Catálogo
                 <ArrowRight size={20} />
               </Link>
-              <Link href="/cotizar" className="btn" style={{ fontSize: "1.1rem", padding: "1rem 2rem", background: "white", color: "var(--color-primary)", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+              <Link href="/cotizar" className="btn btn-full-mobile" style={{ fontSize: "1.1rem", padding: "1rem 2rem", background: "white", color: "var(--color-primary)", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                 Cotizar Proyecto
               </Link>
             </div>
@@ -52,7 +52,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Trust Badges */}
-      <section style={{ background: "white", borderBottom: "1px solid var(--color-border)" }}>
+      <section className="mobile-padding" style={{ background: "white", borderBottom: "1px solid var(--color-border)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem" }}>
           {[
             { icon: ShieldCheck, title: "Garantía de Fábrica", text: "En todos los productos" },
@@ -77,7 +77,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Categories Grid */}
-      <section style={{ background: "var(--color-background)", padding: "5rem 2rem" }}>
+      <section className="mobile-padding" style={{ background: "var(--color-background)", padding: "5rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "2rem", color: "var(--color-primary)" }}>Categorías Principales</h2>
           <div className="grid-cards">
@@ -92,7 +92,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Day-to-Day Gallery (Carousel) */}
-      <section style={{ background: "white", padding: "5rem 2rem" }}>
+      <section className="mobile-padding" style={{ background: "white", padding: "5rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)" }}>El Día a Día en DISTRIELECTRICOS</h2>
           <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem" }}>Una mirada detrás de escena de nuestro trabajo en tienda y bodegas.</p>
@@ -122,7 +122,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Featured Products */}
-      <section style={{ background: "var(--color-background)", padding: "5rem 2rem" }}>
+      <section className="mobile-padding" style={{ background: "var(--color-background)", padding: "5rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
             <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>Productos Destacados</h2>
@@ -169,7 +169,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
       {/* Herramientas y Novedades Promocionadas */}
       {promoProducts && promoProducts.length > 0 && (
-        <section style={{ background: "white", padding: "5rem 2rem", borderTop: "1px solid var(--color-border)" }}>
+        <section className="mobile-padding" style={{ background: "white", padding: "5rem 2rem", borderTop: "1px solid var(--color-border)" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
               <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
