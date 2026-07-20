@@ -6,24 +6,22 @@ export default function Footer() {
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 2rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "3rem" }}>
         
         <div>
-          <Link href="/dashboard" style={{ textDecoration: "none", cursor: "default", outline: "none" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-              <img 
-                src="/logo.png" 
-                alt="Logo" 
-                className="logo-electric"
-                style={{ height: "45px", width: "45px", objectFit: "contain" }}
-              />
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ fontWeight: 800, fontSize: "1.5rem", color: "white", letterSpacing: "-0.5px", lineHeight: 1.1 }}>
-                  DISTRIELECTRICOS <span style={{ color: "var(--color-secondary)" }}>E&D</span>
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-light-gray)", fontWeight: 600, letterSpacing: "1px" }}>
-                  IDEAS CON ENERGÍA
-                </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+            <img 
+              src="/logo.png" 
+              alt="Logo" 
+              className="logo-electric"
+              style={{ height: "45px", width: "45px", objectFit: "contain" }}
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ fontWeight: 800, fontSize: "1.5rem", color: "white", letterSpacing: "-0.5px", lineHeight: 1.1 }}>
+                DISTRIELECTRICOS <span style={{ color: "var(--color-secondary)" }}>E&D</span>
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-light-gray)", fontWeight: 600, letterSpacing: "1px" }}>
+                IDEAS CON ENERGÍA
               </div>
             </div>
-          </Link>
+          </div>
           <p style={{ color: "var(--color-light-gray)", fontSize: "0.9rem", lineHeight: "1.6", marginBottom: "1.5rem" }}>
             Tu aliado confiable para proyectos eléctricos, construcción y remodelación. Todo el catálogo a tu disposición 24/7.
           </p>
