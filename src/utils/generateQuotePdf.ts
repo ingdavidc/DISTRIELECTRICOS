@@ -24,7 +24,10 @@ export async function generateQuotePdf(
       
       const img = new Image();
       img.src = base64;
-      await new Promise((resolve) => { img.onload = resolve; });
+      await new Promise((resolve, reject) => { 
+        img.onload = resolve; 
+        img.onerror = () => reject(new Error("Failed to load image into DOM"));
+      });
       
       return { base64, ratio: img.width / img.height };
     } catch (e) {
