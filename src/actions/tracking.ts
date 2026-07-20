@@ -4,15 +4,15 @@ import { prisma } from "@/lib/prisma";
 
 export async function trackOrder(orderId: string) {
   try {
-    // Validate UUID format roughly to avoid database errors
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId.trim());
-    
-    if (!isUuid) {
-      return { success: false, error: "El formato del número de ticket es inválido." };
+    const cleanId = orderId.trim();
+    if (cleanId.length < 6) {
+      return { success: false, error: "El número de ticket debe tener al menos 6 caracteres." };
     }
 
-    const order = await prisma.order.findUnique({
-      where: { id: orderId.trim() },
+    const order = await prisma.order.findFirst({
+      where: { 
+        id: { startsWith: cleanId, mode: 'insensitive' }
+      },
       select: {
         id: true,
         status: true,

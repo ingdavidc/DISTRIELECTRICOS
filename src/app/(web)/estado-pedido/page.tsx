@@ -65,7 +65,7 @@ export default function OrderTrackingPage() {
           Rastrea tu Pedido
         </h1>
         <p style={{ color: "var(--color-text-muted)", fontSize: "1.1rem", maxWidth: "600px", margin: "0 auto" }}>
-          Ingresa el número de ticket (UUID) que aparece en tu comprobante de compra para conocer en qué etapa se encuentra.
+          Ingresa el número de ticket que aparece en tu comprobante de compra para conocer en qué etapa se encuentra.
         </p>
       </div>
 
@@ -74,7 +74,7 @@ export default function OrderTrackingPage() {
           <Search size={20} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
           <input 
             type="text" 
-            placeholder="Ej: 123e4567-e89b-12d3-a456-426614174000"
+            placeholder="Ej: 2634DA"
             value={ticketId}
             onChange={e => setTicketId(e.target.value)}
             style={{ width: "100%", padding: "1rem 1rem 1rem 3rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: "1rem", outline: "none" }}
