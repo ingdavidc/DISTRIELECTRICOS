@@ -5,10 +5,13 @@ export async function generateQuotePdf(
   clientName: string,
   expertName: string,
   items: { name: string; quantity: number; pvpPrice: number; sku?: string }[],
-  totalPvp: number
+  totalPvp: number,
+  quoteId?: string
 ) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  
+  const uniqueCode = quoteId ? `CTZ-${quoteId.slice(0,6).toUpperCase()}` : `CTZ-${Math.floor(Date.now() / 1000).toString().slice(-6)}`;
 
   // Helper to load image as base64 and get its aspect ratio
   const loadImage = async (url: string) => {
@@ -71,6 +74,10 @@ export async function generateQuotePdf(
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
   doc.text("COTIZACIÓN DE PRODUCTOS", 14, currentY);
+  
+  doc.setFontSize(12);
+  doc.setTextColor(14, 165, 233);
+  doc.text(`N° ${uniqueCode}`, pageWidth - 14, currentY, { align: "right" });
   currentY += 10;
 
   doc.setFontSize(11);
@@ -115,11 +122,11 @@ export async function generateQuotePdf(
   // Total
   doc.setFontSize(14);
   doc.setTextColor(0, 0, 0);
-  doc.text("TOTAL A PAGAR:", 120, finalY + 15);
+  doc.text("TOTAL A PAGAR:", pageWidth - 50, finalY + 15, { align: "right" });
   
   doc.setFontSize(14);
   doc.setTextColor(14, 165, 233);
-  doc.text(`$${totalPvp.toLocaleString('de-DE')}`, 160, finalY + 15);
+  doc.text(`$${totalPvp.toLocaleString('de-DE')}`, pageWidth - 14, finalY + 15, { align: "right" });
 
   // Footer Notes
   let footerY = finalY + 30;

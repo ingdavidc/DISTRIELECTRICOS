@@ -19,7 +19,8 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
         quantity: i.quantity,
         pvpPrice: i.pvpPrice
       })),
-      quote.totalPvp
+      quote.totalPvp,
+      quote.id
     );
   };
 
