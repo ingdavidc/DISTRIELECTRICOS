@@ -90,7 +90,7 @@ export default function PaymentsPage() {
     const tid = toast.loading("Buscando cliente...");
     try {
       const res = await assignCustomerToOrder(selectedOrder.id, manualPhone);
-      if (res.success) {
+      if (res.success && res.customer) {
         toast.success(`Cliente ${res.customer.name} asignado a la orden`, { id: tid });
         setManualPhone("");
         loadOrders();
