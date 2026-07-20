@@ -21,6 +21,10 @@ export default async function AdminLayout({
   if ((session.user as any).role === "CUSTOMER") {
     redirect("/profile");
   }
+  
+  if ((session.user as any).role === "EXPERT") {
+    redirect("/aliados/dashboard");
+  }
 
   return (
     <div className="dashboard-layout">
