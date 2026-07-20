@@ -14,8 +14,9 @@ export async function searchProductImage(query: string) {
     }
 
     // Usaremos Bing Images porque Google bloquea las IPs de Vercel/Datacenters
-    const searchQuery = `${query.trim()} alta calidad producto eléctrico`;
-    const url = `https://www.bing.com/images/search?q=${encodeURIComponent(searchQuery)}`;
+    // No agregamos sufijos genéricos porque Bing puede auto-corregir palabras como "SUMMETER" a "SUMMER" y mostrar fotos erróneas
+    const searchQuery = query.trim();
+    const url = `https://www.bing.com/images/search?q=${encodeURIComponent(searchQuery)}&FORM=HDRSC2`;
     
     const res = await fetch(url, {
       headers: {
