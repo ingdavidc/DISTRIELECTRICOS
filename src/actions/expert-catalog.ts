@@ -95,10 +95,8 @@ export async function createExpertWholesaleOrder({
         payments: {
           create: {
             amount: serverTotalAmount,
-            method: "TRANSFERENCIA", // It's usually a transfer since they attach a receipt
-            status: "PENDING",
-            reference: paymentReceiptUrl, // Guardamos la URL del comprobante en el campo reference
-            notes: "Comprobante subido desde Portal Aliados"
+            method: "TRANSFERENCIA",
+            transactionId: paymentReceiptUrl,
           }
         }
       }

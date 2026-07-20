@@ -488,12 +488,12 @@ export default function PaymentsPage() {
               )}
 
               {/* Mostrar Comprobante de Aliado si existe */}
-              {selectedOrder.payments && selectedOrder.payments.length > 0 && selectedOrder.payments[0].reference?.startsWith("http") && (
+              {selectedOrder.payments && selectedOrder.payments.length > 0 && selectedOrder.payments[0].transactionId?.startsWith("http") && (
                 <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid var(--color-border)", background: "#e0f2fe", display: "flex", alignItems: "flex-start", gap: "1rem" }}>
                   <Receipt color="#0369a1" size={20} style={{ marginTop: "0.2rem" }} />
                   <div>
                     <h3 style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0369a1", margin: 0 }}>Comprobante de Pago (Aliado Experto)</h3>
-                    <a href={selectedOrder.payments[0].reference} target="_blank" rel="noreferrer" style={{ fontSize: "0.9rem", color: "#0284c7", marginTop: "0.25rem", display: "inline-block", textDecoration: "underline", fontWeight: 600 }}>
+                    <a href={selectedOrder.payments[0].transactionId} target="_blank" rel="noreferrer" style={{ fontSize: "0.9rem", color: "#0284c7", marginTop: "0.25rem", display: "inline-block", textDecoration: "underline", fontWeight: 600 }}>
                       Ver Soporte de Pago Subido
                     </a>
                   </div>
