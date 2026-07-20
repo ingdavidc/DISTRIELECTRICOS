@@ -14,7 +14,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net", // unsafe-eval needed for Next.js dev/turbopack
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https://*.supabase.co",
+      "img-src 'self' data: blob: https:",
       "media-src 'self' blob:",
       "connect-src 'self' https://*.supabase.co https://*.googleapis.com wss://*.supabase.co",
       "frame-ancestors 'none'",
