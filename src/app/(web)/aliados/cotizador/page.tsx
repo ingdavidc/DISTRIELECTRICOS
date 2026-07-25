@@ -1,10 +1,21 @@
 import { getExpertUser } from "@/actions/expert";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ExpertQuoterClient from "./ExpertQuoterClient";
 
 export default async function ExpertQuoterPage() {
-  const user = await getExpertUser();
+  const cookieExpertUser = await getExpertUser();
+  const session = await auth();
+  
+  const isNextAuthExpert = (session?.user as any)?.role === "EXPERT";
+  const user = cookieExpertUser ?? (isNextAuthExpert ? {
+    id: (session!.user as any).id,
+    name: session!.user?.name ?? "Aliado",
+    email: session!.user?.email ?? "",
+    phone: null,
+  } : null);
+
   if (!user) {
     redirect("/aliados");
   }
