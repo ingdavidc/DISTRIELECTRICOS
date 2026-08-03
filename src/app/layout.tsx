@@ -31,6 +31,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
+        {/* Trampa para portales cautivos: Atrapa el autofocus automático del sistema para que no despliegue el teclado */}
+        <input type="text" readOnly tabIndex={-1} style={{ position: "absolute", top: "-9999px", left: "-9999px", opacity: 0 }} aria-hidden="true" />
+        
         <Toaster position="top-right" />
         {children}
       </body>
