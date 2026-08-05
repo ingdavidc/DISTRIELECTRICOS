@@ -1025,14 +1025,14 @@ export default function InventoryPage() {
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <button type="button" id="close-modal-btn" className="btn btn-outline" onClick={handleCloseModal}>Cancelar</button>
                   
-                  {activeTab < 5 ? (
-                    <button type="button" className="btn btn-primary" onClick={() => setActiveTab(activeTab + 1)}>Siguiente Pestaña</button>
-                  ) : (
-                    <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                      {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} 
-                      {editingProductId ? "Guardar Cambios" : "Guardar Producto"}
-                    </button>
+                  {activeTab < 5 && (
+                    <button type="button" className="btn btn-outline" onClick={() => setActiveTab(activeTab + 1)}>Siguiente Pestaña</button>
                   )}
+                  
+                  <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                    {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} 
+                    {editingProductId ? "💾 Guardar Cambios" : "💾 Guardar Producto"}
+                  </button>
                 </div>
               </div>
             </form>
