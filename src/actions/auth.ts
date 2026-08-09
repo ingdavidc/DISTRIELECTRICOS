@@ -7,7 +7,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Email inválido" }),
+  email: z.string().min(1, { message: "El usuario/correo es requerido" }),
   password: z.string().min(1, { message: "La contraseña es requerida" }),
 });
 
@@ -29,8 +29,13 @@ export async function authenticate(
     }
 
     const { prisma } = await import("@/lib/prisma");
-    const user = await prisma.user.findUnique({
-      where: { email: parsed.data.email }
+    const user = await prisma.user.findFirst({
+      where: { 
+        OR: [
+          { email: parsed.data.email },
+          { identification: parsed.data.email }
+        ]
+      }
     });
 
     if (user) {

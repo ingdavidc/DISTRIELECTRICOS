@@ -40,13 +40,13 @@ export default function LoginPage() {
           
           <div className="form-group">
             <label htmlFor="email" className="form-label">
-              Correo Electrónico
+              Correo Electrónico o Documento
             </label>
             <input
               id="email"
-              type="email"
+              type="text"
               name="email"
-              placeholder="correo@ejemplo.com"
+              placeholder="correo@ejemplo.com o 123456789"
               required
               className="input"
             />

@@ -89,6 +89,7 @@ export const authConfig: NextAuthConfig = {
         token.role = (user as any).role;
         token.id = user.id;
         token.modules = (user as any).modules || [];
+        token.name = user.name;
       }
       return token;
     },
@@ -97,6 +98,7 @@ export const authConfig: NextAuthConfig = {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
         (session.user as any).modules = token.modules || [];
+        session.user.name = token.name as string | null | undefined;
       }
       return session;
     },

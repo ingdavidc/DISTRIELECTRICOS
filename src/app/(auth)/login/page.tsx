@@ -40,13 +40,13 @@ export default function LoginStaffPage() {
           
           <div className="form-group">
             <label htmlFor="identification" className="form-label">
-              Documento de Identidad
+              Documento de Identidad o Correo
             </label>
             <input
               id="identification"
-              type="tel"
+              type="text"
               name="identification"
-              placeholder="Ej. 123456789"
+              placeholder="Ej. 123456789 o correo@ejemplo.com"
               required
               className="input"
             />
