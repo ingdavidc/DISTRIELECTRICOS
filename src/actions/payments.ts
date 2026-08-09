@@ -82,6 +82,7 @@ interface PaymentData {
 }
 
 interface ModifiedItem {
+  id?: string;
   productId: string;
   quantity: number;
   unitPrice: number;
@@ -140,15 +141,45 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
         if (modifiedItems && modifiedItems.length > 0) {
           finalItems = modifiedItems;
           finalTotal = modifiedItems.reduce((acc: any, item: any) => acc + (item.quantity * item.unitPrice), 0);
-          await tx.orderItem.deleteMany({ where: { orderId } });
-          await tx.orderItem.createMany({
-            data: modifiedItems.map((item: any) => ({
-              orderId,
-              productId: item.productId,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice
-            }))
-          });
+          
+          const incomingIds = modifiedItems.map((i: any) => i.id).filter(Boolean);
+          
+          // Delete removed items (if any throw foreign key constraint, it will bubble up)
+          try {
+            await tx.orderItem.deleteMany({
+              where: {
+                orderId,
+                id: { notIn: incomingIds }
+              }
+            });
+          } catch (e: any) {
+            if (e.code === 'P2003') {
+              throw new Error("No se pueden eliminar algunos productos porque tienen devoluciones asociadas.");
+            }
+            throw e;
+          }
+
+          // Update existing and create new
+          for (const item of modifiedItems) {
+            if (item.id) {
+              await tx.orderItem.update({
+                where: { id: item.id },
+                data: {
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice
+                }
+              });
+            } else {
+              await tx.orderItem.create({
+                data: {
+                  orderId,
+                  productId: item.productId,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice
+                }
+              });
+            }
+          }
         }
 
         // ── Atomic stock decrement (prevents race conditions) ─────────────────
