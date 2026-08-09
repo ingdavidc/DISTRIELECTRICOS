@@ -7,7 +7,7 @@ export async function getOrdersForDispatch() {
   try {
     const orders = await prisma.order.findMany({
       where: { 
-        status: { in: ['PREPARING', 'OPEN_INVOICE', 'READY'] } 
+        status: { in: ['PENDING', 'PREPARING', 'OPEN_INVOICE', 'READY'] } 
       },
       include: {
         customer: true,
@@ -69,6 +69,13 @@ export async function markOrderAsReady(orderId: string) {
 
 export async function markOrderAsDelivered(orderId: string) {
   try {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return { success: false, error: "Orden no encontrada" };
+
+    if (order.amountPaid < order.totalAmount) {
+      return { success: false, error: "No se puede entregar: El pedido no ha sido pagado en su totalidad." };
+    }
+
     await prisma.order.update({
       where: { id: orderId },
       data: { status: 'DELIVERED' }

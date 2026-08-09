@@ -21,7 +21,7 @@ export async function getPendingOrders() {
   try {
     await requireSession();
     const orders = await prisma.order.findMany({
-      where: { status: 'PENDING' },
+      where: { status: { in: ['PENDING', 'READY'] } },
       include: {
         customer: true,
         items: { include: { product: true } },
@@ -29,7 +29,8 @@ export async function getPendingOrders() {
       },
       orderBy: { createdAt: 'asc' }
     });
-    return orders;
+    // Solo mostrar las que aún no han sido pagadas en su totalidad
+    return orders.filter(o => o.amountPaid < o.totalAmount);
   } catch (error) {
     if ((error as Error).message === 'NO_AUTH') return [];
     console.error('Error fetching pending orders:', error);
@@ -47,10 +48,10 @@ export async function searchCustomerOrdersForPayment(identification: string) {
     const customer = await prisma.customer.findUnique({ where: { identification: cleanId } });
     if (!customer) return [];
 
-    return await prisma.order.findMany({
+    const orders = await prisma.order.findMany({
       where: {
         customerId: customer.id,
-        status: { in: ['PENDING', 'OPEN_INVOICE'] }
+        status: { in: ['PENDING', 'OPEN_INVOICE', 'READY'] }
       },
       include: {
         customer: true,
@@ -58,6 +59,11 @@ export async function searchCustomerOrdersForPayment(identification: string) {
         payments: true
       },
       orderBy: { createdAt: 'desc' }
+    });
+    // Filtrar aquellas listas (READY) que ya estén pagadas
+    return orders.filter(o => {
+      if (o.status === 'READY' && o.amountPaid >= o.totalAmount) return false;
+      return true;
     });
   } catch (error) {
     if ((error as Error).message === 'NO_AUTH') return [];
@@ -104,7 +110,7 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
       });
 
       if (!order) throw new Error('Orden no encontrada');
-      if (order.status !== 'PENDING' && order.status !== 'OPEN_INVOICE') {
+      if (order.status !== 'PENDING' && order.status !== 'OPEN_INVOICE' && order.status !== 'READY') {
         throw new Error('Esta orden ya no admite abonos');
       }
 
@@ -128,7 +134,7 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
 
       let finalItems = order.items.map((i: any) => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice }));
       let finalTotal = order.totalAmount;
-      const isFirstPayment = order.status === 'PENDING';
+      const isFirstPayment = order.amountPaid === 0;
 
       if (isFirstPayment) {
         if (modifiedItems && modifiedItems.length > 0) {
@@ -179,10 +185,18 @@ export async function processPayment(orderId: string, paymentData: PaymentData, 
 
       const totalPaidSoFar = alreadyPaid + paymentData.amount;
       let newStatus: any = order.status;
-      if (isFirstPayment) {
-        newStatus = (totalPaidSoFar < finalTotal) ? 'OPEN_INVOICE' : 'PREPARING';
+      
+      if (order.status !== 'READY') {
+        if (isFirstPayment) {
+          newStatus = (totalPaidSoFar < finalTotal) ? 'OPEN_INVOICE' : 'PREPARING';
+        } else {
+          // If not first payment, and now fully paid, and wasn't READY, we put it to PREPARING
+          // Wait, if it wasn't READY, it was probably OPEN_INVOICE. We move it to PREPARING for Bodega.
+          if (totalPaidSoFar >= finalTotal) newStatus = 'PREPARING';
+        }
       } else {
-        if (totalPaidSoFar >= finalTotal) newStatus = 'DELIVERED';
+        // If it is already READY (bodega was fast), we just keep it READY
+        newStatus = 'READY';
       }
 
       const updatedOrder = await tx.order.update({
