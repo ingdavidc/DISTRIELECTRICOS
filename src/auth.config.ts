@@ -49,9 +49,9 @@ export const authConfig: NextAuthConfig = {
         const routeConfig: Record<string, string[]> = {
           "/dashboard": ["ADMIN"],
           "/website": ["ADMIN"],
-          "/pos": ["ADMIN", "CASHIER", "OPERATIVE"],
+          "/pos": ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"],
           "/payments": ["ADMIN", "FINANCE", "OPERATIVE", "CASHIER"],
-          "/customers": ["ADMIN", "CASHIER", "OPERATIVE"],
+          "/customers": ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"],
           "/inventory": ["ADMIN", "WAREHOUSE", "OPERATIVE"],
           "/dispatch": ["ADMIN", "WAREHOUSE", "OPERATIVE"],
           "/quotes": ["ADMIN", "OPERATIVE"],
