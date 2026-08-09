@@ -50,7 +50,7 @@ export const authConfig: NextAuthConfig = {
           "/dashboard": ["ADMIN"],
           "/website": ["ADMIN"],
           "/pos": ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"],
-          "/payments": ["ADMIN", "FINANCE", "OPERATIVE", "CASHIER"],
+          "/payments": ["ADMIN", "FINANCE", "OPERATIVE"],
           "/customers": ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"],
           "/inventory": ["ADMIN", "WAREHOUSE", "OPERATIVE"],
           "/dispatch": ["ADMIN", "WAREHOUSE", "OPERATIVE"],
