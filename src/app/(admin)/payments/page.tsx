@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment, assignCustomerToOrder } from "@/actions/payments";
 import { getCustomerOrders, requestCustomerRUT, requestCustomerRUTManual } from "@/actions/customers";
 import ReturnsCashierTab from "@/components/admin/ReturnsCashierTab";
+import VoucherPrint80mm from "@/components/admin/VoucherPrint80mm";
+import { Printer } from "lucide-react";
 
 type Order = Awaited<ReturnType<typeof getPendingOrders>>[0];
 type CustomerOrder = Awaited<ReturnType<typeof getCustomerOrders>>[0];
@@ -41,6 +43,11 @@ export default function PaymentsPage() {
   // Missing Customer State
   const [manualPhone, setManualPhone] = useState("");
   const [isAssigning, setIsAssigning] = useState(false);
+
+  // Voucher Print State
+  const [paidOrderForVoucher, setPaidOrderForVoucher] = useState<Order | null>(null);
+  const [paymentDetailsForVoucher, setPaymentDetailsForVoucher] = useState<{amountPaid: number, method: string, date: Date}>({amountPaid: 0, method: "EFECTIVO", date: new Date()});
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   const handlePriceTierChange = (newTier: string) => {
     setPriceTier(newTier as any);
@@ -294,10 +301,15 @@ export default function PaymentsPage() {
       const res = await processPayment(selectedOrder.id, paymentData, isPending ? editableItems : undefined);
       if (res.success) {
 
+        setPaidOrderForVoucher(selectedOrder);
+        setPaymentDetailsForVoucher({ amountPaid: amountToPay, method: paymentMethod, date: new Date() });
+        
         if (amountToPay < currentBalance) {
           toast.success(`Abono exitoso. Saldo pendiente: $${(currentBalance - amountToPay).toLocaleString('de-DE')}`, { id: tid });
+          setIsPrintModalOpen(true);
         } else {
           toast.success("Pago total exitoso. Ticket cerrado.", { id: tid });
+          setIsPrintModalOpen(true);
           setSelectedOrder(null);
           setEditableItems([]);
         }
@@ -894,6 +906,48 @@ export default function PaymentsPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL: PRINT VOUCHER AFTER PAYMENT */}
+      {isPrintModalOpen && paidOrderForVoucher && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: "400px", textAlign: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "var(--color-success)" }}>Pago Exitoso</h3>
+              <button onClick={() => setIsPrintModalOpen(false)} className="btn-icon">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: "2rem" }}>
+              <CheckCircle size={64} color="var(--color-success)" style={{ margin: "0 auto 1rem auto" }} />
+              <p style={{ color: "var(--color-text-muted)" }}>El pago de Ticket #{paidOrderForVoucher.id.slice(-6).toUpperCase()} se ha procesado correctamente. El mensaje por WhatsApp será enviado automáticamente.</p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <button 
+                onClick={() => {
+                  window.print();
+                }} 
+                className="btn btn-primary"
+                style={{ padding: "0.75rem", display: "flex", gap: "0.5rem", justifyContent: "center" }}
+              >
+                <Printer size={20} />
+                Imprimir Voucher (Opcional)
+              </button>
+              <button 
+                onClick={() => setIsPrintModalOpen(false)}
+                className="btn btn-outline"
+                style={{ padding: "0.75rem" }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HIDDEN VOUCHER FOR PRINTING */}
+      <VoucherPrint80mm order={paidOrderForVoucher} paymentDetails={paymentDetailsForVoucher} />
 
     </div>
     )}
