@@ -57,38 +57,40 @@ export default function VoucherPrint80mm({ order, paymentDetails }: VoucherPrint
         }
       `}} />
 
-      <div style={{ textAlign: "center", marginBottom: "10px" }}>
-        <h2 style={{ margin: "0 0 5px 0", fontSize: "16px", fontWeight: "bold" }}>DistriEléctricos E&D</h2>
-        <p style={{ margin: 0 }}>Venta de Materiales Eléctricos</p>
-        <p style={{ margin: 0 }}>--------------------------------</p>
+      <div style={{ textAlign: "center", marginBottom: "15px", borderBottom: "1px dashed #ccc", paddingBottom: "10px" }}>
+        <img src="/logo.png" alt="Logo" style={{ maxWidth: "150px", height: "auto", marginBottom: "8px" }} />
+        <h2 style={{ margin: "0 0 4px 0", fontSize: "16px", fontWeight: "bold" }}>DistriEléctricos E&D</h2>
+        <p style={{ margin: "0 0 2px 0", fontStyle: "italic", fontSize: "11px" }}>"Todo el Material Eléctrico para tus Grandes Proyectos"</p>
+        <p style={{ margin: "4px 0 2px 0", fontSize: "11px" }}>NIT: 900.123.456-7</p>
+        <p style={{ margin: "0 0 2px 0", fontSize: "11px" }}>Dirección: Calle Falsa 123, Local 4</p>
+        <p style={{ margin: "0", fontSize: "11px" }}>Teléfono: +57 300 123 4567</p>
       </div>
 
-      <div style={{ marginBottom: "10px" }}>
+      <div style={{ marginBottom: "10px", padding: "5px", background: "#f9f9f9", borderRadius: "4px" }}>
         <p style={{ margin: "2px 0" }}><strong>Ticket:</strong> #{order.id.slice(-6).toUpperCase()}</p>
         <p style={{ margin: "2px 0" }}><strong>Fecha:</strong> {formatDate(paymentDetails?.date || new Date())}</p>
         <p style={{ margin: "2px 0" }}><strong>Cliente:</strong> {order.customer?.name || "Consumidor Final"}</p>
         {order.customer?.identification && (
           <p style={{ margin: "2px 0" }}><strong>CC/NIT:</strong> {order.customer.identification}</p>
         )}
-        <p style={{ margin: 0 }}>--------------------------------</p>
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", fontSize: "11px" }}>
         <thead>
           <tr>
-            <th style={{ textAlign: "left", borderBottom: "1px dashed #000" }}>Cant</th>
-            <th style={{ textAlign: "left", borderBottom: "1px dashed #000" }}>Desc</th>
-            <th style={{ textAlign: "right", borderBottom: "1px dashed #000" }}>Total</th>
+            <th style={{ textAlign: "left", borderBottom: "1px solid #000", paddingBottom: "4px", width: "15%" }}>Cant</th>
+            <th style={{ textAlign: "left", borderBottom: "1px solid #000", paddingBottom: "4px", width: "55%" }}>Desc</th>
+            <th style={{ textAlign: "right", borderBottom: "1px solid #000", paddingBottom: "4px", width: "30%" }}>Total</th>
           </tr>
         </thead>
         <tbody>
           {order.items?.map((item: any) => (
             <tr key={item.id}>
-              <td style={{ verticalAlign: "top", paddingTop: "4px" }}>{item.quantity}</td>
-              <td style={{ padding: "4px 4px", wordBreak: "break-word" }}>
+              <td style={{ verticalAlign: "top", paddingTop: "6px", textAlign: "center" }}>{item.quantity}</td>
+              <td style={{ padding: "6px 4px", wordBreak: "break-word" }}>
                 {item.product?.name || item.name || "Producto"}
               </td>
-              <td style={{ verticalAlign: "top", textAlign: "right", paddingTop: "4px" }}>
+              <td style={{ verticalAlign: "top", textAlign: "right", paddingTop: "6px" }}>
                 ${(item.quantity * item.unitPrice).toLocaleString("de-DE")}
               </td>
             </tr>
@@ -96,11 +98,15 @@ export default function VoucherPrint80mm({ order, paymentDetails }: VoucherPrint
         </tbody>
       </table>
 
-      <p style={{ margin: 0 }}>--------------------------------</p>
-
-      <div style={{ textAlign: "right", marginBottom: "10px", marginTop: "10px" }}>
-        <p style={{ margin: "2px 0", fontSize: "14px" }}><strong>Total Pagado:</strong> ${((paymentDetails?.amountPaid) || order.totalAmount).toLocaleString("de-DE")}</p>
-        <p style={{ margin: "2px 0" }}><strong>Método:</strong> {paymentDetails?.method || "Efectivo"}</p>
+      <div style={{ borderTop: "1px dashed #ccc", paddingTop: "10px", marginBottom: "15px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+          <span><strong>Total Pagado:</strong></span>
+          <span style={{ fontSize: "14px", fontWeight: "bold" }}>${((paymentDetails?.amountPaid) || order.totalAmount).toLocaleString("de-DE")}</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#555" }}>
+          <span>Método de pago:</span>
+          <span>{paymentDetails?.method || "Efectivo"}</span>
+        </div>
       </div>
 
       <div style={{ textAlign: "center", marginTop: "15px" }}>
