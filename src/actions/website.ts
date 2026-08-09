@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { triggerN8nWebhook } from "@/lib/n8n";
 
 async function getSession() {
   const { auth } = await import("@/auth");
@@ -36,11 +37,36 @@ export async function updateWebConfig(data: {
 }) {
   await getSession();
 
+  // Obtener la config anterior para comparar
+  const oldConfig = await prisma.webConfig.findUnique({ where: { id: "default" } });
+
   const res = await prisma.webConfig.update({
     where: { id: "default" },
     data
   });
   
+  // Detectar nuevas Ofertas Flash
+  if (data.flashOfferIds && oldConfig) {
+    const newFlashIds = data.flashOfferIds.filter(id => !oldConfig.flashOfferIds.includes(id));
+    if (newFlashIds.length > 0) {
+      const newProducts = await prisma.product.findMany({ where: { id: { in: newFlashIds } } });
+      newProducts.forEach(p => {
+        triggerN8nWebhook("publicaciones", { event: "new_flash_offer", product: p });
+      });
+    }
+  }
+
+  // Detectar nuevas Herramientas y Novedades
+  if (data.promoProductIds && oldConfig) {
+    const newPromoIds = data.promoProductIds.filter(id => !oldConfig.promoProductIds.includes(id));
+    if (newPromoIds.length > 0) {
+      const newProducts = await prisma.product.findMany({ where: { id: { in: newPromoIds } } });
+      newProducts.forEach(p => {
+        triggerN8nWebhook("publicaciones", { event: "new_promo_product", product: p });
+      });
+    }
+  }
+
   revalidatePath('/');
   revalidatePath('/catalog');
   revalidatePath('/pos');
@@ -84,6 +110,9 @@ export async function addGalleryItem(url: string, type: "IMAGE" | "VIDEO" = "IMA
   const newItem = await prisma.webGallery.create({
     data: { url, type }
   });
+
+  // Notificar a n8n
+  triggerN8nWebhook("publicaciones", { event: "new_gallery_item", item: newItem });
 
   // Check count, if > 10, delete oldest
   const count = await prisma.webGallery.count();

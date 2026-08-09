@@ -219,6 +219,7 @@ model Order {
 
   items    OrderItem[]
   payments OrderPayment[]
+  returnRequests ReturnRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -250,8 +251,38 @@ model OrderItem {
   order     Order   @relation(fields: [orderId], references: [id])
   productId String
   product   Product @relation(fields: [productId], references: [id])
+
   quantity  Int
-  unitPrice Float
+  unitPrice Float // Precio al que se vendió (con o sin descuento aplicado)
+
+  returnItems ReturnItem[]
+}
+
+model ReturnRequest {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  userId    String?  // Quién solicita/autoriza
+  reason    String
+  status    String   @default("PENDING_AUTHORIZATION") // PENDING_AUTHORIZATION, APPROVED, REJECTED
+  amount    Float    // Monto total a devolver
+  
+  items     ReturnItem[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReturnItem {
+  id              String        @id @default(uuid())
+  returnRequestId String
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  
+  orderItemId     String
+  orderItem       OrderItem     @relation(fields: [orderItemId], references: [id])
+  
+  quantity        Int
+  unitPrice       Float
 }
 
 model PurchaseOrder {

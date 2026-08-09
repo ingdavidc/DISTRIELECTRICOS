@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
 import { createSpecialRequest } from "@/actions/requests";
@@ -18,7 +18,12 @@ interface CartItem extends Product {
   cartQuantity: number;
 }
 
+import ReturnsPosTab from "@/components/admin/ReturnsPosTab";
+
 export default function POSPage() {
+  const [activeTab, setActiveTab] = useState<"VENTAS" | "DEVOLUCIONES">("VENTAS");
+  // ... rest of state ...
+
   const [products, setProducts] = useState<Product[]>([]);
   const [flashOfferIds, setFlashOfferIds] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -248,7 +253,28 @@ export default function POSPage() {
   };
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 64px - 4rem)", gap: "1.5rem" }}>
+    <>
+    <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+      <button 
+        className={`btn ${activeTab === "VENTAS" ? "btn-primary" : "btn-outline"}`}
+        onClick={() => setActiveTab("VENTAS")}
+        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px" }}
+      >
+        🛒 Nueva Venta
+      </button>
+      <button 
+        className={`btn ${activeTab === "DEVOLUCIONES" ? "btn-primary" : "btn-outline"}`}
+        onClick={() => setActiveTab("DEVOLUCIONES")}
+        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px", display: "flex", gap: "0.5rem", alignItems: "center" }}
+      >
+        <RotateCcw size={16} /> Solicitar Devolución
+      </button>
+    </div>
+
+    {activeTab === "DEVOLUCIONES" ? (
+      <ReturnsPosTab />
+    ) : (
+    <div style={{ display: "flex", height: "calc(100vh - 64px - 4rem - 50px)", gap: "1.5rem" }}>
       
       {/* LEFT COLUMN: CATALOG */}
       <div className="card" style={{ flex: "1 1 60%", display: "flex", flexDirection: "column", padding: "1.5rem", overflow: "hidden" }}>
@@ -726,5 +752,7 @@ export default function POSPage() {
       )}
 
     </div>
+    )}
+    </>
   );
 }

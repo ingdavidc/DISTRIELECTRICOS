@@ -7,7 +7,7 @@ const N8N_URL = process.env.N8N_URL || "http://localhost:5678/webhook";
 
 export async function triggerN8nWebhook(webhookId: string, payload: any) {
   try {
-    const url = `${N8N_URL}/${webhookId}`;
+    const url = process.env.N8N_WEBHOOK_URL || `${N8N_URL}/${webhookId}`;
     
     // Fire and forget: No esperamos el await completo en el hilo principal
     // para no bloquear la caja registradora.

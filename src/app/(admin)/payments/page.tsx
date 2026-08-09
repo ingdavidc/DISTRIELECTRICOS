@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store, X, Sparkles } from "lucide-react";
+import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store, X, Sparkles, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment, assignCustomerToOrder } from "@/actions/payments";
 import { getCustomerOrders, requestCustomerRUT, requestCustomerRUTManual } from "@/actions/customers";
+import ReturnsCashierTab from "@/components/admin/ReturnsCashierTab";
 
 type Order = Awaited<ReturnType<typeof getPendingOrders>>[0];
 type CustomerOrder = Awaited<ReturnType<typeof getCustomerOrders>>[0];
 
 export default function PaymentsPage() {
+  const [activeTab, setActiveTab] = useState<"COBROS" | "DEVOLUCIONES">("COBROS");
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -173,10 +175,10 @@ export default function PaymentsPage() {
   useEffect(() => {
     loadOrders();
     const interval = setInterval(() => {
-      if (!isSearching) loadOrders();
+      if (!isSearching && activeTab === "COBROS") loadOrders();
     }, 10000);
     return () => clearInterval(interval);
-  }, [isSearching]);
+  }, [isSearching, activeTab]);
 
   const handleSelectOrder = (order: Order) => {
     setSelectedOrder(order);
@@ -313,8 +315,8 @@ export default function PaymentsPage() {
     }
   };
 
-  const handleCancel = async (id: string) => {
-    if (!confirm("¿Está seguro de anular este ticket? (El cliente desistió)")) return;
+  const handleCancelOrder = async (id: string) => {
+    if (!confirm("¿Está seguro de anular todo el ticket? Esto devolverá el stock y cancelará la orden permanentemente.")) return;
     const tid = toast.loading("Anulando ticket...");
     const res = await cancelOrder(id);
     if (res.success) {
@@ -433,7 +435,7 @@ export default function PaymentsPage() {
                     <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-primary)" }}>${balance.toLocaleString('de-DE')}</div>
                     {order.status === 'PENDING' && (
                       <button 
-                        onClick={(e) => { e.stopPropagation(); handleCancel(order.id); }}
+                        onClick={(e) => { e.stopPropagation(); handleCancelOrder(order.id); }}
                         style={{ background: "none", border: "none", color: "var(--color-danger)", fontSize: "0.85rem", cursor: "pointer", marginTop: "0.5rem", textDecoration: "underline" }}
                       >
                         Anular Ticket
