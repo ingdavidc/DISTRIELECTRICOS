@@ -25,16 +25,14 @@ export async function getPosProducts(query: string = "") {
       } : undefined,
       take: 50,
       orderBy: q ? { name: 'asc' } : {
-        orderItems: {
-          _count: 'desc'
-        }
+        createdAt: 'desc'
       }
     });
     return products;
   } catch (error: any) {
     if (error.message === 'NO_AUTH') return [];
     console.error("Error fetching POS products:", error);
-    return [];
+    throw new Error("Failed to fetch products: " + error.message);
   }
 }
 

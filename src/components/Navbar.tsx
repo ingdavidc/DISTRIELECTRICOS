@@ -4,7 +4,14 @@ import { Bell, Search, UserCircle, LogOut } from "lucide-react";
 import { logOut } from "@/actions/auth";
 import GlobalSearch from "./GlobalSearch";
 
+import { signOut } from "next-auth/react";
+
 export default function Navbar({ user }: { user?: any }) {
+  const handleLogout = async () => {
+    await logOut();
+    signOut({ callbackUrl: "/" });
+  };
+
   return (
     <header className="topbar">
       <div style={{ display: "flex", alignItems: "center", width: "400px" }}>
@@ -23,7 +30,7 @@ export default function Navbar({ user }: { user?: any }) {
           <UserCircle size={32} color="var(--color-primary)" />
           
           <button 
-            onClick={() => logOut()}
+            onClick={handleLogout}
             className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-colors text-red-500"
             title="Cerrar sesión"
           >
