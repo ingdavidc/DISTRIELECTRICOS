@@ -359,7 +359,28 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 64px - 4rem)", gap: "1.5rem" }}>
+    <>
+    <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+      <button 
+        className={`btn ${activeTab === "COBROS" ? "btn-primary" : "btn-outline"}`}
+        onClick={() => setActiveTab("COBROS")}
+        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px" }}
+      >
+        💵 Cobros Pendientes
+      </button>
+      <button 
+        className={`btn ${activeTab === "DEVOLUCIONES" ? "btn-primary" : "btn-outline"}`}
+        onClick={() => setActiveTab("DEVOLUCIONES")}
+        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px", display: "flex", gap: "0.5rem", alignItems: "center" }}
+      >
+        <RotateCcw size={16} /> Autorizar Devoluciones
+      </button>
+    </div>
+
+    {activeTab === "DEVOLUCIONES" ? (
+      <ReturnsCashierTab />
+    ) : (
+    <div style={{ display: "flex", height: "calc(100vh - 64px - 4rem - 50px)", gap: "1.5rem" }}>
       
       {/* LEFT COLUMN: PENDING QUEUE & SEARCH */}
       <div className="card" style={{ flex: "1 1 40%", display: "flex", flexDirection: "column", padding: "0", overflow: "hidden" }}>
@@ -875,5 +896,7 @@ export default function PaymentsPage() {
       )}
 
     </div>
+    )}
+    </>
   );
 }
