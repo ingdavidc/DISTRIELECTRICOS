@@ -126,3 +126,36 @@ export async function processReturnRequest(requestId: string, approved: boolean)
     return { success: false, error: error.message };
   }
 }
+
+export async function getPosReturnRequests() {
+  const session = await requireSession();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const requests = await prisma.returnRequest.findMany({
+    where: {
+      userId: session.user.id,
+      createdAt: { gte: today }
+    },
+    include: {
+      order: {
+        include: {
+          customer: true
+        }
+      },
+      items: {
+        include: {
+          orderItem: {
+            include: {
+              product: true
+            }
+          }
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return requests;
+}
