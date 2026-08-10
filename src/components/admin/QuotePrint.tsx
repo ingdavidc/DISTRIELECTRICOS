@@ -70,15 +70,19 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
           transformOrigin: "top center"
         } : { display: "none" }}
       >
+        {/* Background Watermark */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundImage: 'url("/logo.png")', backgroundRepeat: "no-repeat", backgroundPosition: "center", backgroundSize: "70%", opacity: 0.1, zIndex: 0, pointerEvents: "none" }} />
+
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #003366", paddingBottom: "15px", marginBottom: "20px" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #003366", paddingBottom: "15px", marginBottom: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             <img src="/logo.png" alt="Logo" style={{ maxWidth: "120px", height: "auto" }} />
             <div>
               <h2 style={{ margin: "0 0 5px 0", fontSize: "18px", color: "#003366" }}>DistriEléctricos E&D</h2>
-              <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>NIT: 900.123.456-7</p>
-              <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>Dirección: Calle Falsa 123, Local 4</p>
-              <p style={{ margin: "0", fontSize: "12px" }}>WhatsApp / Tel: +57 300 123 4567</p>
+              <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>NIT: 109860861-8</p>
+              <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>Dirección: Cl. 25 #12 - 55, Saravena, Arauca</p>
+              <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>WhatsApp/Tel: 313 223 9174</p>
+              <p style={{ margin: "0", fontSize: "12px" }}>Web: www.distrielectricoseyd.com</p>
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
@@ -91,7 +95,7 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
         </div>
 
         {/* Customer Info */}
-        <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "20px", marginBottom: "20px" }}>
           <div style={{ flex: 1, padding: "10px", border: "1px solid #ccc", borderRadius: "6px" }}>
             <h3 style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#003366", borderBottom: "1px solid #eee", paddingBottom: "4px" }}>Datos del Cliente</h3>
             <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Nombre:</strong> {quote.customer?.name || "Consumidor Final"}</p>
@@ -102,24 +106,33 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
           <div style={{ width: "200px", padding: "10px", border: "1px solid #ccc", borderRadius: "6px" }}>
             <h3 style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#003366", borderBottom: "1px solid #eee", paddingBottom: "4px" }}>Condiciones</h3>
             <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Validez:</strong> 15 Días</p>
+            <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Pago:</strong> Efectivo</p>
             <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Entrega:</strong> {quote.deliveryType}</p>
             <p style={{ margin: "0", fontSize: "12px" }}><strong>Vendedor:</strong> {quote.user?.name || "Asesor"}</p>
           </div>
         </div>
 
         {/* Items Table */}
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px", fontSize: "12px" }}>
+        <table style={{ position: "relative", zIndex: 1, width: "100%", borderCollapse: "collapse", marginBottom: "20px", fontSize: "12px" }}>
           <thead>
             <tr style={{ background: "#003366", color: "white" }}>
-              <th style={{ padding: "8px", textAlign: "left", width: "10%" }}>Cant</th>
-              <th style={{ padding: "8px", textAlign: "left", width: "50%" }}>Descripción</th>
+              <th style={{ padding: "8px", textAlign: "center", width: "8%" }}>Img</th>
+              <th style={{ padding: "8px", textAlign: "center", width: "7%" }}>Cant</th>
+              <th style={{ padding: "8px", textAlign: "left", width: "45%" }}>Descripción</th>
               <th style={{ padding: "8px", textAlign: "right", width: "20%" }}>V. Unitario</th>
               <th style={{ padding: "8px", textAlign: "right", width: "20%" }}>V. Total</th>
             </tr>
           </thead>
           <tbody>
             {quote.items?.map((item: any, i: number) => (
-              <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
+              <tr key={i} style={{ borderBottom: "1px solid #eee", background: "rgba(255,255,255,0.7)" }}>
+                <td style={{ padding: "4px", textAlign: "center" }}>
+                  {item.product?.imageUrl ? (
+                    <img src={item.product.imageUrl} alt={item.product?.name} style={{ width: "35px", height: "35px", objectFit: "contain", borderRadius: "4px" }} />
+                  ) : (
+                    <div style={{ width: "35px", height: "35px", background: "#f0f0f0", borderRadius: "4px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: "9px" }}>N/A</div>
+                  )}
+                </td>
                 <td style={{ padding: "8px", textAlign: "center" }}>{item.quantity}</td>
                 <td style={{ padding: "8px" }}>{item.product?.name || item.name || "Producto Especial"}</td>
                 <td style={{ padding: "8px", textAlign: "right" }}>${item.unitPrice.toLocaleString('de-DE')}</td>
@@ -130,7 +143,7 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
         </table>
 
         {/* Totals */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "30px" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "flex-end", marginBottom: "30px" }}>
           <div style={{ width: "250px", border: "1px solid #ccc", borderRadius: "6px", overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid #eee", fontSize: "12px" }}>
               <span>Subtotal (Sin IVA):</span>
@@ -149,7 +162,7 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
 
         {/* Notes & Footer */}
         {quote.notes && (
-          <div style={{ marginBottom: "20px" }}>
+          <div style={{ position: "relative", zIndex: 1, marginBottom: "20px" }}>
             <p style={{ margin: "0 0 5px 0", fontSize: "12px", fontWeight: "bold" }}>Observaciones:</p>
             <p style={{ margin: 0, fontSize: "11px", padding: "10px", background: "#fffbc8", border: "1px solid #e0d000", borderRadius: "4px" }}>
               {quote.notes}
@@ -157,7 +170,7 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
           </div>
         )}
 
-        <div style={{ marginTop: "40px", borderTop: "1px solid #ccc", paddingTop: "15px", textAlign: "center", fontSize: "10px", color: "#666" }}>
+        <div style={{ position: "relative", zIndex: 1, marginTop: "40px", borderTop: "1px solid #ccc", paddingTop: "15px", textAlign: "center", fontSize: "10px", color: "#666" }}>
           <p style={{ margin: "0 0 4px 0" }}>Esta cotización está sujeta a cambios de precio y disponibilidad de inventario sin previo aviso.</p>
           <p style={{ margin: 0 }}>Generado por el Sistema POS DistriEléctricos E&D</p>
         </div>
