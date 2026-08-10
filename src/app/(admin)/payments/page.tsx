@@ -5,6 +5,7 @@ import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, His
 import toast from "react-hot-toast";
 import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment, assignCustomerToOrder, getQuotes } from "@/actions/payments";
 import { getCustomerOrders, requestCustomerRUT, requestCustomerRUTManual } from "@/actions/customers";
+import { getPendingReturns } from "@/actions/returns";
 import ReturnsCashierTab from "@/components/admin/ReturnsCashierTab";
 import QuotesCashierTab from "@/components/admin/QuotesCashierTab";
 import VoucherPrint80mm from "@/components/admin/VoucherPrint80mm";
@@ -17,6 +18,7 @@ export default function PaymentsPage() {
   const [activeTab, setActiveTab] = useState<"COBROS" | "DEVOLUCIONES" | "COTIZACIONES">("COBROS");
   const [orders, setOrders] = useState<Order[]>([]);
   const [quotes, setQuotes] = useState<Order[]>([]);
+  const [pendingReturnsCount, setPendingReturnsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -142,6 +144,9 @@ export default function PaymentsPage() {
 
       const qs = await getQuotes();
       setQuotes(qs as any);
+
+      const rets = await getPendingReturns();
+      setPendingReturnsCount(rets.length);
     } catch (error) {
       toast.error("Error al cargar cola");
     } finally {
@@ -381,9 +386,14 @@ export default function PaymentsPage() {
       <button 
         className={`btn ${activeTab === "COBROS" ? "btn-primary" : "btn-outline"}`}
         onClick={() => setActiveTab("COBROS")}
-        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px" }}
+        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px", display: "flex", gap: "0.5rem", alignItems: "center" }}
       >
         💰 Cobros Pendientes
+        {orders.length > 0 && (
+          <span style={{ background: "var(--color-danger)", color: "white", borderRadius: "50%", padding: "2px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
+            {orders.length}
+          </span>
+        )}
       </button>
       <button 
         className={`btn ${activeTab === "DEVOLUCIONES" ? "btn-primary" : "btn-outline"}`}
@@ -391,6 +401,11 @@ export default function PaymentsPage() {
         style={{ padding: "0.5rem 1.5rem", borderRadius: "100px", display: "flex", gap: "0.5rem", alignItems: "center" }}
       >
         <RotateCcw size={16} /> Autorizar Devoluciones
+        {pendingReturnsCount > 0 && (
+          <span style={{ background: "var(--color-danger)", color: "white", borderRadius: "50%", padding: "2px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
+            {pendingReturnsCount}
+          </span>
+        )}
       </button>
       <button 
         className={`btn ${activeTab === "COTIZACIONES" ? "btn-primary" : "btn-outline"}`}
@@ -398,6 +413,11 @@ export default function PaymentsPage() {
         style={{ padding: "0.5rem 1.5rem", borderRadius: "100px", display: "flex", gap: "0.5rem", alignItems: "center" }}
       >
         <FileText size={16} /> Cotizaciones
+        {quotes.length > 0 && (
+          <span style={{ background: "var(--color-danger)", color: "white", borderRadius: "50%", padding: "2px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
+            {quotes.length}
+          </span>
+        )}
       </button>
     </div>
 
