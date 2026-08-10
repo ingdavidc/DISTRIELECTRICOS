@@ -12,7 +12,7 @@ export default function Sidebar({ role, modules = [] }: { role: string; modules?
     { name: "Gestor Web", href: "/website", icon: Globe, roles: ["ADMIN"] },
     { name: "Punto de Venta", href: "/pos", icon: ShoppingCart, roles: ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"] },
     { name: "Caja / Pagos", href: "/payments", icon: Banknote, roles: ["ADMIN", "FINANCE", "OPERATIVE"] },
-    { name: "Clientes", href: "/customers", icon: Users, roles: ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"] },
+    { name: "Clientes", href: "/customers", icon: Users, roles: ["ADMIN", "FINANCE", "OPERATIVE"] },
     { name: "Inventario", href: "/inventory", icon: Package, roles: ["ADMIN", "WAREHOUSE", "OPERATIVE"] },
     { name: "Despachos", href: "/dispatch", icon: Truck, roles: ["ADMIN", "WAREHOUSE", "OPERATIVE"] },
     { name: "Cotizaciones", href: "/quotes", icon: FileText, roles: ["ADMIN", "OPERATIVE"] },
