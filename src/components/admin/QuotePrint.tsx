@@ -106,7 +106,7 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
           <div style={{ width: "200px", padding: "10px", border: "1px solid #ccc", borderRadius: "6px" }}>
             <h3 style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#003366", borderBottom: "1px solid #eee", paddingBottom: "4px" }}>Condiciones</h3>
             <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Validez:</strong> 15 Días</p>
-            <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Pago:</strong> Efectivo</p>
+            <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Pago:</strong> Contado</p>
             <p style={{ margin: "0 0 4px 0", fontSize: "12px" }}><strong>Entrega:</strong> {quote.deliveryType}</p>
             <p style={{ margin: "0", fontSize: "12px" }}><strong>Vendedor:</strong> {quote.user?.name || "Asesor"}</p>
           </div>
