@@ -289,7 +289,7 @@ function POSContent() {
     {activeTab === "DEVOLUCIONES" ? (
       <ReturnsPosTab />
     ) : (
-    <div style={{ display: "flex", minHeight: "calc(100vh - 64px - 2rem)", gap: "1rem" }}>
+    <div style={{ display: "flex", height: "calc(100vh - 64px - 2rem)", gap: "1rem" }}>
       
       {/* LEFT COLUMN: CATALOG */}
       <div className="card" style={{ flex: "1 1 50%", display: "flex", flexDirection: "column", padding: "1rem", overflow: "hidden" }}>
@@ -484,7 +484,7 @@ function POSContent() {
         </div>
 
         {/* Cart Items */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "1rem", minHeight: "350px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "1rem", minHeight: "250px" }}>
           {cart.length === 0 ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--color-text-muted)", gap: "1rem" }}>
               <ShoppingCart size={48} opacity={0.2} />
