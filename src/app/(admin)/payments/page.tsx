@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { CreditCard, Banknote, Landmark, CheckCircle, Clock, Users, Package, History, Trash2, Plus, Minus, FileText, CalendarClock, Search, Receipt, Truck, Store, X, Sparkles, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
-import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment, assignCustomerToOrder } from "@/actions/payments";
+import { getPendingOrders, processPayment, cancelOrder, searchCustomerOrdersForPayment, assignCustomerToOrder, getQuotes } from "@/actions/payments";
 import { getCustomerOrders, requestCustomerRUT, requestCustomerRUTManual } from "@/actions/customers";
 import ReturnsCashierTab from "@/components/admin/ReturnsCashierTab";
+import QuotesCashierTab from "@/components/admin/QuotesCashierTab";
 import VoucherPrint80mm from "@/components/admin/VoucherPrint80mm";
 import { Printer } from "lucide-react";
 
@@ -13,8 +14,9 @@ type Order = Awaited<ReturnType<typeof getPendingOrders>>[0];
 type CustomerOrder = Awaited<ReturnType<typeof getCustomerOrders>>[0];
 
 export default function PaymentsPage() {
-  const [activeTab, setActiveTab] = useState<"COBROS" | "DEVOLUCIONES">("COBROS");
+  const [activeTab, setActiveTab] = useState<"COBROS" | "DEVOLUCIONES" | "COTIZACIONES">("COBROS");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [quotes, setQuotes] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -137,8 +139,11 @@ export default function PaymentsPage() {
       const data = await getPendingOrders();
       setOrders(data);
       updateSelectedOrderIfPresent(data);
+
+      const qs = await getQuotes();
+      setQuotes(qs as any);
     } catch (error) {
-      toast.error("Error al cargar cola de pagos");
+      toast.error("Error al cargar cola");
     } finally {
       setIsLoading(false);
     }
@@ -378,7 +383,7 @@ export default function PaymentsPage() {
         onClick={() => setActiveTab("COBROS")}
         style={{ padding: "0.5rem 1.5rem", borderRadius: "100px" }}
       >
-        💵 Cobros Pendientes
+        💰 Cobros Pendientes
       </button>
       <button 
         className={`btn ${activeTab === "DEVOLUCIONES" ? "btn-primary" : "btn-outline"}`}
@@ -387,10 +392,19 @@ export default function PaymentsPage() {
       >
         <RotateCcw size={16} /> Autorizar Devoluciones
       </button>
+      <button 
+        className={`btn ${activeTab === "COTIZACIONES" ? "btn-primary" : "btn-outline"}`}
+        onClick={() => { setActiveTab("COTIZACIONES"); setSelectedOrder(null); }}
+        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px", display: "flex", gap: "0.5rem", alignItems: "center" }}
+      >
+        <FileText size={16} /> Cotizaciones
+      </button>
     </div>
 
     {activeTab === "DEVOLUCIONES" ? (
       <ReturnsCashierTab />
+    ) : activeTab === "COTIZACIONES" ? (
+      <QuotesCashierTab quotes={quotes} />
     ) : (
     <div style={{ display: "flex", height: "calc(100vh - 64px - 4rem - 50px)", gap: "1.5rem" }}>
       

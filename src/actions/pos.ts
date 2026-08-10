@@ -136,3 +136,91 @@ export async function createSpecialProduct(name: string, price: number) {
     return { success: false, error: error.message };
   }
 }
+
+export async function saveQuote(
+  items: { productId: string, quantity: number, unitPrice: number }[], 
+  totalAmount: number, 
+  customerId?: string, 
+  notes?: string, 
+  priceTier: string = "NORMAL"
+) {
+  try {
+    await requireSession();
+    let serverTotalAmount = 0;
+    const itemsWithServerPrice: any[] = [];
+
+    // Validar y recalcular precio
+    for (const item of items) {
+      const product = await prisma.product.findUnique({ where: { id: item.productId } });
+      if (!product) continue;
+      
+      let realUnitPrice = product.price;
+      if (!product.sku.startsWith("ESP-")) {
+        // @ts-ignore
+        const expertDcto = product.expertDiscount ?? 5;
+        // @ts-ignore
+        const volDcto = product.volumeDiscount ?? 10;
+        // @ts-ignore
+        const corpDcto = product.corporateDiscount ?? 15;
+
+        if (priceTier === "EXPERTO") realUnitPrice = product.price - (product.price * expertDcto / 100);
+        else if (priceTier === "VOLUMEN") realUnitPrice = product.price - (product.price * volDcto / 100);
+        else if (priceTier === "CORPORATIVO") realUnitPrice = product.price - (product.price * corpDcto / 100);
+        
+        realUnitPrice = Math.round(realUnitPrice);
+      } else {
+        realUnitPrice = item.unitPrice;
+      }
+
+      serverTotalAmount += realUnitPrice * item.quantity;
+      itemsWithServerPrice.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: realUnitPrice
+      });
+    }
+
+    if (itemsWithServerPrice.length === 0) return { success: false, error: "Cotización vacía" };
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Find last quote number
+      const lastQuote = await tx.order.findFirst({
+        where: { quoteNumber: { not: null } },
+        orderBy: { quoteNumber: 'desc' }
+      });
+      
+      let nextNumber = 1;
+      if (lastQuote && lastQuote.quoteNumber) {
+        const match = lastQuote.quoteNumber.match(/COT-(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1], 10) + 1;
+        }
+      }
+      const newQuoteNumber = `COT-${String(nextNumber).padStart(4, '0')}`;
+
+      const order = await tx.order.create({
+        data: {
+          status: 'QUOTE',
+          totalAmount: serverTotalAmount,
+          customer: customerId ? { connect: { id: customerId } } : undefined,
+          notes,
+          quoteNumber: newQuoteNumber,
+          items: {
+            create: itemsWithServerPrice
+          }
+        }
+      });
+      return order;
+    });
+
+    await logUserAction("NUEVA_COTIZACION_POS", `Cotización: ${result.quoteNumber} | Monto total: $${serverTotalAmount.toFixed(2)} | Items: ${items.length}`);
+    
+    revalidatePath("/(admin)/pos");
+    revalidatePath("/(admin)/payments");
+    return { success: true, orderId: result.id, quoteNumber: result.quoteNumber };
+  } catch (error: any) {
+    if (error.message === 'NO_AUTH') return { success: false, error: 'No autorizado' };
+    console.error("Error creating Quote:", error);
+    return { success: false, error: "Failed to create quote: " + error.message };
+  }
+}

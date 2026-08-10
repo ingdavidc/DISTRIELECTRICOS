@@ -38,6 +38,25 @@ export async function getPendingOrders() {
   }
 }
 
+export async function getQuotes() {
+  try {
+    await requireSession();
+    const orders = await prisma.order.findMany({
+      where: { status: 'QUOTE' },
+      include: {
+        customer: true,
+        items: { include: { product: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return orders;
+  } catch (error) {
+    if ((error as Error).message === 'NO_AUTH') return [];
+    console.error('Error fetching quotes:', error);
+    return [];
+  }
+}
+
 export async function searchCustomerOrdersForPayment(identification: string) {
   try {
     await requireSession();

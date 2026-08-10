@@ -24,6 +24,7 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   OPEN_INVOICE
+  QUOTE
 }
 
 enum TransactionType {
@@ -212,7 +213,8 @@ model Order {
   totalAmount  Float
   notes        String?
   deliveryType String      @default("RETIRO") // RETIRO, DOMICILIO
-
+  quoteNumber  String?     @unique // COT-0001
+  
   // Datos Financieros (Caja)
   amountPaid  Float   @default(0)
   receiptType String? // FACTURA, VOUCHER

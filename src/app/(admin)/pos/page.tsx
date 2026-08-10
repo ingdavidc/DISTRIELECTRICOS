@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap, RotateCcw } from "lucide-react";
+import { FileText } from "lucide-react";
 import toast from "react-hot-toast";
-import { getPosProducts, submitOrderToCashier } from "@/actions/pos";
+import { getPosProducts, submitOrderToCashier, saveQuote } from "@/actions/pos";
 import { createSpecialRequest } from "@/actions/requests";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
 import { requestMultipleToCounter } from "@/actions/counter";
@@ -32,6 +33,8 @@ export default function POSPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [notes, setNotes] = useState("");
   const [deliveryType, setDeliveryType] = useState("RETIRO");
+
+  const [priceTier, setPriceTier] = useState("NORMAL");
 
   // Customer State
   const [customerQuery, setCustomerQuery] = useState("");
@@ -172,34 +175,55 @@ export default function POSPage() {
 
   const handleSendToCashier = async () => {
     if (cart.length === 0) return;
-
     setIsProcessing(true);
-    const tid = toast.loading("Enviando orden a caja...");
+    const tid = toast.loading("Enviando a caja...");
 
     try {
-      const items = cart.map((item: any) => ({
-        productId: item.id,
-        quantity: item.cartQuantity,
-        unitPrice: item.price
-      }));
-
-      const res = await submitOrderToCashier(items, total, selectedCustomer?.id, notes, deliveryType);
+      const items = cart.map(c => ({ productId: c.id, quantity: c.cartQuantity, unitPrice: c.price }));
+      const res = await submitOrderToCashier(items, total, selectedCustomer?.id, notes, deliveryType, priceTier);
       
       if (res.success) {
-        toast.success(`Orden #${res.orderId} enviada a caja.`, { id: tid });
+        toast.success(`Ticket enviado exitosamente (#${res.orderId?.slice(-6).toUpperCase()})`, { id: tid });
         setCart([]);
-        setSearchQuery("");
         setSelectedCustomer(null);
-        setCustomerQuery("");
         setNotes("");
         setDeliveryType("RETIRO");
-        fetchProducts(""); 
-        searchInputRef.current?.focus();
+        setPriceTier("NORMAL");
       } else {
-        toast.error(res.error || "Error al enviar la orden", { id: tid });
+        toast.error(res.error || "Error al enviar", { id: tid });
       }
-    } catch (err) {
-      toast.error("Ocurrió un error inesperado", { id: tid });
+    } catch (e: any) {
+      toast.error("Error de conexión", { id: tid });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSaveQuote = async () => {
+    if (cart.length === 0) return;
+    if (!selectedCustomer) {
+      toast.error("Debe seleccionar un cliente para la cotización");
+      return;
+    }
+    setIsProcessing(true);
+    const tid = toast.loading("Guardando cotización...");
+
+    try {
+      const items = cart.map(c => ({ productId: c.id, quantity: c.cartQuantity, unitPrice: c.price }));
+      const res = await saveQuote(items, total, selectedCustomer.id, notes, priceTier);
+      
+      if (res.success) {
+        toast.success(`Cotización guardada exitosamente (${res.quoteNumber})`, { id: tid });
+        setCart([]);
+        setSelectedCustomer(null);
+        setNotes("");
+        setDeliveryType("RETIRO");
+        setPriceTier("NORMAL");
+      } else {
+        toast.error(res.error || "Error al guardar cotización", { id: tid });
+      }
+    } catch (e: any) {
+      toast.error("Error de conexión", { id: tid });
     } finally {
       setIsProcessing(false);
     }
@@ -559,15 +583,27 @@ export default function POSPage() {
             <span>${total.toLocaleString('de-DE')}</span>
           </div>
 
-          <button 
-            className="btn btn-secondary" 
-            style={{ width: "100%", padding: "1.25rem", fontSize: "1.1rem", marginTop: "1rem", opacity: cart.length === 0 ? 0.5 : 1, display: "flex", justifyContent: "center", gap: "0.75rem", backgroundColor: "var(--color-primary)", color: "white" }}
-            disabled={cart.length === 0 || isProcessing}
-            onClick={handleSendToCashier}
-          >
-            <Send size={22} />
-            {isProcessing ? "Enviando..." : `ENVIAR A CAJA`}
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+            <button 
+              className="btn btn-outline" 
+              style={{ flex: 1, padding: "1.25rem", fontSize: "1rem", opacity: cart.length === 0 ? 0.5 : 1, display: "flex", justifyContent: "center", gap: "0.5rem" }}
+              disabled={cart.length === 0 || isProcessing}
+              onClick={handleSaveQuote}
+            >
+              <FileText size={20} />
+              Guardar Cotización
+            </button>
+
+            <button 
+              className="btn btn-primary" 
+              style={{ flex: 1, padding: "1.25rem", fontSize: "1.1rem", opacity: cart.length === 0 ? 0.5 : 1, display: "flex", justifyContent: "center", gap: "0.5rem" }}
+              disabled={cart.length === 0 || isProcessing}
+              onClick={handleSendToCashier}
+            >
+              <Send size={22} />
+              {isProcessing ? "Enviando..." : `ENVIAR A CAJA`}
+            </button>
+          </div>
         </div>
 
       </div>
@@ -622,6 +658,48 @@ export default function POSPage() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
                   
+                  {/* Cotizaciones */}
+                  {customerOrders.filter((o: any) => o.status === 'QUOTE').length > 0 && (
+                    <div>
+                      <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--color-secondary)", marginBottom: "1rem", borderBottom: "1px solid var(--color-border)", paddingBottom: "0.5rem" }}>
+                        Cotizaciones Guardadas
+                      </h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        {customerOrders.filter((o: any) => o.status === 'QUOTE').map((order: any) => (
+                          <div key={order.id} style={{ border: "1px dashed var(--color-secondary)", borderRadius: "var(--radius-md)", padding: "1rem", background: "white" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                              <div style={{ fontWeight: 600, fontSize: "1rem" }}>Cotización {order.quoteNumber}</div>
+                              <span className="badge" style={{ background: "var(--color-secondary)", color: "white" }}>Cotización</span>
+                            </div>
+                            <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <Package size={14} /> {order.items.reduce((acc: any, item: any) => acc + item.quantity, 0)} artículos   Total: ${order.totalAmount.toLocaleString('de-DE')}
+                            </div>
+                            <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+                              <button 
+                                className="btn btn-primary" 
+                                style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
+                                onClick={() => {
+                                  const newCart = order.items.map((i: any) => ({
+                                    id: i.product.id,
+                                    name: i.product.name,
+                                    price: i.unitPrice,
+                                    cartQuantity: i.quantity,
+                                    stock: i.product.stock
+                                  }));
+                                  setCart(newCart);
+                                  setIsHistoryModalOpen(false);
+                                  toast.success(`Cotización cargada al carrito`);
+                                }}
+                              >
+                                Retomar al Carrito
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Órdenes Activas */}
                   {activeOrders.length > 0 && (
                     <div>
@@ -636,7 +714,7 @@ export default function POSPage() {
                               {getStatusBadge(order.status)}
                             </div>
                             <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                              <Package size={14} /> {order.items.reduce((acc: any, item: any) => acc + item.quantity, 0)} artículos • Total: ${order.totalAmount.toLocaleString('de-DE')}
+                              <Package size={14} /> {order.items.reduce((acc: any, item: any) => acc + item.quantity, 0)} artículos   Total: ${order.totalAmount.toLocaleString('de-DE')}
                             </div>
                           </div>
                         ))}
