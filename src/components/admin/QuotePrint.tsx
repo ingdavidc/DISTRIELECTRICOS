@@ -39,7 +39,7 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
               left: 0;
               top: 0;
               width: ${paperWidth};
-              height: ${paperHeight};
+              min-height: ${paperHeight};
               padding: ${isHalf ? '0.5in' : '0.75in'};
               box-sizing: border-box;
               background: white;
@@ -58,7 +58,8 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
         id={!previewMode ? "quote-print-area" : undefined} 
         style={previewMode ? {
           width: paperWidth,
-          minHeight: paperHeight,
+          height: paperHeight,
+          overflow: "hidden",
           padding: isHalf ? '0.5in' : '0.75in',
           boxSizing: "border-box",
           background: "white",
