@@ -47,7 +47,7 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
               color: #000;
             }
             @page {
-              size: ${paperWidth} ${paperHeight};
+              size: ${paperWidth} ${paperHeight} ${isHalf ? 'landscape' : ''};
               margin: 0;
             }
           }

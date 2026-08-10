@@ -195,7 +195,7 @@ export default function QuotesCashierTab({ quotes }: { quotes: any[] }) {
                       className={`btn ${printFormat === "HALF_LETTER" ? "btn-primary" : "btn-outline"}`}
                       onClick={() => setPrintFormat("HALF_LETTER")}
                     >
-                      Tamaño MEDIA CARTA (5.5" x 8.5")
+                      Tamaño MEDIA CARTA (8.5" x 5.5")
                     </button>
                   </div>
 
