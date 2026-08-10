@@ -12,8 +12,8 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
   if (!quote) return null;
 
   const isHalf = format === "HALF_LETTER";
-  const paperWidth = isHalf ? "5.5in" : "8.5in";
-  const paperHeight = isHalf ? "8.5in" : "11in";
+  const paperWidth = "8.5in";
+  const paperHeight = isHalf ? "5.5in" : "11in";
 
   const formatDate = (date: any) => {
     return new Intl.DateTimeFormat('es-CO', {
@@ -72,12 +72,14 @@ export default function QuotePrint({ quote, format, previewMode = false }: Quote
       >
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #003366", paddingBottom: "15px", marginBottom: "20px" }}>
-          <div>
-            <img src="/logo.png" alt="Logo" style={{ maxWidth: "200px", height: "auto", marginBottom: "10px" }} />
-            <h2 style={{ margin: "0 0 5px 0", fontSize: "18px", color: "#003366" }}>DistriEléctricos E&D</h2>
-            <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>NIT: 900.123.456-7</p>
-            <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>Dirección: Calle Falsa 123, Local 4</p>
-            <p style={{ margin: "0", fontSize: "12px" }}>WhatsApp / Tel: +57 300 123 4567</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <img src="/logo.png" alt="Logo" style={{ maxWidth: "120px", height: "auto" }} />
+            <div>
+              <h2 style={{ margin: "0 0 5px 0", fontSize: "18px", color: "#003366" }}>DistriEléctricos E&D</h2>
+              <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>NIT: 900.123.456-7</p>
+              <p style={{ margin: "0 0 3px 0", fontSize: "12px" }}>Dirección: Calle Falsa 123, Local 4</p>
+              <p style={{ margin: "0", fontSize: "12px" }}>WhatsApp / Tel: +57 300 123 4567</p>
+            </div>
           </div>
           <div style={{ textAlign: "right" }}>
             <h1 style={{ margin: "0 0 10px 0", fontSize: "28px", color: "#003366", textTransform: "uppercase" }}>Cotización</h1>
