@@ -289,7 +289,7 @@ function POSContent() {
     {activeTab === "DEVOLUCIONES" ? (
       <ReturnsPosTab />
     ) : (
-    <div style={{ display: "flex", height: "calc(100vh - 64px - 2rem)", gap: "1rem" }}>
+    <div style={{ display: "flex", minHeight: "calc(100vh - 64px - 2rem)", gap: "1rem" }}>
       
       {/* LEFT COLUMN: CATALOG */}
       <div className="card" style={{ flex: "1 1 50%", display: "flex", flexDirection: "column", padding: "1rem", overflow: "hidden" }}>
@@ -484,7 +484,7 @@ function POSContent() {
         </div>
 
         {/* Cart Items */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "1rem" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "1rem", minHeight: "350px" }}>
           {cart.length === 0 ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--color-text-muted)", gap: "1rem" }}>
               <ShoppingCart size={48} opacity={0.2} />
@@ -523,8 +523,8 @@ function POSContent() {
         </div>
 
         {/* Tipo de Entrega */}
-        <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
-            <label style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between" }}>
+        <div style={{ padding: "0.5rem 1rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
+            <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.25rem", display: "flex", justifyContent: "space-between" }}>
               <span>Tipo de Entrega</span>
               <span style={{ fontSize: "0.8rem", color: "var(--color-secondary)" }}>⏳ Promedio Bodega: {avgTime}</span>
             </label>
@@ -547,7 +547,7 @@ function POSContent() {
         </div>
 
         {/* Observaciones */}
-        <div style={{ padding: "0.75rem 1.5rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
+        <div style={{ padding: "0.5rem 1rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
           <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.25rem", display: "block" }}>Observaciones / Notas del pedido</label>
           <input 
             type="text"
@@ -560,7 +560,7 @@ function POSContent() {
         </div>
 
         {/* Totals and Send */}
-        <div style={{ padding: "1.5rem", background: "var(--color-background)", borderTop: "1px solid var(--color-border)", borderBottomLeftRadius: "var(--radius-lg)", borderBottomRightRadius: "var(--radius-lg)", display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div style={{ padding: "1rem", background: "var(--color-background)", borderTop: "1px solid var(--color-border)", borderBottomLeftRadius: "var(--radius-lg)", borderBottomRightRadius: "var(--radius-lg)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           
           <div style={{ display: "flex", justifyContent: "space-between", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>
             <span>Subtotal (Sin IVA)</span>
@@ -575,24 +575,24 @@ function POSContent() {
             <span>${total.toLocaleString('de-DE')}</span>
           </div>
 
-          <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
             <button 
               className="btn btn-outline" 
-              style={{ flex: 1, padding: "1.25rem", fontSize: "1rem", opacity: cart.length === 0 ? 0.5 : 1, display: "flex", justifyContent: "center", gap: "0.5rem" }}
+              style={{ flex: 1, padding: "0.75rem", fontSize: "0.9rem", opacity: cart.length === 0 ? 0.5 : 1, display: "flex", justifyContent: "center", gap: "0.5rem" }}
               disabled={cart.length === 0 || isProcessing}
               onClick={handleSaveQuote}
             >
-              <FileText size={20} />
+              <FileText size={18} />
               Guardar Cotización
             </button>
 
             <button 
               className="btn btn-primary" 
-              style={{ flex: 1, padding: "1.25rem", fontSize: "1.1rem", opacity: cart.length === 0 ? 0.5 : 1, display: "flex", justifyContent: "center", gap: "0.5rem" }}
+              style={{ flex: 1, padding: "0.75rem", fontSize: "1rem", opacity: cart.length === 0 ? 0.5 : 1, display: "flex", justifyContent: "center", gap: "0.5rem" }}
               disabled={cart.length === 0 || isProcessing}
               onClick={handleSendToCashier}
             >
-              <Send size={22} />
+              <Send size={20} />
               {isProcessing ? "Enviando..." : `ENVIAR A CAJA`}
             </button>
           </div>
