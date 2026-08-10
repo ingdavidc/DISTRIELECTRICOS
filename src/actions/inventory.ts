@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { logUserAction } from './logs';
 import { auth } from '@/auth';
+import { buildSearchTokenConditions } from '@/lib/searchUtils';
 
 async function requireSession() {
   const session = await auth();
@@ -21,13 +22,12 @@ export async function getInventoryProducts(limit?: number, sortField: string = '
       orderBy[sortField] = sortOrder;
     }
     
-    const where: any = {};
+    let where: any = {};
     if (searchTerm) {
-      where.OR = [
-        { name: { contains: searchTerm, mode: 'insensitive' } },
-        { sku: { contains: searchTerm, mode: 'insensitive' } },
-        { commercialName: { contains: searchTerm, mode: 'insensitive' } },
-      ];
+      const tokenConditions = buildSearchTokenConditions(searchTerm, ['name', 'sku', 'commercialName']);
+      if (tokenConditions) {
+        where = { ...where, ...tokenConditions };
+      }
     }
     
     const data = await prisma.product.findMany({
@@ -47,13 +47,12 @@ export async function getInventoryProducts(limit?: number, sortField: string = '
 export async function getTotalProductsCount(searchTerm?: string) {
   try {
     await requireSession();
-    const where: any = {};
+    let where: any = {};
     if (searchTerm) {
-      where.OR = [
-        { name: { contains: searchTerm, mode: 'insensitive' } },
-        { sku: { contains: searchTerm, mode: 'insensitive' } },
-        { commercialName: { contains: searchTerm, mode: 'insensitive' } },
-      ];
+      const tokenConditions = buildSearchTokenConditions(searchTerm, ['name', 'sku', 'commercialName']);
+      if (tokenConditions) {
+        where = { ...where, ...tokenConditions };
+      }
     }
     const count = await prisma.product.count({ where });
     return count;

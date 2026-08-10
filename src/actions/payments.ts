@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { logUserAction } from './logs';
+import { buildSearchTokenConditions } from '@/lib/searchUtils';
 
 // ── Shared guard ──────────────────────────────────────────────────────────────
 async function requireSession() {
@@ -60,16 +61,19 @@ export async function getQuotes() {
 export async function searchCustomerOrdersForPayment(identification: string) {
   try {
     await requireSession();
-    // Sanitize: only allow alphanumeric + common ID chars
-    const cleanId = String(identification).replace(/[^a-zA-Z0-9\-\.]/g, '').slice(0, 20);
-    if (!cleanId) return [];
+    if (!identification) return [];
 
-    const customer = await prisma.customer.findUnique({ where: { identification: cleanId } });
-    if (!customer) return [];
+    const tokenConditions = buildSearchTokenConditions(identification, ['name', 'identification', 'phone']) || {};
+    const customers = await prisma.customer.findMany({
+      where: tokenConditions,
+      select: { id: true }
+    });
+
+    if (customers.length === 0) return [];
 
     const orders = await prisma.order.findMany({
       where: {
-        customerId: customer.id,
+        customerId: { in: customers.map((c: any) => c.id) },
         status: { in: ['PENDING', 'OPEN_INVOICE', 'READY'] }
       },
       include: {
@@ -333,16 +337,9 @@ export async function assignCustomerToOrder(orderId: string, search: string) {
   try {
     await requireSession();
     
-    // Buscar cliente por teléfono o NIT
-    const cleanSearch = search.replace(/\D/g, "");
+    const tokenConditions = buildSearchTokenConditions(search, ['name', 'identification', 'phone']) || {};
     let customer = await prisma.customer.findFirst({
-      where: {
-        OR: [
-          { phone: { contains: cleanSearch } },
-          { phone: search },
-          { identification: search }
-        ]
-      }
+      where: tokenConditions
     });
 
     if (!customer) {

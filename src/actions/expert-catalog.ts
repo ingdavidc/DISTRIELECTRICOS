@@ -4,18 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { getExpertUser } from "@/actions/expert";
 import { revalidatePath } from "next/cache";
+import { buildSearchTokenConditions } from "@/lib/searchUtils";
 
 export async function searchProductsForExpert(query: string) {
   if (!query || query.length < 2) return [];
 
+  const tokenConditions = buildSearchTokenConditions(query, ['name', 'sku', 'commercialName']) || {};
+
   const products = await prisma.product.findMany({
-    where: {
-      OR: [
-        { name: { contains: query, mode: 'insensitive' } },
-        { sku: { contains: query, mode: 'insensitive' } },
-        { commercialName: { contains: query, mode: 'insensitive' } },
-      ]
-    },
+    where: tokenConditions,
     select: {
       id: true,
       sku: true,

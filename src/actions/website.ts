@@ -74,16 +74,14 @@ export async function updateWebConfig(data: {
   return res;
 }
 
+import { buildSearchTokenConditions } from "@/lib/searchUtils";
+
 export async function searchProducts(query: string) {
   await getSession();
   if (!query) return [];
+  const tokenConditions = buildSearchTokenConditions(query, ['name', 'sku']) || {};
   return await prisma.product.findMany({
-    where: {
-      OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { sku: { contains: query, mode: "insensitive" } }
-      ]
-    },
+    where: tokenConditions,
     take: 10,
     select: { id: true, name: true, price: true, imageUrl: true }
   });

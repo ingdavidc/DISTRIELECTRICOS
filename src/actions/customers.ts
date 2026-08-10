@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import { logUserAction } from "./logs";
+import { buildSearchTokenConditions } from "@/lib/searchUtils";
 
 // ── Auth guard ─────────────────────────────────────────────────────────────────
 async function requireSession() {
@@ -48,15 +49,9 @@ export async function searchCustomers(query: string) {
   if (!query) return [];
   try {
     await requireSession();
-    // Sanitize: limit length and strip non-printable
-    const q = String(query).slice(0, 60).trim();
+    const tokenConditions = buildSearchTokenConditions(query, ['name', 'identification', 'email', 'phone']) || {};
     const customers = await prisma.customer.findMany({
-      where: {
-        OR: [
-          { identification: { contains: q } },
-          { name: { contains: q, mode: "insensitive" } },
-        ]
-      },
+      where: tokenConditions,
       take: 5
     });
     return customers;

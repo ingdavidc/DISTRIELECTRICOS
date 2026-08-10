@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { buildSearchTokenConditions } from "@/lib/searchUtils";
 
 async function requireSession() {
   const session = await auth();
@@ -41,46 +42,23 @@ export async function globalSearch(query: string) {
     // 2. Buscar en base de datos en paralelo
     const [products, customers, suppliers, orders] = await Promise.all([
       prisma.product.findMany({
-        where: {
-          OR: [
-            { name: { contains: searchStr, mode: 'insensitive' } },
-            { sku: { contains: searchStr, mode: 'insensitive' } },
-            { commercialName: { contains: searchStr, mode: 'insensitive' } },
-            { brand: { contains: searchStr, mode: 'insensitive' } }
-          ]
-        },
+        where: buildSearchTokenConditions(searchStr, ['name', 'sku', 'commercialName', 'brand']) || {},
         take: 5,
         select: { id: true, name: true, sku: true, stock: true, price: true, imageUrl: true }
       }),
       prisma.customer.findMany({
-        where: {
-          OR: [
-            { name: { contains: searchStr, mode: 'insensitive' } },
-            { identification: { contains: searchStr, mode: 'insensitive' } },
-            { phone: { contains: searchStr, mode: 'insensitive' } }
-          ]
-        },
+        where: buildSearchTokenConditions(searchStr, ['name', 'identification', 'phone']) || {},
         take: 5,
         select: { id: true, name: true, identification: true, phone: true }
       }),
       prisma.supplier.findMany({
-        where: {
-          OR: [
-            { name: { contains: searchStr, mode: 'insensitive' } },
-            { nit: { contains: searchStr, mode: 'insensitive' } }
-          ]
-        },
+        where: buildSearchTokenConditions(searchStr, ['name', 'nit']) || {},
         take: 5,
         select: { id: true, name: true, nit: true }
       }),
-      // Para órdenes, buscamos por ID o notas
+      // Para órdenes, buscamos por ID, número de cotización o notas
       prisma.order.findMany({
-        where: {
-          OR: [
-            { id: { contains: searchStr, mode: 'insensitive' } },
-            { notes: { contains: searchStr, mode: 'insensitive' } }
-          ]
-        },
+        where: buildSearchTokenConditions(searchStr, ['id', 'quoteNumber', 'notes']) || {},
         take: 5,
         select: { id: true, status: true, totalAmount: true, createdAt: true, customer: { select: { name: true } } }
       })
