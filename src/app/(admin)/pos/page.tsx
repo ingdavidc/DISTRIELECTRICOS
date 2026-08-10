@@ -158,6 +158,20 @@ function POSContent() {
     }));
   };
 
+  const setAbsoluteQuantity = (id: string, qty: number) => {
+    setCart(prev => prev.map((item: any) => {
+      if (item.id === id) {
+        let newQty = qty;
+        if (newQty > item.stock) {
+          toast.error(`Solo hay ${item.stock} unidades disponibles`);
+          newQty = item.stock;
+        }
+        return { ...item, cartQuantity: newQty };
+      }
+      return item;
+    }));
+  };
+
   const removeFromCart = (id: string) => {
     setCart(prev => prev.filter(item => item.id !== id));
   };
@@ -507,7 +521,23 @@ function POSContent() {
                       >
                         {item.cartQuantity > 1 ? <Minus size={14} /> : <Trash2 size={14} color="var(--color-danger)" />}
                       </button>
-                      <span style={{ fontSize: "0.9rem", fontWeight: 600, width: "24px", textAlign: "center" }}>{item.cartQuantity}</span>
+                      <input 
+                        type="number"
+                        min="1"
+                        max={item.stock}
+                        value={item.cartQuantity || ''}
+                        onChange={(e) => {
+                          let val = parseInt(e.target.value);
+                          if (isNaN(val)) val = 0;
+                          setAbsoluteQuantity(item.id, val);
+                        }}
+                        onBlur={() => {
+                          if (!item.cartQuantity || item.cartQuantity <= 0) {
+                            setAbsoluteQuantity(item.id, 1);
+                          }
+                        }}
+                        style={{ fontSize: "0.9rem", fontWeight: 600, width: "46px", textAlign: "center", border: "1px solid var(--color-border)", borderRadius: "4px", outline: "none", padding: "0.15rem 0", WebkitAppearance: "none", margin: 0 }}
+                      />
                       <button 
                         onClick={() => updateQuantity(item.id, 1)}
                         style={{ padding: "0.25rem", borderRadius: "4px", background: "white", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center" }}
