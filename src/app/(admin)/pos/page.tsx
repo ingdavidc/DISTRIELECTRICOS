@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap, RotateCcw } from "lucide-react";
 import { FileText } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,11 +19,18 @@ type Order = Awaited<ReturnType<typeof getCustomerOrders>>[0];
 interface CartItem extends Product {
   cartQuantity: number;
 }
-
+import { Suspense } from "react";
 import ReturnsPosTab from "@/components/admin/ReturnsPosTab";
 
-export default function POSPage() {
+function POSContent() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<"VENTAS" | "DEVOLUCIONES">("VENTAS");
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'DEVOLUCIONES') setActiveTab("DEVOLUCIONES");
+    else if (tab === 'VENTAS') setActiveTab("VENTAS");
+  }, [searchParams]);
   // ... rest of state ...
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -278,30 +286,13 @@ export default function POSPage() {
 
   return (
     <>
-    <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-      <button 
-        className={`btn ${activeTab === "VENTAS" ? "btn-primary" : "btn-outline"}`}
-        onClick={() => setActiveTab("VENTAS")}
-        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px" }}
-      >
-        🛒 Nueva Venta
-      </button>
-      <button 
-        className={`btn ${activeTab === "DEVOLUCIONES" ? "btn-primary" : "btn-outline"}`}
-        onClick={() => setActiveTab("DEVOLUCIONES")}
-        style={{ padding: "0.5rem 1.5rem", borderRadius: "100px", display: "flex", gap: "0.5rem", alignItems: "center" }}
-      >
-        <RotateCcw size={16} /> Solicitar Devolución
-      </button>
-    </div>
-
     {activeTab === "DEVOLUCIONES" ? (
       <ReturnsPosTab />
     ) : (
-    <div style={{ display: "flex", height: "calc(100vh - 64px - 4rem - 50px)", gap: "1.5rem" }}>
+    <div style={{ display: "flex", height: "calc(100vh - 64px - 2rem)", gap: "1rem" }}>
       
       {/* LEFT COLUMN: CATALOG */}
-      <div className="card" style={{ flex: "1 1 60%", display: "flex", flexDirection: "column", padding: "1.5rem", overflow: "hidden" }}>
+      <div className="card" style={{ flex: "1 1 50%", display: "flex", flexDirection: "column", padding: "1rem", overflow: "hidden" }}>
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -418,7 +409,7 @@ export default function POSPage() {
       </div>
 
       {/* RIGHT COLUMN: TICKET */}
-      <div className="card" style={{ flex: "0 0 400px", display: "flex", flexDirection: "column", padding: "0" }}>
+      <div className="card" style={{ flex: "1 1 50%", maxWidth: "600px", display: "flex", flexDirection: "column", padding: "0" }}>
         
         {/* Customer Section */}
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid var(--color-border)", background: "var(--color-background)", borderTopLeftRadius: "var(--radius-lg)", borderTopRightRadius: "var(--radius-lg)" }}>
@@ -500,11 +491,11 @@ export default function POSPage() {
               <p>El carrito está vacío</p>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               {cart.map((item: any) => (
-                <div key={item.id} style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingBottom: "1rem", borderBottom: "1px dashed var(--color-border)" }}>
+                <div key={item.id} style={{ display: "flex", flexDirection: "column", gap: "0.25rem", paddingBottom: "0.5rem", borderBottom: "1px dashed var(--color-border)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div style={{ fontWeight: 500, fontSize: "0.9rem", flex: 1 }}>{item.name}</div>
+                    <div style={{ fontWeight: 500, fontSize: "0.85rem", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginRight: "0.5rem" }}>{item.name}</div>
                     <div style={{ fontWeight: 600 }}>${(item.price * item.cartQuantity).toLocaleString('de-DE')}</div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -556,12 +547,13 @@ export default function POSPage() {
         </div>
 
         {/* Observaciones */}
-        <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
-          <label style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "block" }}>Observaciones / Notas del pedido</label>
-          <textarea 
+        <div style={{ padding: "0.75rem 1.5rem", borderTop: "1px solid var(--color-border)", background: "white" }}>
+          <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.25rem", display: "block" }}>Observaciones / Notas del pedido</label>
+          <input 
+            type="text"
             className="form-input" 
-            style={{ width: "100%", minHeight: "60px", resize: "none", fontSize: "0.9rem" }} 
-            placeholder=""
+            style={{ width: "100%", fontSize: "0.85rem", padding: "0.5rem" }} 
+            placeholder="Escribe alguna nota..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
@@ -832,5 +824,13 @@ export default function POSPage() {
     </div>
     )}
     </>
+  );
+}
+
+export default function POSPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>Cargando Punto de Venta...</div>}>
+      <POSContent />
+    </Suspense>
   );
 }

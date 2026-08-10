@@ -44,14 +44,25 @@ export default function Sidebar({ role, modules = [] }: { role: string; modules?
           const isActive = pathname === item.href;
           const Icon = item.icon;
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`nav-item ${isActive ? "active" : ""}`}
-            >
-              <Icon size={20} />
-              {item.name}
-            </Link>
+            <div key={item.name}>
+              <Link
+                href={item.href}
+                className={`nav-item ${isActive ? "active" : ""}`}
+              >
+                <Icon size={20} />
+                {item.name}
+              </Link>
+              {item.name === "Punto de Venta" && pathname.startsWith("/pos") && (
+                <div style={{ paddingLeft: "2.5rem", display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem", marginBottom: "0.5rem" }}>
+                  <Link href="/pos?tab=VENTAS" className="nav-item" style={{ fontSize: "0.85rem", padding: "0.35rem 0.75rem", minHeight: "auto" }}>
+                    🛒 Nueva Venta
+                  </Link>
+                  <Link href="/pos?tab=DEVOLUCIONES" className="nav-item" style={{ fontSize: "0.85rem", padding: "0.35rem 0.75rem", minHeight: "auto" }}>
+                    🔄 Devolución
+                  </Link>
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
