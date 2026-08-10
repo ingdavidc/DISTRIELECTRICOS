@@ -5,9 +5,10 @@ import React from "react";
 interface QuotePrintProps {
   quote: any;
   format: "LETTER" | "HALF_LETTER";
+  previewMode?: boolean;
 }
 
-export default function QuotePrint({ quote, format }: QuotePrintProps) {
+export default function QuotePrint({ quote, format, previewMode = false }: QuotePrintProps) {
   if (!quote) return null;
 
   const isHalf = format === "HALF_LETTER";
@@ -23,34 +24,52 @@ export default function QuotePrint({ quote, format }: QuotePrintProps) {
 
   return (
     <>
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
+      {!previewMode && (
+        <style>{`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #quote-print-area, #quote-print-area * {
+              visibility: visible;
+            }
+            #quote-print-area {
+              display: block !important;
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: ${paperWidth};
+              height: ${paperHeight};
+              padding: ${isHalf ? '0.5in' : '0.75in'};
+              box-sizing: border-box;
+              background: white;
+              font-family: Arial, sans-serif;
+              color: #000;
+            }
+            @page {
+              size: ${paperWidth} ${paperHeight};
+              margin: 0;
+            }
           }
-          #quote-print-area, #quote-print-area * {
-            visibility: visible;
-          }
-          #quote-print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: ${paperWidth};
-            height: ${paperHeight};
-            padding: ${isHalf ? '0.5in' : '0.75in'};
-            box-sizing: border-box;
-            background: white;
-            font-family: Arial, sans-serif;
-            color: #000;
-          }
-          @page {
-            size: ${paperWidth} ${paperHeight};
-            margin: 0;
-          }
-        }
-      `}</style>
+        `}</style>
+      )}
 
-      <div id="quote-print-area" style={{ display: "none" }}>
+      <div 
+        id={!previewMode ? "quote-print-area" : undefined} 
+        style={previewMode ? {
+          width: paperWidth,
+          minHeight: paperHeight,
+          padding: isHalf ? '0.5in' : '0.75in',
+          boxSizing: "border-box",
+          background: "white",
+          fontFamily: "Arial, sans-serif",
+          color: "#000",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+          margin: "0 auto",
+          transform: "scale(0.8)",
+          transformOrigin: "top center"
+        } : { display: "none" }}
+      >
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #003366", paddingBottom: "15px", marginBottom: "20px" }}>
           <div>

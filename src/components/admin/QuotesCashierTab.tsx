@@ -9,6 +9,7 @@ export default function QuotesCashierTab({ quotes }: { quotes: any[] }) {
   const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
   const [printFormat, setPrintFormat] = useState<"LETTER" | "HALF_LETTER">("LETTER");
   const [isPrintReady, setIsPrintReady] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const filteredQuotes = quotes.filter((q: any) => {
     const term = searchQuery.toLowerCase();
@@ -140,30 +141,16 @@ export default function QuotesCashierTab({ quotes }: { quotes: any[] }) {
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 
                 <button 
-                  className="btn btn-outline" 
+                  className="btn btn-primary" 
                   style={{ padding: "1.5rem", display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem", fontSize: "1.1rem" }}
-                  onClick={() => handlePrint("LETTER")}
+                  onClick={() => setIsPreviewModalOpen(true)}
                 >
-                  <div style={{ background: "var(--color-surface)", padding: "0.75rem", borderRadius: "50%" }}>
-                    <Printer size={24} color="var(--color-primary)" />
+                  <div style={{ background: "rgba(255,255,255,0.2)", padding: "0.75rem", borderRadius: "50%" }}>
+                    <Printer size={24} color="white" />
                   </div>
                   <div style={{ textAlign: "left" }}>
-                    <div style={{ fontWeight: 600 }}>Imprimir Tamaño CARTA</div>
-                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Ideal para impresoras de oficina estándar</div>
-                  </div>
-                </button>
-
-                <button 
-                  className="btn btn-outline" 
-                  style={{ padding: "1.5rem", display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem", fontSize: "1.1rem" }}
-                  onClick={() => handlePrint("HALF_LETTER")}
-                >
-                  <div style={{ background: "var(--color-surface)", padding: "0.75rem", borderRadius: "50%" }}>
-                    <Printer size={24} color="var(--color-primary)" />
-                  </div>
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontWeight: 600 }}>Imprimir MEDIA CARTA</div>
-                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>Ahorra papel, ideal para cotizaciones cortas</div>
+                    <div style={{ fontWeight: 600 }}>Vista Previa e Imprimir</div>
+                    <div style={{ fontSize: "0.85rem", opacity: 0.9 }}>Visualiza la cotización y elige el tamaño de papel</div>
                   </div>
                 </button>
 
@@ -186,6 +173,56 @@ export default function QuotesCashierTab({ quotes }: { quotes: any[] }) {
             
             {isPrintReady && (
               <QuotePrint quote={selectedQuote} format={printFormat} />
+            )}
+
+            {/* Preview Modal */}
+            {isPreviewModalOpen && (
+              <div className="modal-overlay" style={{ zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}>
+                <div className="modal-content" style={{ maxWidth: "800px", width: "95%", height: "90vh", display: "flex", flexDirection: "column", background: "#f0f4f8" }}>
+                  <div className="modal-header" style={{ background: "white", padding: "1rem 1.5rem", borderBottom: "1px solid #ccc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h2 className="modal-title" style={{ fontSize: "1.25rem", margin: 0 }}>Vista Previa de Cotización</h2>
+                    <button className="btn-close" onClick={() => setIsPreviewModalOpen(false)}>×</button>
+                  </div>
+                  
+                  <div style={{ padding: "1rem", display: "flex", justifyContent: "center", gap: "1rem", background: "white", borderBottom: "1px solid #ccc" }}>
+                    <button 
+                      className={`btn ${printFormat === "LETTER" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setPrintFormat("LETTER")}
+                    >
+                      Tamaño CARTA (8.5" x 11")
+                    </button>
+                    <button 
+                      className={`btn ${printFormat === "HALF_LETTER" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setPrintFormat("HALF_LETTER")}
+                    >
+                      Tamaño MEDIA CARTA (5.5" x 8.5")
+                    </button>
+                  </div>
+
+                  <div className="modal-body" style={{ flex: 1, overflowY: "auto", padding: "2rem", display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
+                    <QuotePrint quote={selectedQuote} format={printFormat} previewMode={true} />
+                  </div>
+
+                  <div style={{ padding: "1rem 1.5rem", background: "white", borderTop: "1px solid #ccc", display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+                    <button className="btn btn-outline" onClick={() => setIsPreviewModalOpen(false)}>Cancelar</button>
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={() => {
+                        setIsPrintReady(true);
+                        setTimeout(() => {
+                          window.print();
+                          setIsPrintReady(false);
+                          setIsPreviewModalOpen(false);
+                        }, 500);
+                      }}
+                      style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                    >
+                      <Printer size={20} />
+                      Imprimir Ahora
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
