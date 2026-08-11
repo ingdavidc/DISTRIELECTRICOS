@@ -188,7 +188,7 @@ function POSContent() {
     if (pTier === "EXPERTO") finalPrice = item.price - (cost * expertDcto / 100);
     else if (pTier === "VOLUMEN") finalPrice = item.price - (cost * volDcto / 100);
     else if (pTier === "CORPORATIVO") finalPrice = item.price - (cost * corpDcto / 100);
-    return Math.round(finalPrice);
+    return Math.ceil(finalPrice / 100) * 100;
   };
 
   const updateItemTier = (id: string, tier: any) => {

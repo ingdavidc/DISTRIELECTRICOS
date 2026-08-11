@@ -66,9 +66,9 @@ export default function PaymentsPage() {
           else if (newTier === "VOLUMEN") finalPrice = item.basePrice - (cost * vol / 100);
           else if (newTier === "CORPORATIVO") finalPrice = item.basePrice - (cost * corp / 100);
         } else {
-          finalPrice = item.unitPrice;
+          finalPrice = item.basePrice;
         }
-        return { ...item, priceTier: newTier, unitPrice: Math.round(finalPrice) };
+        return { ...item, priceTier: newTier, unitPrice: Math.ceil(finalPrice / 100) * 100 };
       }
       return item;
     }));
