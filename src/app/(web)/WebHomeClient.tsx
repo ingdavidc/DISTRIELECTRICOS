@@ -136,7 +136,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
             <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>Productos Destacados</h2>
-            <button className="btn btn-outline">Ver Todo</button>
+            <Link href="/catalog" className="btn btn-outline" style={{ textDecoration: "none" }}>Ver Todo</Link>
           </div>
           
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem" }}>
