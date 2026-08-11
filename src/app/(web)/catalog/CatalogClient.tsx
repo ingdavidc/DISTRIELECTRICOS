@@ -191,8 +191,8 @@ export default function CatalogClient({
             <>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem", marginBottom: "3rem" }}>
                 {products.map((prod) => (
-                  <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                    <Link href={`/producto/${prod.id}`} style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                  <div key={prod.id} className="card product-card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    <Link href={`/producto/${prod.id}`} className="product-img-wrapper" style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                       {flashOfferIds.includes(prod.id) && (
                         <div style={{ position: "absolute", top: "10px", left: "10px", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.25rem", zIndex: 10 }}>
                           <Zap size={12} fill="white" /> FLASH

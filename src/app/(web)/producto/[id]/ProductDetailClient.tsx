@@ -198,11 +198,11 @@ export default function ProductDetailClient({ product, similarProducts }: { prod
             <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--color-text-main)", marginBottom: "2rem" }}>Productos Similares</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "2rem" }}>
               {similarProducts.map((prod) => (
-                <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <div key={prod.id} className="card product-card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                   <Link href={`/producto/${prod.id}`} style={{ display: "block", textDecoration: "none" }}>
                     <div style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
                       {prod.imageUrl ? (
-                        <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.3s" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} />
+                        <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                       ) : (
                         <ShoppingCart size={50} color="var(--color-medium-gray)" />
                       )}

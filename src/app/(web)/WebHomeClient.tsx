@@ -82,7 +82,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
           <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "2rem", color: "var(--color-primary)" }}>Categorías Principales</h2>
           <div className="grid-cards">
             {featuredCategories.map((cat, i) => (
-              <div key={i} className="card" style={{ display: "flex", alignItems: "center", gap: "1.5rem", cursor: "pointer", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+              <div key={i} className="card product-card" style={{ display: "flex", alignItems: "center", gap: "1.5rem", cursor: "pointer", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
                 <div style={{ fontSize: "3rem" }}>{cat.img}</div>
                 <div style={{ fontSize: "1.2rem", fontWeight: 600 }}>{cat.name}</div>
               </div>
@@ -131,8 +131,8 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
           
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem" }}>
             {products.map((prod) => (
-              <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                <Link href={`/producto/${prod.id}`} style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+              <div key={prod.id} className="card product-card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <Link href={`/producto/${prod.id}`} className="product-img-wrapper" style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                   {prod.imageUrl ? (
                     <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "1rem" }} />
                   ) : (
@@ -188,13 +188,13 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
             
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
               {promoProducts.map((prod) => (
-                <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", border: "2px solid var(--color-secondary)", position: "relative" }}>
+                <div key={prod.id} className="card product-card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", border: "2px solid var(--color-secondary)", position: "relative" }}>
                   <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.8rem", fontWeight: 800, zIndex: 10 }}>
                     NUEVO
                   </div>
-                  <Link href={`/producto/${prod.id}`} style={{ height: "250px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+                  <Link href={`/producto/${prod.id}`} className="product-img-wrapper" style={{ height: "250px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
                     {prod.imageUrl ? (
-                      <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.3s" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} />
+                      <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                     ) : (
                       <Wrench size={80} color="var(--color-medium-gray)" />
                     )}
