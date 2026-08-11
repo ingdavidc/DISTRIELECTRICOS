@@ -629,8 +629,14 @@ button {
   display: flex;
   gap: 1rem;
   width: max-content;
-  animation: scrollMarquee 40s linear infinite;
+  animation: scrollMarquee 52s linear infinite;
 }
 .marquee-content:hover {
   animation-play-state: paused;
+}
+.marquee-item img, .marquee-item video {
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.marquee-item:hover img, .marquee-item:hover video {
+  transform: scale(1.08);
 }

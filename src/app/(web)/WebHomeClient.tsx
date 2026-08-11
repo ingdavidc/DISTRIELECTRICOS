@@ -117,7 +117,7 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
                   We multiply the array to ensure it's wide enough for large screens.
                 */}
                 {[...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery].map((item, idx) => (
-                  <div key={`${item.id}-${idx}`} style={{ width: "350px", height: "300px", borderRadius: "1rem", overflow: "hidden", background: "#f0f0f0", flexShrink: 0, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
+                  <div key={`${item.id}-${idx}`} className="marquee-item" style={{ width: "350px", height: "300px", borderRadius: "1rem", overflow: "hidden", background: "#f0f0f0", flexShrink: 0, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
                     {item.type === "VIDEO" ? (
                       <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay muted loop playsInline />
                     ) : (
