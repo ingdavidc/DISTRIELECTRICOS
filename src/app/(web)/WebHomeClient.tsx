@@ -132,13 +132,13 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem" }}>
             {products.map((prod) => (
               <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                <div style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                <Link href={`/producto/${prod.id}`} style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                   {prod.imageUrl ? (
                     <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "1rem" }} />
                   ) : (
                     <ShoppingCart size={60} color="var(--color-medium-gray)" />
                   )}
-                </div>
+                </Link>
                 <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "white" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                     <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{prod.brand || "Sin Marca"}</div>
@@ -150,16 +150,25 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
                       <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#dcfce7", color: "#22c55e" }}>Disponible</span>
                     )}
                   </div>
-                  <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1 }}>{prod.name}</div>
+                  <Link href={`/producto/${prod.id}`} style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1, textDecoration: "none", color: "inherit" }}>{prod.name}</Link>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                     <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
-                    <button 
-                      className="btn btn-primary" 
-                      style={{ padding: "0.5rem", borderRadius: "50%" }}
-                      onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
-                    >
-                      <ShoppingCart size={20} />
-                    </button>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <Link 
+                        href={`/producto/${prod.id}`}
+                        className="btn btn-outline"
+                        style={{ padding: "0.5rem 1rem", borderRadius: "2rem", display: "flex", alignItems: "center", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", color: "var(--color-primary)", border: "1px solid var(--color-primary)" }}
+                      >
+                        Ver
+                      </Link>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ padding: "0.5rem", borderRadius: "50%" }}
+                        onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
+                      >
+                        <ShoppingCart size={20} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -183,28 +192,37 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
                   <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.8rem", fontWeight: 800, zIndex: 10 }}>
                     NUEVO
                   </div>
-                  <div style={{ height: "250px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+                  <Link href={`/producto/${prod.id}`} style={{ height: "250px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
                     {prod.imageUrl ? (
                       <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.3s" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} />
                     ) : (
                       <Wrench size={80} color="var(--color-medium-gray)" />
                     )}
-                  </div>
+                  </Link>
                   <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "linear-gradient(to bottom, #ffffff, #f8fafc)" }}>
                     <div style={{ fontSize: "0.9rem", color: "var(--color-text-muted)", marginBottom: "0.5rem", fontWeight: 600 }}>{prod.brand || "Especial"}</div>
-                    <div style={{ fontWeight: 800, fontSize: "1.3rem", marginBottom: "0.5rem", color: "var(--color-text-main)", lineHeight: 1.2 }}>{prod.name}</div>
+                    <Link href={`/producto/${prod.id}`} style={{ fontWeight: 800, fontSize: "1.3rem", marginBottom: "0.5rem", color: "var(--color-text-main)", lineHeight: 1.2, textDecoration: "none" }}>{prod.name}</Link>
                     <p style={{ fontSize: "0.95rem", color: "var(--color-text-muted)", marginBottom: "1.5rem", flex: 1 }}>
                       {prod.description || "Equipamiento profesional de alto rendimiento para proyectos eléctricos de cualquier magnitud."}
                     </p>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "auto" }}>
                       <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
-                      <button 
-                        className="btn btn-secondary" 
-                        style={{ padding: "0.75rem 1.5rem", borderRadius: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
-                        onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
-                      >
-                        Comprar <ArrowRight size={18} />
-                      </button>
+                      <div style={{ display: "flex", gap: "0.5rem", flexDirection: "column" }}>
+                        <Link 
+                          href={`/producto/${prod.id}`}
+                          className="btn btn-outline"
+                          style={{ padding: "0.5rem 1rem", borderRadius: "2rem", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, textDecoration: "none", border: "1px solid var(--color-primary)", color: "var(--color-primary)" }}
+                        >
+                          Ver Detalles
+                        </Link>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ padding: "0.75rem 1.5rem", borderRadius: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                          onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
+                        >
+                          Comprar <ArrowRight size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

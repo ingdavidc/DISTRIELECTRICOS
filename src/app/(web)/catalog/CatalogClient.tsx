@@ -192,9 +192,9 @@ export default function CatalogClient({
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem", marginBottom: "3rem" }}>
                 {products.map((prod) => (
                   <div key={prod.id} className="card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                    <div style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                    <Link href={`/producto/${prod.id}`} style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                       {flashOfferIds.includes(prod.id) && (
-                        <div style={{ position: "absolute", top: "10px", left: "10px", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <div style={{ position: "absolute", top: "10px", left: "10px", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.25rem", zIndex: 10 }}>
                           <Zap size={12} fill="white" /> FLASH
                         </div>
                       )}
@@ -203,7 +203,7 @@ export default function CatalogClient({
                       ) : (
                         <ShoppingCart size={60} color="var(--color-medium-gray)" />
                       )}
-                    </div>
+                    </Link>
                     <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "white" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                         <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{prod.brand || "Sin Marca"}</div>
@@ -215,16 +215,25 @@ export default function CatalogClient({
                           <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#dcfce7", color: "#22c55e" }}>Disponible</span>
                         )}
                       </div>
-                      <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1 }}>{prod.name}</div>
+                      <Link href={`/producto/${prod.id}`} style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1, textDecoration: "none", color: "inherit" }}>{prod.name}</Link>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                         <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
-                        <button 
-                          className="btn btn-primary" 
-                          style={{ padding: "0.5rem", borderRadius: "50%" }}
-                          onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
-                        >
-                          <ShoppingCart size={20} />
-                        </button>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <Link 
+                            href={`/producto/${prod.id}`}
+                            className="btn btn-outline"
+                            style={{ padding: "0.5rem 1rem", borderRadius: "2rem", display: "flex", alignItems: "center", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", color: "var(--color-primary)", border: "1px solid var(--color-primary)" }}
+                          >
+                            Ver
+                          </Link>
+                          <button 
+                            className="btn btn-primary" 
+                            style={{ padding: "0.5rem", borderRadius: "50%" }}
+                            onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
+                          >
+                            <ShoppingCart size={20} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
