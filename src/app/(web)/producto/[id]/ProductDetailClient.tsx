@@ -118,8 +118,8 @@ export default function ProductDetailClient({ product, similarProducts }: { prod
 
             {product.features && (
               <div style={{ marginBottom: "2rem" }}>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>Características Adicionales</h3>
-                <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>{product.features}</p>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>Características o Descripción Adicional</h3>
+                <div style={{ color: "var(--color-text-muted)", fontSize: "0.95rem", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{product.features}</div>
               </div>
             )}
 
