@@ -18,6 +18,7 @@ type Order = Awaited<ReturnType<typeof getCustomerOrders>>[0];
 
 interface CartItem extends Product {
   cartQuantity: number;
+  priceTier?: "NORMAL" | "EXPERTO" | "VOLUMEN" | "CORPORATIVO";
 }
 import { Suspense } from "react";
 import ReturnsPosTab from "@/components/admin/ReturnsPosTab";
@@ -43,8 +44,6 @@ function POSContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [notes, setNotes] = useState("");
   const [deliveryType, setDeliveryType] = useState("RETIRO");
-
-  const [priceTier, setPriceTier] = useState("NORMAL");
 
   // Customer State
   const [customerQuery, setCustomerQuery] = useState("");
@@ -178,8 +177,26 @@ function POSContent() {
     setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const subtotal = cart.reduce((sum: any, item: any) => sum + (item.price * item.cartQuantity / (1 + (item.tax / 100))), 0);
-  const total = cart.reduce((sum: any, item: any) => sum + (item.price * item.cartQuantity), 0);
+  const getEffectivePrice = (item: CartItem) => {
+    if (item.sku.startsWith("ESP-")) return item.price;
+    const pTier = item.priceTier || "NORMAL";
+    const expertDcto = item.expertDiscount ?? 5;
+    const volDcto = item.volumeDiscount ?? 10;
+    const corpDcto = item.corporateDiscount ?? 15;
+    const cost = item.cost || 0;
+    let finalPrice = item.price;
+    if (pTier === "EXPERTO") finalPrice = item.price - (cost * expertDcto / 100);
+    else if (pTier === "VOLUMEN") finalPrice = item.price - (cost * volDcto / 100);
+    else if (pTier === "CORPORATIVO") finalPrice = item.price - (cost * corpDcto / 100);
+    return Math.round(finalPrice);
+  };
+
+  const updateItemTier = (id: string, tier: any) => {
+    setCart(prev => prev.map(item => item.id === id ? { ...item, priceTier: tier } : item));
+  };
+
+  const subtotal = cart.reduce((sum: any, item: any) => sum + (getEffectivePrice(item) * item.cartQuantity / (1 + (item.tax / 100))), 0);
+  const total = cart.reduce((sum: any, item: any) => sum + (getEffectivePrice(item) * item.cartQuantity), 0);
   const taxes = total - subtotal;
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
@@ -205,7 +222,8 @@ function POSContent() {
     const newCart = quote.items.map((item: any) => ({
       ...item.product,
       cartQuantity: item.quantity,
-      price: item.unitPrice
+      price: item.unitPrice,
+      priceTier: "NORMAL"
     }));
     
     setCart(newCart);
@@ -219,8 +237,8 @@ function POSContent() {
     const tid = toast.loading("Enviando a caja...");
 
     try {
-      const items = cart.map(c => ({ productId: c.id, quantity: c.cartQuantity, unitPrice: c.price }));
-      const res = await submitOrderToCashier(items, total, selectedCustomer?.id, notes, deliveryType, priceTier);
+      const items = cart.map(c => ({ productId: c.id, quantity: c.cartQuantity, unitPrice: getEffectivePrice(c), priceTier: c.priceTier || "NORMAL" }));
+      const res = await submitOrderToCashier(items, total, selectedCustomer?.id, notes, deliveryType);
       
       if (res.success) {
         toast.success(`Ticket enviado exitosamente (#${res.orderId?.slice(-6).toUpperCase()})`, { id: tid });
@@ -228,7 +246,6 @@ function POSContent() {
         setSelectedCustomer(null);
         setNotes("");
         setDeliveryType("RETIRO");
-        setPriceTier("NORMAL");
       } else {
         toast.error(res.error || "Error al enviar", { id: tid });
       }
@@ -249,8 +266,8 @@ function POSContent() {
     const tid = toast.loading("Guardando cotización...");
 
     try {
-      const items = cart.map(c => ({ productId: c.id, quantity: c.cartQuantity, unitPrice: c.price }));
-      const res = await saveQuote(items, total, selectedCustomer.id, notes, priceTier);
+      const items = cart.map(c => ({ productId: c.id, quantity: c.cartQuantity, unitPrice: getEffectivePrice(c), priceTier: c.priceTier || "NORMAL" }));
+      const res = await saveQuote(items, total, selectedCustomer.id, notes);
       
       if (res.success) {
         toast.success(`Cotización guardada exitosamente (${res.quoteNumber})`, { id: tid });
@@ -258,7 +275,6 @@ function POSContent() {
         setSelectedCustomer(null);
         setNotes("");
         setDeliveryType("RETIRO");
-        setPriceTier("NORMAL");
       } else {
         toast.error(res.error || "Error al guardar cotización", { id: tid });
       }
@@ -530,10 +546,25 @@ function POSContent() {
                 <div key={item.id} style={{ display: "flex", flexDirection: "column", gap: "0.25rem", paddingBottom: "0.5rem", borderBottom: "1px dashed var(--color-border)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ fontWeight: 500, fontSize: "0.85rem", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginRight: "0.5rem" }}>{item.name}</div>
-                    <div style={{ fontWeight: 600 }}>${(item.price * item.cartQuantity).toLocaleString('de-DE')}</div>
+                    <div style={{ fontWeight: 600 }}>${(getEffectivePrice(item) * item.cartQuantity).toLocaleString('de-DE')}</div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.price.toLocaleString('de-DE')} c/u</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${getEffectivePrice(item).toLocaleString('de-DE')} c/u</div>
+                      {!item.sku.startsWith("ESP-") && (
+                        <select 
+                          className="form-input" 
+                          style={{ padding: "0.15rem 0.5rem", fontSize: "0.75rem", height: "auto", minHeight: "auto", width: "auto", cursor: "pointer", appearance: "auto", border: "1px solid var(--color-border)", borderRadius: "4px", background: "white" }}
+                          value={item.priceTier || "NORMAL"}
+                          onChange={(e) => updateItemTier(item.id, e.target.value)}
+                        >
+                          <option value="NORMAL">Normal</option>
+                          <option value="VOLUMEN">Volumen (-{item.volumeDiscount ?? 10}%)</option>
+                          <option value="CORPORATIVO">Corp. (-{item.corporateDiscount ?? 15}%)</option>
+                          <option value="EXPERTO">Experto (-{item.expertDiscount ?? 5}%)</option>
+                        </select>
+                      )}
+                    </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--color-background)", borderRadius: "var(--radius-md)", padding: "0.25rem" }}>
                       <button 
                         onClick={() => item.cartQuantity > 1 ? updateQuantity(item.id, -1) : removeFromCart(item.id)}

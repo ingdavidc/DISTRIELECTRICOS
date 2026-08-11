@@ -231,9 +231,11 @@ export default function InventoryPage() {
     const cost = Number(formData.cost) || 0;
     const margin = Number(formData.profitMargin) || 0;
     const tax = Number(formData.tax) || 0;
+    const costWithTax = cost + (cost * tax / 100);
+    let u = 1 - (margin / 100);
+    if (u <= 0) u = 0.01; // Avoid division by zero
     
-    const subtotal = cost * (1 + (margin / 100));
-    const finalPrice = subtotal * (1 + (tax / 100));
+    const finalPrice = costWithTax / u;
     
     setFormData(prev => ({ ...prev, price: Math.ceil(finalPrice / 100) * 100 }));
   }, [formData.cost, formData.profitMargin, formData.tax]);

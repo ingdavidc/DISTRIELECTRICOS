@@ -37,12 +37,11 @@ export async function getPosProducts(query: string = "") {
 }
 
 export async function submitOrderToCashier(
-  items: { productId: string, quantity: number, unitPrice: number }[], 
+  items: { productId: string, quantity: number, unitPrice: number, priceTier?: string }[], 
   totalAmount: number, 
   customerId?: string, 
   notes?: string, 
-  deliveryType: string = "RETIRO",
-  priceTier: string = "NORMAL"
+  deliveryType: string = "RETIRO"
 ) {
   try {
     await requireSession();
@@ -65,9 +64,10 @@ export async function submitOrderToCashier(
         // @ts-ignore
         const corpDcto = product.corporateDiscount ?? 15;
 
-        if (priceTier === "EXPERTO") realUnitPrice = product.price - (product.price * expertDcto / 100);
-        else if (priceTier === "VOLUMEN") realUnitPrice = product.price - (product.price * volDcto / 100);
-        else if (priceTier === "CORPORATIVO") realUnitPrice = product.price - (product.price * corpDcto / 100);
+        const pTier = item.priceTier || "NORMAL";
+        if (pTier === "EXPERTO") realUnitPrice = product.price - (product.cost * expertDcto / 100);
+        else if (pTier === "VOLUMEN") realUnitPrice = product.price - (product.cost * volDcto / 100);
+        else if (pTier === "CORPORATIVO") realUnitPrice = product.price - (product.cost * corpDcto / 100);
         
         realUnitPrice = Math.round(realUnitPrice);
       } else {
@@ -138,11 +138,10 @@ export async function createSpecialProduct(name: string, price: number) {
 }
 
 export async function saveQuote(
-  items: { productId: string, quantity: number, unitPrice: number }[], 
+  items: { productId: string, quantity: number, unitPrice: number, priceTier?: string }[], 
   totalAmount: number, 
   customerId?: string, 
-  notes?: string, 
-  priceTier: string = "NORMAL"
+  notes?: string
 ) {
   try {
     await requireSession();
@@ -163,9 +162,10 @@ export async function saveQuote(
         // @ts-ignore
         const corpDcto = product.corporateDiscount ?? 15;
 
-        if (priceTier === "EXPERTO") realUnitPrice = product.price - (product.price * expertDcto / 100);
-        else if (priceTier === "VOLUMEN") realUnitPrice = product.price - (product.price * volDcto / 100);
-        else if (priceTier === "CORPORATIVO") realUnitPrice = product.price - (product.price * corpDcto / 100);
+        const pTier = item.priceTier || "NORMAL";
+        if (pTier === "EXPERTO") realUnitPrice = product.price - (product.cost * expertDcto / 100);
+        else if (pTier === "VOLUMEN") realUnitPrice = product.price - (product.cost * volDcto / 100);
+        else if (pTier === "CORPORATIVO") realUnitPrice = product.price - (product.cost * corpDcto / 100);
         
         realUnitPrice = Math.round(realUnitPrice);
       } else {

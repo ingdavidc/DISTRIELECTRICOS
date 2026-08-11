@@ -38,7 +38,6 @@ export default function PaymentsPage() {
   const [creditDays, setCreditDays] = useState(30);
   const [receiptType, setReceiptType] = useState("VOUCHER"); // FACTURA, VOUCHER
   const [amountToPay, setAmountToPay] = useState(0);
-  const [priceTier, setPriceTier] = useState<"NORMAL" | "EXPERTO" | "VOLUMEN" | "CORPORATIVO">("NORMAL");
 
   // Cash Modal State
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
@@ -53,28 +52,25 @@ export default function PaymentsPage() {
   const [paymentDetailsForVoucher, setPaymentDetailsForVoucher] = useState<{amountPaid: number, method: string, date: Date}>({amountPaid: 0, method: "EFECTIVO", date: new Date()});
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
-  const handlePriceTierChange = (newTier: string) => {
-    setPriceTier(newTier as any);
-    if (!selectedOrder) return;
-
+  const updateItemTier = (id: string, newTier: string) => {
     setEditableItems(prev => prev.map((item: any) => {
-      const original = selectedOrder.items.find((i: any) => i.id === item.id);
-      if (!original) return item;
-      
-      let finalPrice = original.product.price;
-      if (!original.product.sku.startsWith("ESP-")) {
-        const expert = original.product.expertDiscount ?? 5;
-        const vol = original.product.volumeDiscount ?? 10;
-        const corp = original.product.corporateDiscount ?? 15;
-        
-        if (newTier === "EXPERTO") finalPrice = finalPrice - (finalPrice * expert / 100);
-        else if (newTier === "VOLUMEN") finalPrice = finalPrice - (finalPrice * vol / 100);
-        else if (newTier === "CORPORATIVO") finalPrice = finalPrice - (finalPrice * corp / 100);
-      } else {
-        finalPrice = original.unitPrice;
+      if (item.id === id) {
+        let finalPrice = item.basePrice;
+        if (!item.sku.startsWith("ESP-")) {
+          const expert = item.expertDiscount ?? 5;
+          const vol = item.volumeDiscount ?? 10;
+          const corp = item.corporateDiscount ?? 15;
+          const cost = item.cost || 0;
+          
+          if (newTier === "EXPERTO") finalPrice = item.basePrice - (cost * expert / 100);
+          else if (newTier === "VOLUMEN") finalPrice = item.basePrice - (cost * vol / 100);
+          else if (newTier === "CORPORATIVO") finalPrice = item.basePrice - (cost * corp / 100);
+        } else {
+          finalPrice = item.unitPrice;
+        }
+        return { ...item, priceTier: newTier, unitPrice: Math.round(finalPrice) };
       }
-
-      return { ...item, unitPrice: Math.round(finalPrice) };
+      return item;
     }));
   };
 
@@ -205,7 +201,14 @@ export default function PaymentsPage() {
       name: i.product.name,
       quantity: i.quantity,
       unitPrice: i.unitPrice,
-      stock: i.product.stock 
+      stock: i.product.stock,
+      basePrice: i.product.price,
+      cost: i.product.cost,
+      expertDiscount: i.product.expertDiscount,
+      volumeDiscount: i.product.volumeDiscount,
+      corporateDiscount: i.product.corporateDiscount,
+      sku: i.product.sku,
+      priceTier: "NORMAL"
     })));
     // Reset payment states
     setPaymentMethod("EFECTIVO");
@@ -214,7 +217,6 @@ export default function PaymentsPage() {
     setCreditProvider("");
     setCreditDays(30);
     setReceiptType(order.receiptType || "VOUCHER");
-    setPriceTier("NORMAL");
     const balance = order.totalAmount - order.amountPaid;
     setAmountToPay(balance);
   };
@@ -587,23 +589,6 @@ export default function PaymentsPage() {
               {/* Items List (Editable only if PENDING) */}
               <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border)" }}>
                 
-                {/* Selector de Precios (NUEVO) */}
-                {isPending && (
-                  <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "var(--color-background)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-                    <label style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-main)", marginBottom: "0.5rem", display: "block" }}>Aplicar Lista de Precios</label>
-                    <select 
-                      className="form-input" 
-                      value={priceTier} 
-                      onChange={(e) => handlePriceTierChange(e.target.value)}
-                      style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)" }}
-                    >
-                      <option value="NORMAL">Precio Público (Normal)</option>
-                      <option value="EXPERTO">Aliado Experto</option>
-                      <option value="VOLUMEN">Precio Volumen</option>
-                      <option value="CORPORATIVO">Precio Corporativo</option>
-                    </select>
-                  </div>
-                )}
 
                   <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--color-primary)" }}>
                     {isPending ? "Auditoría de Artículos" : "Artículos Despachados"}
@@ -613,7 +598,22 @@ export default function PaymentsPage() {
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "0.75rem", borderBottom: "1px dashed var(--color-border)" }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 500, color: isPending ? "inherit" : "var(--color-text-muted)" }}>{item.name}</div>
-                        <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.unitPrice.toLocaleString('de-DE')} c/u</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.25rem" }}>
+                          <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>${item.unitPrice.toLocaleString('de-DE')} c/u</div>
+                          {isPending && !item.sku.startsWith("ESP-") && (
+                            <select 
+                              className="form-input" 
+                              style={{ padding: "0.15rem 0.5rem", fontSize: "0.75rem", height: "auto", minHeight: "auto", width: "auto", cursor: "pointer", appearance: "auto" }}
+                              value={item.priceTier || "NORMAL"}
+                              onChange={(e) => updateItemTier(item.id, e.target.value)}
+                            >
+                              <option value="NORMAL">Normal</option>
+                              <option value="VOLUMEN">Volumen (-{item.volumeDiscount ?? 10}%)</option>
+                              <option value="CORPORATIVO">Corp. (-{item.corporateDiscount ?? 15}%)</option>
+                              <option value="EXPERTO">Experto (-{item.expertDiscount ?? 5}%)</option>
+                            </select>
+                          )}
+                        </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
                         
