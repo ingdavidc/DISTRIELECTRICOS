@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Search, ShoppingCart, Filter, X, ChevronLeft, ChevronRight, Zap } from "lucide-react";
@@ -38,6 +38,12 @@ export default function CatalogClient({
   const currentCategory = searchParams.get('category') || 'all';
   const currentQuery = searchParams.get('q') || '';
   const isFlash = searchParams.get('flash') === 'true';
+
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [searchParams]);
 
   const [minPrice, setMinPrice] = useState(currentMin?.toString() || "");
   const [maxPrice, setMaxPrice] = useState(currentMax?.toString() || "");
