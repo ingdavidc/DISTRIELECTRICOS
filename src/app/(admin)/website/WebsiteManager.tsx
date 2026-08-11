@@ -377,7 +377,25 @@ export default function WebsiteManager({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
             <div>
               <h3 style={{ fontWeight: 600 }}>Fotos del Día a Día</h3>
-              <p style={{ fontSize: "0.9rem", color: "var(--color-text-muted)" }}>Máximo 10 fotos o videos cortos. Las más antiguas se borran automáticamente.</p>
+              <p style={{ fontSize: "0.9rem", color: "var(--color-text-muted)", marginBottom: "1rem" }}>Máximo 10 fotos o videos cortos. Las más antiguas se borran automáticamente.</p>
+              
+              <div style={{ background: "#fff3cd", border: "1px solid #ffe69c", color: "#664d03", padding: "1rem", borderRadius: "var(--radius-md)", fontSize: "0.85rem", maxWidth: "600px" }}>
+                <strong style={{ display: "block", marginBottom: "0.5rem" }}>⚠️ Requisitos para Instagram:</strong>
+                
+                <strong style={{ display: "block", marginTop: "0.5rem", fontSize: "0.8rem" }}>📸 Para Fotos:</strong>
+                <ul style={{ paddingLeft: "1.5rem", margin: 0, marginBottom: "0.5rem" }}>
+                  <li><strong>Formato y Peso:</strong> Solo JPEG, máximo 8 MB.</li>
+                  <li><strong>Proporción:</strong> Entre 4:5 (vertical) y 1.91:1 (horizontal).</li>
+                </ul>
+
+                <strong style={{ display: "block", fontSize: "0.8rem" }}>🎥 Para Videos (Reels):</strong>
+                <ul style={{ paddingLeft: "1.5rem", margin: 0 }}>
+                  <li><strong>Formato y Peso:</strong> MP4 o MOV, máximo 1 GB.</li>
+                  <li><strong>Duración:</strong> Entre 3 segundos y 15 minutos.</li>
+                  <li><strong>Proporción recomendada:</strong> 9:16 (formato vertical de celular).</li>
+                  <li><strong>FPS:</strong> 23 a 60 FPS (formato estándar).</li>
+                </ul>
+              </div>
             </div>
             
             <div style={{ position: "relative" }}>

@@ -47,8 +47,8 @@ export const authConfig: NextAuthConfig = {
 
         // Reglas de acceso estrictas por rol para módulos ERP
         const routeConfig: Record<string, string[]> = {
-          "/dashboard": ["ADMIN"],
-          "/website": ["ADMIN"],
+          "/dashboard": ["ADMIN", "OPERATIVE"],
+          "/website": ["ADMIN", "OPERATIVE"],
           "/pos": ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"],
           "/payments": ["ADMIN", "FINANCE", "OPERATIVE"],
           "/customers": ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"],
@@ -57,9 +57,9 @@ export const authConfig: NextAuthConfig = {
           "/quotes": ["ADMIN", "OPERATIVE"],
           "/purchases": ["ADMIN", "OPERATIVE"],
           "/suppliers": ["ADMIN", "OPERATIVE"],
-          "/b2b-requests": ["ADMIN"],
-          "/expert-requests": ["ADMIN"],
-          "/hr": ["ADMIN"],
+          "/b2b-requests": ["ADMIN", "OPERATIVE"],
+          "/expert-requests": ["ADMIN", "OPERATIVE"],
+          "/hr": ["ADMIN", "OPERATIVE"],
         };
 
         const matchedRoute = Object.keys(routeConfig).find(route => pathname.startsWith(route));

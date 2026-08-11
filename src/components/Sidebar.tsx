@@ -8,8 +8,8 @@ export default function Sidebar({ role, modules = [] }: { role: string; modules?
   const pathname = usePathname();
 
   const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN"] },
-    { name: "Gestor Web", href: "/website", icon: Globe, roles: ["ADMIN"] },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "OPERATIVE"] },
+    { name: "Gestor Web", href: "/website", icon: Globe, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Punto de Venta", href: "/pos", icon: ShoppingCart, roles: ["ADMIN", "CASHIER", "FINANCE", "OPERATIVE"] },
     { name: "Caja / Pagos", href: "/payments", icon: Banknote, roles: ["ADMIN", "FINANCE", "OPERATIVE"] },
     { name: "Clientes", href: "/customers", icon: Users, roles: ["ADMIN", "FINANCE", "OPERATIVE"] },
@@ -18,9 +18,9 @@ export default function Sidebar({ role, modules = [] }: { role: string; modules?
     { name: "Cotizaciones", href: "/quotes", icon: FileText, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Órdenes de Compra", href: "/purchases", icon: ClipboardList, roles: ["ADMIN", "OPERATIVE"] },
     { name: "Proveedores", href: "/suppliers", icon: Building2, roles: ["ADMIN", "OPERATIVE"] },
-    { name: "Clientes Corp. (B2B)", href: "/b2b-requests", icon: Building2, roles: ["ADMIN"] },
-    { name: "Aliados Expertos", href: "/expert-requests", icon: Zap, roles: ["ADMIN"] },
-    { name: "Recursos Humanos", href: "/hr", icon: Users, roles: ["ADMIN"] },
+    { name: "Clientes Corp. (B2B)", href: "/b2b-requests", icon: Building2, roles: ["ADMIN", "OPERATIVE"] },
+    { name: "Aliados Expertos", href: "/expert-requests", icon: Zap, roles: ["ADMIN", "OPERATIVE"] },
+    { name: "Recursos Humanos", href: "/hr", icon: Users, roles: ["ADMIN", "OPERATIVE"] },
   ];
 
   const filteredNavItems = navItems.filter((item) => {
@@ -59,6 +59,9 @@ export default function Sidebar({ role, modules = [] }: { role: string; modules?
                   </Link>
                   <Link href="/pos?tab=DEVOLUCIONES" className="nav-item" style={{ fontSize: "0.85rem", padding: "0.35rem 0.75rem", minHeight: "auto" }}>
                     🔄 Devolución
+                  </Link>
+                  <Link href="/pos?tab=COTIZACIONES" className="nav-item" style={{ fontSize: "0.85rem", padding: "0.35rem 0.75rem", minHeight: "auto" }}>
+                    📄 Retomar Cotización
                   </Link>
                 </div>
               )}

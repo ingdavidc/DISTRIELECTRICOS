@@ -79,15 +79,15 @@ export default function InventoryPage() {
           maxSizeMB: 0.1, // Max 100KB
           maxWidthOrHeight: 800,
           useWebWorker: true,
-          fileType: "image/webp" as string,
+          fileType: "image/jpeg" as string,
         };
         const compressedFile = await imageCompression(file, options);
   
-        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, "_")}.webp`;
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, "_")}.jpeg`;
         
         const { error } = await supabase.storage
           .from("products")
-          .upload(fileName, compressedFile, { contentType: "image/webp", upsert: true });
+          .upload(fileName, compressedFile, { contentType: "image/jpeg", upsert: true });
   
         if (error) throw error;
   
@@ -993,9 +993,13 @@ export default function InventoryPage() {
                             </div>
                           )}
                           
-                          <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                            * Las imágenes se comprimirán automáticamente a WebP (&lt;100KB) antes de subirse.
-                          </span>
+                          <div style={{ marginTop: "0.5rem", background: "#fff3cd", border: "1px solid #ffe69c", color: "#664d03", padding: "0.75rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem" }}>
+                            <strong>⚠️ Requisitos de Instagram (Ofertas/Novedades):</strong>
+                            <ul style={{ paddingLeft: "1.5rem", margin: "0.25rem 0 0 0" }}>
+                              <li>Las imágenes se comprimirán a JPEG (&lt;100KB) automáticamente para cumplir la norma.</li>
+                              <li>Evita subir fotos demasiado alargadas (deben estar entre proporción 4:5 y 1.91:1).</li>
+                            </ul>
+                          </div>
                         </div>
                       </div>
                     </div>

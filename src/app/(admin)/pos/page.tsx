@@ -21,14 +21,16 @@ interface CartItem extends Product {
 }
 import { Suspense } from "react";
 import ReturnsPosTab from "@/components/admin/ReturnsPosTab";
+import QuotesPosTab from "@/components/admin/QuotesPosTab";
 
 function POSContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"VENTAS" | "DEVOLUCIONES">("VENTAS");
+  const [activeTab, setActiveTab] = useState<"VENTAS" | "DEVOLUCIONES" | "COTIZACIONES">("VENTAS");
 
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'DEVOLUCIONES') setActiveTab("DEVOLUCIONES");
+    else if (tab === 'COTIZACIONES') setActiveTab("COTIZACIONES");
     else if (tab === 'VENTAS') setActiveTab("VENTAS");
   }, [searchParams]);
   // ... rest of state ...
@@ -195,6 +197,22 @@ function POSContent() {
     }
   };
 
+  const handleResumeQuote = (quote: any) => {
+    if (quote.customer) setSelectedCustomer(quote.customer);
+    if (quote.notes) setNotes(quote.notes);
+    if (quote.deliveryType) setDeliveryType(quote.deliveryType);
+    
+    const newCart = quote.items.map((item: any) => ({
+      ...item.product,
+      cartQuantity: item.quantity,
+      price: item.unitPrice
+    }));
+    
+    setCart(newCart);
+    setActiveTab("VENTAS");
+    toast.success("Cotización retomada con éxito");
+  };
+
   const handleSendToCashier = async () => {
     if (cart.length === 0) return;
     setIsProcessing(true);
@@ -302,6 +320,8 @@ function POSContent() {
     <>
     {activeTab === "DEVOLUCIONES" ? (
       <ReturnsPosTab />
+    ) : activeTab === "COTIZACIONES" ? (
+      <QuotesPosTab onResumeQuote={handleResumeQuote} />
     ) : (
     <div style={{ display: "flex", height: "calc(100vh - 64px - 2rem)", gap: "1rem" }}>
       

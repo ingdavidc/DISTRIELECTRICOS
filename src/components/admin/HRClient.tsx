@@ -172,6 +172,7 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
   };
 
   const availableModules = [
+    { id: "/dashboard", label: "Dashboard / Inicio" },
     { id: "/pos", label: "Punto de Venta" },
     { id: "/payments", label: "Caja / Pagos" },
     { id: "/customers", label: "Clientes" },
@@ -181,6 +182,9 @@ export default function HRClient({ initialUsers }: { initialUsers: User[] }) {
     { id: "/purchases", label: "Órdenes de Compra" },
     { id: "/suppliers", label: "Proveedores" },
     { id: "/website", label: "Gestor Web" },
+    { id: "/b2b-requests", label: "Clientes Corp. (B2B)" },
+    { id: "/expert-requests", label: "Aliados Expertos" },
+    { id: "/hr", label: "Recursos Humanos" },
   ];
 
   return (
