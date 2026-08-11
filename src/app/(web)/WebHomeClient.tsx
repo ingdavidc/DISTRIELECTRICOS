@@ -8,10 +8,10 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
   const { addToCart } = useCart();
 
   const featuredCategories = [
-    { name: "Conductores y Cables", img: "🔌", color: "#f39423" },
-    { name: "Iluminación Comercial", img: "💡", color: "#203562" },
-    { name: "Automatización", img: "⚙️", color: "#b7b7c2" },
-    { name: "Herramientas", img: "🛠️", color: "#10b981" },
+    { name: "Conductores y Cables", img: "🔌", color: "#f39423", link: "/catalog?category=204a74cb-97b1-4554-9bee-4d5b71dfc000" },
+    { name: "Iluminación Comercial", img: "💡", color: "#203562", link: "/catalog?category=11651069-bb4d-477b-9d77-afac5495b18f" },
+    { name: "Automatización", img: "⚙️", color: "#b7b7c2", link: "/catalog?category=18811ae2-62ea-45c5-b410-fce91ff5d585" },
+    { name: "Herramientas", img: "🛠️", color: "#10b981", link: "/catalog?category=f2b91dca-04e2-46b1-b422-f92ff367e2c5" },
   ];
 
   return (
@@ -82,10 +82,12 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
           <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "2rem", color: "var(--color-primary)" }}>Categorías Principales</h2>
           <div className="grid-cards">
             {featuredCategories.map((cat, i) => (
-              <div key={i} className="card product-card" style={{ display: "flex", alignItems: "center", gap: "1.5rem", cursor: "pointer", transition: "transform 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                <div style={{ fontSize: "3rem" }}>{cat.img}</div>
-                <div style={{ fontSize: "1.2rem", fontWeight: 600 }}>{cat.name}</div>
-              </div>
+              <Link key={i} href={cat.link} style={{ textDecoration: "none", color: "inherit" }}>
+                <div className="card product-card" style={{ display: "flex", alignItems: "center", gap: "1.5rem", cursor: "pointer" }}>
+                  <div style={{ fontSize: "3rem" }}>{cat.img}</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: 600 }}>{cat.name}</div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -97,27 +99,35 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
           <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)" }}>El Día a Día en DISTRIELECTRICOS</h2>
           <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem" }}>Una mirada detrás de escena de nuestro trabajo en tienda y bodegas.</p>
           
-          <div style={{ display: "flex", overflowX: "auto", gap: "1rem", paddingBottom: "1rem", scrollSnapType: "x mandatory" }}>
-            {gallery && gallery.length > 0 ? (
-              gallery.map(item => (
-                <div key={item.id} style={{ minWidth: "300px", height: "300px", borderRadius: "1rem", overflow: "hidden", scrollSnapAlign: "start", background: "#f0f0f0", flexShrink: 0, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
-                  {item.type === "VIDEO" ? (
-                    <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} controls muted loop />
-                  ) : (
-                    <img src={item.url} alt="Galería" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  )}
-                </div>
-              ))
-            ) : (
-              // Empty State Placeholder
-              [1, 2, 3].map(i => (
-                <div key={i} style={{ minWidth: "300px", height: "300px", borderRadius: "1rem", overflow: "hidden", scrollSnapAlign: "start", background: "var(--color-background)", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed var(--color-border)", color: "var(--color-text-muted)" }}>
+          {(!gallery || gallery.length === 0) ? (
+            <div style={{ display: "flex", overflowX: "auto", gap: "1rem", paddingBottom: "1rem" }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{ minWidth: "300px", height: "300px", borderRadius: "1rem", overflow: "hidden", background: "var(--color-background)", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed var(--color-border)", color: "var(--color-text-muted)" }}>
                   <Zap size={40} style={{ opacity: 0.2, marginBottom: "1rem" }} />
                   <p style={{ fontSize: "0.9rem", fontWeight: 600 }}>Próximamente</p>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="marquee-container">
+              <div className="marquee-content">
+                {/* 
+                  To make an infinite marquee, we duplicate the items so that when 
+                  it translates to -50%, it looks identical to the start.
+                  We multiply the array to ensure it's wide enough for large screens.
+                */}
+                {[...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery].map((item, idx) => (
+                  <div key={`${item.id}-${idx}`} style={{ width: "350px", height: "300px", borderRadius: "1rem", overflow: "hidden", background: "#f0f0f0", flexShrink: 0, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
+                    {item.type === "VIDEO" ? (
+                      <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay muted loop playsInline />
+                    ) : (
+                      <img src={item.url} alt="Galería" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

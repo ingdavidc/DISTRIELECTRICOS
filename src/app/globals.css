@@ -613,3 +613,24 @@ button {
 .product-card:hover .product-img-wrapper img {
   transform: scale(1.08);
 }
+
+/* Marquee Carousel */
+@keyframes scrollMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 0.5rem)); }
+}
+.marquee-container {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  padding: 1rem 0;
+}
+.marquee-content {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  animation: scrollMarquee 40s linear infinite;
+}
+.marquee-content:hover {
+  animation-play-state: paused;
+}
