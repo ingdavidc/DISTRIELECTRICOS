@@ -539,7 +539,9 @@ export default function InventoryPage() {
                         <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           {prod.name}
                           {(prod.imageUrl || (prod.imageUrls && prod.imageUrls.length > 0)) && (
-                            <ImageIcon size={14} color="var(--color-primary)" title="El producto tiene imágenes asignadas" style={{ opacity: 0.7 }} />
+                            <span title="El producto tiene imágenes asignadas" style={{ display: 'flex', alignItems: 'center' }}>
+                              <ImageIcon size={14} color="var(--color-primary)" style={{ opacity: 0.7 }} />
+                            </span>
                           )}
                         </div>
                         <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>{prod.brand || 'Sin marca'} | {prod.category?.name}</div>
