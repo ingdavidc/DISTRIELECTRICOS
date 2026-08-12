@@ -112,7 +112,7 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
         </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <Phone size={14} />
-          <span>Línea Gratuita: 01 8000 123 456</span>
+          <span>Celular / WhatsApp: 313 223 9174</span>
         </div>
       </div>
 
