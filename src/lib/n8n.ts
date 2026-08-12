@@ -9,9 +9,9 @@ export async function triggerN8nWebhook(webhookId: string, payload: any) {
   try {
     const url = process.env.MAKE_WEBHOOK_URL || process.env.N8N_WEBHOOK_URL || `${N8N_URL}/${webhookId}`;
     
-    // Fire and forget: No esperamos el await completo en el hilo principal
-    // para no bloquear la caja registradora.
-    fetch(url, {
+    // En entornos Serverless como Vercel, si no usamos "await", la función termina y mata
+    // la petición antes de que salga hacia Make.com.
+    await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -21,9 +21,6 @@ export async function triggerN8nWebhook(webhookId: string, payload: any) {
         timestamp: new Date().toISOString(),
         source: "distrielectricos-erp"
       })
-    }).catch(err => {
-      // Si n8n está apagado, simplemente logueamos el error sin romper el ERP
-      console.warn(`[N8N] Webhook ${webhookId} falló silenciosamente:`, err.message);
     });
 
   } catch (error) {

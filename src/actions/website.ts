@@ -50,9 +50,9 @@ export async function updateWebConfig(data: {
     const newFlashIds = data.flashOfferIds.filter(id => !oldConfig.flashOfferIds.includes(id));
     if (newFlashIds.length > 0) {
       const newProducts = await prisma.product.findMany({ where: { id: { in: newFlashIds } } });
-      newProducts.forEach(p => {
-        triggerN8nWebhook("publicaciones", { event: "new_flash_offer", product: p });
-      });
+      await Promise.all(newProducts.map(p => 
+        triggerN8nWebhook("publicaciones", { event: "new_flash_offer", product: p })
+      ));
     }
   }
 
@@ -61,9 +61,9 @@ export async function updateWebConfig(data: {
     const newPromoIds = data.promoProductIds.filter(id => !oldConfig.promoProductIds.includes(id));
     if (newPromoIds.length > 0) {
       const newProducts = await prisma.product.findMany({ where: { id: { in: newPromoIds } } });
-      newProducts.forEach(p => {
-        triggerN8nWebhook("publicaciones", { event: "new_promo_product", product: p });
-      });
+      await Promise.all(newProducts.map(p => 
+        triggerN8nWebhook("publicaciones", { event: "new_promo_product", product: p })
+      ));
     }
   }
 
@@ -110,7 +110,7 @@ export async function addGalleryItem(url: string, type: "IMAGE" | "VIDEO" = "IMA
   });
 
   // Notificar a n8n
-  triggerN8nWebhook("publicaciones", { event: "new_gallery_item", item: newItem });
+  await triggerN8nWebhook("publicaciones", { event: "new_gallery_item", item: newItem });
 
   // Check count, if > 10, delete oldest
   const count = await prisma.webGallery.count();
