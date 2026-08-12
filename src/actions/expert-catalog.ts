@@ -28,7 +28,7 @@ export async function searchProductsForExpert(query: string) {
 
   return products.map(p => {
     const discountPercent = p.expertDiscount || 5;
-    const discountedPrice = Math.round(p.price - (p.price * discountPercent / 100));
+    const discountedPrice = Math.ceil((p.price * (1 - discountPercent / 100)) / 100) * 100;
     return {
       ...p,
       discountedPrice
@@ -67,7 +67,7 @@ export async function createExpertWholesaleOrder({
       }
 
       const discountPercent = product.expertDiscount || 5;
-      const realUnitPrice = Math.round(product.price - (product.price * discountPercent / 100));
+      const realUnitPrice = Math.ceil((product.price * (1 - discountPercent / 100)) / 100) * 100;
 
       serverTotalAmount += realUnitPrice * item.quantity;
       

@@ -74,9 +74,9 @@ export default async function CatalogPage(props: {
   const finalProducts = products.map(p => {
     let finalPrice = p.price;
     if (b2bUser && p.corporateDiscount > 0) {
-      finalPrice = p.price - ((p.cost || 0) * p.corporateDiscount / 100);
+      finalPrice = Math.ceil((p.price * (1 - p.corporateDiscount / 100)) / 100) * 100;
     } else if (expertUser && p.expertDiscount > 0) {
-      finalPrice = p.price - ((p.cost || 0) * p.expertDiscount / 100);
+      finalPrice = Math.ceil((p.price * (1 - p.expertDiscount / 100)) / 100) * 100;
     }
 
     if (finalPrice !== p.price) {

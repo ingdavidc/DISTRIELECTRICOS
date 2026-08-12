@@ -65,11 +65,9 @@ export async function submitOrderToCashier(
         const corpDcto = product.corporateDiscount ?? 15;
 
         const pTier = item.priceTier || "NORMAL";
-        if (pTier === "EXPERTO") realUnitPrice = product.price - (product.cost * expertDcto / 100);
-        else if (pTier === "VOLUMEN") realUnitPrice = product.price - (product.cost * volDcto / 100);
-        else if (pTier === "CORPORATIVO") realUnitPrice = product.price - (product.cost * corpDcto / 100);
-        
-        realUnitPrice = Math.round(realUnitPrice);
+        if (pTier === "EXPERTO") realUnitPrice = Math.ceil((product.price * (1 - expertDcto / 100)) / 100) * 100;
+        else if (pTier === "VOLUMEN") realUnitPrice = Math.ceil((product.price * (1 - volDcto / 100)) / 100) * 100;
+        else if (pTier === "CORPORATIVO") realUnitPrice = Math.ceil((product.price * (1 - corpDcto / 100)) / 100) * 100;
       } else {
         realUnitPrice = item.unitPrice; // Para productos especiales, confiar en el frontend
       }
@@ -163,11 +161,9 @@ export async function saveQuote(
         const corpDcto = product.corporateDiscount ?? 15;
 
         const pTier = item.priceTier || "NORMAL";
-        if (pTier === "EXPERTO") realUnitPrice = product.price - (product.cost * expertDcto / 100);
-        else if (pTier === "VOLUMEN") realUnitPrice = product.price - (product.cost * volDcto / 100);
-        else if (pTier === "CORPORATIVO") realUnitPrice = product.price - (product.cost * corpDcto / 100);
-        
-        realUnitPrice = Math.round(realUnitPrice);
+        if (pTier === "EXPERTO") realUnitPrice = Math.ceil((product.price * (1 - expertDcto / 100)) / 100) * 100;
+        else if (pTier === "VOLUMEN") realUnitPrice = Math.ceil((product.price * (1 - volDcto / 100)) / 100) * 100;
+        else if (pTier === "CORPORATIVO") realUnitPrice = Math.ceil((product.price * (1 - corpDcto / 100)) / 100) * 100;
       } else {
         realUnitPrice = item.unitPrice;
       }

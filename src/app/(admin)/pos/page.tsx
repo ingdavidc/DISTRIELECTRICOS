@@ -185,10 +185,10 @@ function POSContent() {
     const corpDcto = item.corporateDiscount ?? 15;
     const cost = item.cost || 0;
     let finalPrice = item.price;
-    if (pTier === "EXPERTO") finalPrice = item.price - (cost * expertDcto / 100);
-    else if (pTier === "VOLUMEN") finalPrice = item.price - (cost * volDcto / 100);
-    else if (pTier === "CORPORATIVO") finalPrice = item.price - (cost * corpDcto / 100);
-    return Math.ceil(finalPrice / 100) * 100;
+    if (pTier === "EXPERTO") finalPrice = Math.ceil((item.price * (1 - expertDcto / 100)) / 100) * 100;
+    else if (pTier === "VOLUMEN") finalPrice = Math.ceil((item.price * (1 - volDcto / 100)) / 100) * 100;
+    else if (pTier === "CORPORATIVO") finalPrice = Math.ceil((item.price * (1 - corpDcto / 100)) / 100) * 100;
+    return finalPrice;
   };
 
   const updateItemTier = (id: string, tier: any) => {

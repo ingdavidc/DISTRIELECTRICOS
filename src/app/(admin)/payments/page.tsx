@@ -62,9 +62,9 @@ export default function PaymentsPage() {
           const corp = item.corporateDiscount ?? 15;
           const cost = item.cost || 0;
           
-          if (newTier === "EXPERTO") finalPrice = item.basePrice - (cost * expert / 100);
-          else if (newTier === "VOLUMEN") finalPrice = item.basePrice - (cost * vol / 100);
-          else if (newTier === "CORPORATIVO") finalPrice = item.basePrice - (cost * corp / 100);
+          if (newTier === "EXPERTO") finalPrice = Math.ceil((item.basePrice * (1 - expert / 100)) / 100) * 100;
+          else if (newTier === "VOLUMEN") finalPrice = Math.ceil((item.basePrice * (1 - vol / 100)) / 100) * 100;
+          else if (newTier === "CORPORATIVO") finalPrice = Math.ceil((item.basePrice * (1 - corp / 100)) / 100) * 100;
         } else {
           finalPrice = item.basePrice;
         }
