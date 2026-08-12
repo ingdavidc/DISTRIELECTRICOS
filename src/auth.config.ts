@@ -15,6 +15,7 @@ export const authConfig: NextAuthConfig = {
       const isPublicRoute =
         nextUrl.pathname === "/" ||
         nextUrl.pathname.startsWith("/catalog") ||
+        nextUrl.pathname.startsWith("/producto") ||
         nextUrl.pathname.startsWith("/cotizar") ||
         nextUrl.pathname.startsWith("/login") ||
         nextUrl.pathname.startsWith("/login-corp") ||
