@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap, RotateCcw } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap, RotateCcw, Image as ImageIcon } from "lucide-react";
 import { FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { getPosProducts, submitOrderToCashier, saveQuote } from "@/actions/pos";
@@ -435,6 +435,20 @@ function POSContent() {
                             <Eye size={16} />
                           </button>
                         )}
+                        <button 
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); window.open(`/producto/${product.id}`, '_blank'); }}
+                          className="btn-icon"
+                          style={{ 
+                            padding: "0.2rem", 
+                            color: "var(--color-text-main)",
+                            backgroundColor: "transparent",
+                            borderRadius: "4px"
+                          }}
+                          title="Previsualizar Producto (Abre en nueva pestaña)"
+                        >
+                          <ImageIcon size={16} />
+                        </button>
                         <span className={`badge ${badgeClass}`}>
                           {hasStock ? `${product.stock} ${product.unit}` : "Agotado"}
                         </span>
