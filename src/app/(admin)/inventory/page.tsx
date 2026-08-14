@@ -753,7 +753,7 @@ export default function InventoryPage() {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Stock en Bodega *</label>
-                      <input required type="number" min="0" className="input" value={formData.stock} onChange={(e) => setFormData({...formData, stock: parseInt(e.target.value) || 0})} disabled={!!editingProductId} title={editingProductId ? "El stock debe actualizarse a través de transacciones" : ""} />
+                      <input required type="number" min="0" className="input" value={formData.stock} onChange={(e) => setFormData({...formData, stock: parseInt(e.target.value) || 0})} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Unidad de Medida / Presentación</label>
