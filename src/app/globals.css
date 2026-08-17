@@ -629,7 +629,7 @@ button {
   display: flex;
   gap: 1rem;
   width: max-content;
-  animation: scrollMarquee 52s linear infinite;
+  animation: scrollMarquee 104s linear infinite;
 }
 .marquee-content:hover {
   animation-play-state: paused;
