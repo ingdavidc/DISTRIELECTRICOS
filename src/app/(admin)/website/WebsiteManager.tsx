@@ -23,6 +23,7 @@ export default function WebsiteManager({
   const [gallery, setGallery] = useState(initialGallery);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Flash Offers State
   const [flashProducts, setFlashProducts] = useState<any[]>(initialFlashProducts);
@@ -65,11 +66,37 @@ export default function WebsiteManager({
       const fileExt = file.name.split('.').pop();
       const fileName = `website/gallery-${Date.now()}.${fileExt}`;
       
-      const { error } = await supabase.storage
-        .from("products")
-        .upload(fileName, file);
+      const { error } = await new Promise<{error: Error | null}>((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            setUploadProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        };
         
-      if (error) throw error;
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve({ error: null });
+          } else {
+            let errorMsg = "Error subiendo archivo";
+            try {
+              const res = JSON.parse(xhr.responseText);
+              if (res.message) errorMsg = res.message;
+            } catch(e) {}
+            resolve({ error: new Error(errorMsg) });
+          }
+        };
+        
+        xhr.onerror = () => resolve({ error: new Error("Network Error") });
+        
+        const endpoint = `${supabaseUrl}/storage/v1/object/products/${fileName}`;
+        xhr.open("POST", endpoint, true);
+        xhr.setRequestHeader("Authorization", `Bearer ${supabaseKey}`);
+        xhr.setRequestHeader("apikey", supabaseKey);
+        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+        
+        xhr.send(file);
+      });
       
       const { data: { publicUrl } } = supabase.storage
         .from("products")
@@ -84,6 +111,7 @@ export default function WebsiteManager({
       alert("Error subiendo archivo: " + err.message);
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
       e.target.value = "";
     }
   };
@@ -398,19 +426,26 @@ export default function WebsiteManager({
               </div>
             </div>
             
-            <div style={{ position: "relative" }}>
-              <input 
-                type="file" 
-                accept="image/*,video/*" 
-                capture="environment"
-                onChange={handleUploadPhoto}
-                disabled={isUploading}
-                style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", zIndex: 10 }}
-              />
-              <button className="btn btn-secondary">
-                {isUploading ? <Loader2 className="animate-spin" size={18} /> : <Camera size={18} />}
-                Tomar / Subir Foto
-              </button>
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "0.5rem", minWidth: "200px" }}>
+              <div style={{ position: "relative" }}>
+                <input 
+                  type="file" 
+                  accept="image/*,video/*" 
+                  capture="environment"
+                  onChange={handleUploadPhoto}
+                  disabled={isUploading}
+                  style={{ position: "absolute", inset: 0, opacity: 0, cursor: isUploading ? "not-allowed" : "pointer", zIndex: 10 }}
+                />
+                <button className="btn btn-secondary" disabled={isUploading} style={{ width: "100%" }}>
+                  {isUploading ? <Loader2 className="animate-spin" size={18} /> : <Camera size={18} />}
+                  {isUploading ? `Subiendo... ${uploadProgress}%` : "Tomar / Subir Foto"}
+                </button>
+              </div>
+              {isUploading && (
+                <div style={{ width: "100%", height: "8px", background: "var(--color-border)", borderRadius: "4px", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${uploadProgress}%`, background: "var(--color-primary)", transition: "width 0.2s ease" }}></div>
+                </div>
+              )}
             </div>
           </div>
 
