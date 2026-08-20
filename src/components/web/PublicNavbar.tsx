@@ -9,6 +9,7 @@ import { signOut } from "next-auth/react";
 
 import { loginB2B, logoutB2B } from "@/actions/b2b-login";
 import toast from "react-hot-toast";
+import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 
 export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, expertUser?: any }) {
   const { totalItems, totalPrice, openCart } = useCart();
@@ -157,10 +158,13 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
         {/* Predictive Search Bar */}
         <form onSubmit={handleSearch} className="navbar-search" style={{ flex: 1, maxWidth: "600px", position: "relative" }}>
           <Search size={20} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
-          <input 
-            type="text" 
+          <ProductSearchAutocomplete 
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(val) => setSearchTerm(val)}
+            onSelect={(product) => {
+              setSearchTerm("");
+              router.push(`/producto/${product.id}`);
+            }}
             placeholder="¿Qué estás buscando para tu proyecto?" 
             style={{ 
               width: "100%", padding: "0.85rem 1rem 0.85rem 3rem", 

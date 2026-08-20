@@ -76,3 +76,48 @@ export async function globalSearch(query: string) {
     return { error: error.message };
   }
 }
+
+export async function searchProductsAutocomplete(query: string) {
+  try {
+    const q = query.slice(0, 100).trim();
+    if (!q || q.length < 2) return [];
+
+    const tokens = q.split(/\s+/).filter(Boolean);
+
+    const tokenConditions = {
+      AND: tokens.map((token) => ({
+        OR: [
+          { sku: { contains: token, mode: 'insensitive' } as any },
+          { name: { contains: token, mode: 'insensitive' } as any },
+          { brand: { contains: token, mode: 'insensitive' } as any },
+        ],
+      })),
+    };
+
+    const products = await prisma.product.findMany({
+      where: tokenConditions,
+      take: 8,
+      select: {
+        id: true,
+        sku: true,
+        name: true,
+        price: true,
+        stock: true,
+        unit: true,
+        imageUrl: true,
+        cost: true,
+        expertDiscount: true,
+        volumeDiscount: true,
+        corporateDiscount: true
+      },
+      orderBy: {
+        stock: 'desc'
+      }
+    });
+
+    return products;
+  } catch (error) {
+    console.error("Autocomplete search error:", error);
+    return [];
+  }
+}

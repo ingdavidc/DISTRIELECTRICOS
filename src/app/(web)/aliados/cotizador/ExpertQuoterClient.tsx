@@ -5,6 +5,7 @@ import { Search, Plus, Trash2, FileText, Send, Mail } from "lucide-react";
 import { generateQuotePdf } from "@/utils/generateQuotePdf";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 
 interface Product {
   id: string;
@@ -100,46 +101,19 @@ export default function ExpertQuoterClient({ expertUser, products }: { expertUse
           <Link href="/aliados/dashboard" style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", textDecoration: "underline" }}>Volver al Panel</Link>
         </div>
 
-        <div style={{ position: "relative", marginBottom: "2rem" }}>
-          <Search size={20} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
-          <input 
-            type="text" 
+        <div style={{ position: "relative", marginBottom: "1.5rem" }}>
+          <Search size={20} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", zIndex: 10 }} />
+          <ProductSearchAutocomplete 
             placeholder="Buscar por nombre o SKU..."
-            className="input"
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={{ paddingLeft: "3rem", fontSize: "1.1rem" }}
+            onChange={e => setSearchTerm(e)}
+            onSelect={(product) => {
+              addToCart(product as any);
+              setSearchTerm("");
+            }}
+            className="input"
+            style={{ paddingLeft: "3rem", fontSize: "1.1rem", width: "100%" }}
           />
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "1rem" }}>
-          {searchTerm.length > 1 && filteredProducts.map(p => (
-            <div key={p.id} style={{ border: "1px solid var(--color-border)", borderRadius: "8px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 600 }}>{p.sku}</div>
-              <div style={{ fontWeight: 600, fontSize: "0.95rem", lineHeight: 1.2 }}>{p.name}</div>
-              <div style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>{p.brand || "Generico"}</div>
-              <div style={{ fontWeight: 700, color: "var(--color-secondary)", fontSize: "1.2rem", marginTop: "auto" }}>
-                ${p.price.toLocaleString('de-DE')}
-              </div>
-              <button 
-                onClick={() => addToCart(p)}
-                className="btn btn-secondary" 
-                style={{ marginTop: "0.5rem", padding: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.25rem" }}
-              >
-                <Plus size={16} /> Agregar
-              </button>
-            </div>
-          ))}
-          {searchTerm.length > 1 && filteredProducts.length === 0 && (
-            <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-muted)", gridColumn: "1 / -1" }}>
-              No se encontraron productos.
-            </div>
-          )}
-          {searchTerm.length <= 1 && (
-            <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-muted)", gridColumn: "1 / -1" }}>
-              Escribe al menos 2 caracteres para buscar.
-            </div>
-          )}
         </div>
       </div>
 

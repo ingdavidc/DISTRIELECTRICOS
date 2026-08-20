@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Search, ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle, UserPlus, Users, X, Flame, History, Package, Eye, Zap, RotateCcw, Image as ImageIcon } from "lucide-react";
 import { FileText } from "lucide-react";
 import toast from "react-hot-toast";
+import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 import { getPosProducts, submitOrderToCashier, saveQuote } from "@/actions/pos";
 import { createSpecialRequest } from "@/actions/requests";
 import { searchCustomers, createCustomer, getCustomerOrders } from "@/actions/customers";
@@ -64,13 +65,10 @@ function POSContent() {
   const [avgTime, setAvgTime] = useState("Calculando...");
   const [counterQueue, setCounterQueue] = useState<string[]>([]);
 
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     fetchProducts("");
     getAverageDispatchTime().then(setAvgTime);
     getWebConfig().then(c => setFlashOfferIds(c.flashOfferIds || []));
-    searchInputRef.current?.focus();
   }, []);
 
   const toggleCounterQueue = (productId: string) => {
@@ -359,14 +357,17 @@ function POSContent() {
             </button>
             <div className="search-bar" style={{ width: "350px", display: "flex", alignItems: "center", position: "relative" }}>
               <Search size={18} style={{ position: "absolute", left: "1rem", color: "var(--color-text-muted)" }} />
-              <input 
-                ref={searchInputRef}
-                type="text" 
-                className="form-input" 
-                style={{ paddingLeft: "2.5rem" }} 
-                placeholder="Escanear código o buscar producto..." 
+              <ProductSearchAutocomplete 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(val) => setSearchQuery(val)}
+                onSelect={(product) => {
+                  addToCart(product as any);
+                  setSearchQuery("");
+                }}
+                className="form-input" 
+                style={{ paddingLeft: "2.5rem", width: "100%" }} 
+                placeholder="Escanear código o buscar producto..." 
+                autoFocus={true}
               />
             </div>
           </div>

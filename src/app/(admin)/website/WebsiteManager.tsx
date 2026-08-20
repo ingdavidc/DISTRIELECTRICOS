@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateWebConfig, addGalleryItem, deleteGalleryItem, searchProducts } from "@/actions/website";
 import { Save, Camera, Trash2, Image as ImageIcon, Loader2, Search, Plus, X } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 
 export default function WebsiteManager({ 
   initialConfig, 
@@ -227,48 +228,21 @@ export default function WebsiteManager({
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           <div style={{ background: "var(--color-background)", padding: "1.5rem", borderRadius: "var(--radius-lg)" }}>
             <h3 style={{ fontWeight: 600, marginBottom: "1rem" }}>Buscar Productos</h3>
-            <form onSubmit={handleSearchProduct} style={{ display: "flex", gap: "1rem" }}>
-              <div style={{ position: "relative", flex: 1 }}>
-                <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
-                <input 
-                  type="text" 
-                  className="input" 
-                  style={{ paddingLeft: "2.5rem" }} 
-                  placeholder="Buscar por nombre o código..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <button type="submit" className="btn btn-secondary" disabled={isSearching}>
-                {isSearching ? "Buscando..." : "Buscar"}
-              </button>
-            </form>
-
-            {searchResults.length > 0 && (
-              <div style={{ marginTop: "1rem", display: "grid", gap: "0.5rem", maxHeight: "300px", overflowY: "auto", padding: "0.5rem", background: "white", borderRadius: "var(--radius-md)" }}>
-                {searchResults.map(p => (
-                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem", borderBottom: "1px solid var(--color-border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <div style={{ width: "40px", height: "40px", background: "var(--color-background)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                        {p.imageUrl ? <img src={p.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <ImageIcon size={20} />}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{p.name}</div>
-                        <div style={{ color: "var(--color-primary)", fontWeight: 700, fontSize: "0.85rem" }}>${p.price.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => addFlashProduct(p)}
-                      className="btn" 
-                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem", background: "var(--color-light-gray)", border: "1px solid var(--color-border)" }}
-                      disabled={flashProducts.some(fp => fp.id === p.id)}
-                    >
-                      <Plus size={16} /> Agregar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div style={{ position: "relative", marginBottom: "1.5rem" }}>
+              <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", zIndex: 10 }} />
+              <ProductSearchAutocomplete 
+                value={searchQuery}
+                onChange={(val) => setSearchQuery(val)}
+                onSelect={(product) => {
+                  if (!flashProducts.some(fp => fp.id === product.id)) {
+                    addFlashProduct(product);
+                  }
+                  setSearchQuery("");
+                }}
+                className="input" 
+                style={{ paddingLeft: "2.5rem", width: "100%" }} 
+              />
+            </div>
           </div>
 
           <div>
@@ -314,51 +288,22 @@ export default function WebsiteManager({
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           <div style={{ background: "var(--color-background)", padding: "1.5rem", borderRadius: "var(--radius-lg)" }}>
             <h3 style={{ fontWeight: 600, marginBottom: "1rem" }}>Buscar Productos Promocionados</h3>
-            <form onSubmit={handleSearchProduct} style={{ display: "flex", gap: "1rem" }}>
-              <div style={{ position: "relative", flex: 1 }}>
-                <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
-                <input 
-                  type="text" 
-                  className="input" 
-                  style={{ paddingLeft: "2.5rem" }} 
-                  placeholder="Buscar por nombre o código..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <button type="submit" className="btn btn-secondary" disabled={isSearching}>
-                {isSearching ? "Buscando..." : "Buscar"}
-              </button>
-            </form>
-
-            {searchResults.length > 0 && (
-              <div style={{ marginTop: "1rem", display: "grid", gap: "0.5rem", maxHeight: "300px", overflowY: "auto", padding: "0.5rem", background: "white", borderRadius: "var(--radius-md)" }}>
-                {searchResults.map(p => (
-                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem", borderBottom: "1px solid var(--color-border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <div style={{ width: "40px", height: "40px", background: "var(--color-background)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                        {p.imageUrl ? <img src={p.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : <ImageIcon size={20} />}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{p.name}</div>
-                        <div style={{ color: "var(--color-primary)", fontWeight: 700, fontSize: "0.85rem" }}>${p.price.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        if (promoProducts.some(pp => pp.id === p.id)) return;
-                        setPromoProducts([...promoProducts, p]);
-                      }}
-                      className="btn" 
-                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem", background: "var(--color-light-gray)", border: "1px solid var(--color-border)" }}
-                      disabled={promoProducts.some(pp => pp.id === p.id)}
-                    >
-                      <Plus size={16} /> Agregar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div style={{ position: "relative", marginBottom: "1.5rem" }}>
+              <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", zIndex: 10 }} />
+              <ProductSearchAutocomplete 
+                value={searchQuery}
+                onChange={(val) => setSearchQuery(val)}
+                onSelect={(product) => {
+                  if (!promoProducts.some(pp => pp.id === product.id)) {
+                    setPromoProducts([...promoProducts, product as any]);
+                  }
+                  setSearchQuery("");
+                }}
+                className="input" 
+                style={{ paddingLeft: "2.5rem", width: "100%" }} 
+                placeholder="Buscar por nombre o código..."
+              />
+            </div>
           </div>
 
           <div>

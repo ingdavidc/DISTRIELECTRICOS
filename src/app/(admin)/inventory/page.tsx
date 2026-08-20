@@ -11,6 +11,7 @@ import { Trash2, Edit } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { NumericFormat } from "react-number-format";
 import { searchProductImage } from "@/actions/image-search";
+import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 
 import { Product } from "@prisma/client";
 type Supplier = Awaited<ReturnType<typeof getSuppliers>>[0];
@@ -465,11 +466,11 @@ export default function InventoryPage() {
         <div style={{ padding: "1.5rem", display: "flex", gap: "1rem", borderBottom: "1px solid var(--color-border)" }}>
           <div style={{ position: "relative", flex: 1 }}>
             <Search size={18} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
-            <input 
-              type="text" 
+            <ProductSearchAutocomplete 
               placeholder="Buscar por SKU, nombre o marca..." 
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(val) => setSearchTerm(val)}
+              onSelect={(product) => setSearchTerm(product.sku)}
               className="input" 
               style={{ paddingLeft: "35px" }}
             />
