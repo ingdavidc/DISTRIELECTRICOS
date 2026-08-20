@@ -26,6 +26,7 @@ interface ProductSearchAutocompleteProps {
   className?: string;
   style?: React.CSSProperties;
   autoFocus?: boolean;
+  showStock?: boolean;
 }
 
 export default function ProductSearchAutocomplete({
@@ -35,7 +36,8 @@ export default function ProductSearchAutocomplete({
   placeholder = "Buscar producto...",
   className = "",
   style = {},
-  autoFocus = false
+  autoFocus = false,
+  showStock = false
 }: ProductSearchAutocompleteProps) {
   const [results, setResults] = useState<Product[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -155,8 +157,12 @@ export default function ProductSearchAutocomplete({
                 </div>
                 <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", display: "flex", gap: "0.5rem" }}>
                   <span>SKU: {product.sku}</span>
-                  <span>|</span>
-                  <span>Stock: {product.stock}</span>
+                  {showStock && (
+                    <>
+                      <span>|</span>
+                      <span>Stock: {product.stock}</span>
+                    </>
+                  )}
                 </div>
               </div>
               <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--color-primary)" }}>

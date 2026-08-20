@@ -241,6 +241,8 @@ export default function WebsiteManager({
                 }}
                 className="input" 
                 style={{ paddingLeft: "2.5rem", width: "100%" }} 
+                placeholder="Buscar por nombre o código..."
+                showStock={true}
               />
             </div>
           </div>
@@ -302,6 +304,7 @@ export default function WebsiteManager({
                 className="input" 
                 style={{ paddingLeft: "2.5rem", width: "100%" }} 
                 placeholder="Buscar por nombre o código..."
+                showStock={true}
               />
             </div>
           </div>

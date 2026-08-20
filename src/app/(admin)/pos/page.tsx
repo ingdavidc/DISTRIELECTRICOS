@@ -368,6 +368,7 @@ function POSContent() {
                 style={{ paddingLeft: "2.5rem", width: "100%" }} 
                 placeholder="Escanear código o buscar producto..." 
                 autoFocus={true}
+                showStock={true}
               />
             </div>
           </div>

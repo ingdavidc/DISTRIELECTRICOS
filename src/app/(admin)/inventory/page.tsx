@@ -473,6 +473,7 @@ export default function InventoryPage() {
               onSelect={(product) => setSearchTerm(product.sku)}
               className="input" 
               style={{ paddingLeft: "35px" }}
+              showStock={true}
             />
           </div>
           <select 

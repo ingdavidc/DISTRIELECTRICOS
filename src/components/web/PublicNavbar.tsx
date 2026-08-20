@@ -166,6 +166,7 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
               router.push(`/producto/${product.id}`);
             }}
             placeholder="¿Qué estás buscando para tu proyecto?" 
+            showStock={!!b2bUser || !!expertUser}
             style={{ 
               width: "100%", padding: "0.85rem 1rem 0.85rem 3rem", 
               borderRadius: "9999px", border: "2px solid var(--color-primary)", 

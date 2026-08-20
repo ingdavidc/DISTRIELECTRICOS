@@ -113,6 +113,7 @@ export default function ExpertQuoterClient({ expertUser, products }: { expertUse
             }}
             className="input"
             style={{ paddingLeft: "3rem", fontSize: "1.1rem", width: "100%" }}
+            showStock={true}
           />
         </div>
       </div>
