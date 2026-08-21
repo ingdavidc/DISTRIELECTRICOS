@@ -151,8 +151,8 @@ export default function ProductSearchAutocomplete({
                   <ImageIcon size={20} color="var(--color-text-muted)" />
                 )}
               </div>
-              <div style={{ flex: 1, overflow: "hidden" }}>
-                <div style={{ fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: "0.85rem", lineHeight: "1.2", marginBottom: "0.25rem", wordBreak: "break-word" }}>
                   {product.name}
                 </div>
                 <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", display: "flex", gap: "0.5rem" }}>
