@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { Trash2, Edit } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { NumericFormat } from "react-number-format";
-import { searchProductImage } from "@/actions/image-search";
+import { searchProductImage, downloadAndUploadExternalImage } from "@/actions/image-search";
 import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 
 import { Product } from "@prisma/client";
@@ -970,14 +970,30 @@ export default function InventoryPage() {
                                 {imageSearchResults.map((img, idx) => (
                                   <div 
                                     key={idx} 
-                                    onClick={() => {
-                                      setFormData(prev => ({ 
-                                        ...prev, 
-                                        imageUrl: img.url,
-                                        imageUrls: Array.from(new Set([...(prev.imageUrls || []), img.url])) 
-                                      }));
-                                      setImageSearchResults([]);
-                                      toast.success("¡Imagen asignada!");
+                                    onClick={async () => {
+                                      const tid = toast.loading("Guardando imagen...");
+                                      try {
+                                        const res = await downloadAndUploadExternalImage(img.url);
+                                        if (!res.success || !res.url) throw new Error(res.error || "Error al guardar");
+                                        
+                                        const newUrl = res.url as string;
+                                        setFormData(prev => ({ 
+                                          ...prev, 
+                                          imageUrl: newUrl,
+                                          imageUrls: Array.from(new Set([...(prev.imageUrls || []), newUrl])) 
+                                        }));
+                                        setImageSearchResults([]);
+                                        toast.success("Imagen guardada permanentemente", { id: tid });
+                                      } catch (error) {
+                                        console.error(error);
+                                        setFormData(prev => ({ 
+                                          ...prev, 
+                                          imageUrl: img.url,
+                                          imageUrls: Array.from(new Set([...(prev.imageUrls || []), img.url])) 
+                                        }));
+                                        setImageSearchResults([]);
+                                        toast.success("Enlazada temporalmente (falló guardado permanente)", { id: tid });
+                                      }
                                     }}
                                     style={{ 
                                       position: "relative",

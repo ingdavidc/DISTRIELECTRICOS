@@ -66,3 +66,57 @@ export async function searchProductImage(query: string) {
     return { success: false, error: "Error interno al buscar imágenes" };
   }
 }
+
+import { createClient } from "@supabase/supabase-js";
+
+export async function downloadAndUploadExternalImage(externalUrl: string): Promise<{success: boolean, url?: string, error?: string}> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    const res = await fetch(externalUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to download image: ${res.status}`);
+    }
+
+    const buffer = await res.arrayBuffer();
+    const contentType = res.headers.get("content-type") || "image/jpeg";
+    
+    // Upload to Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials not configured on server");
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Create random filename
+    const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpeg";
+    const fileName = `ai_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from("products")
+      .upload(fileName, buffer, {
+        contentType,
+        upsert: true
+      });
+      
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("products")
+      .getPublicUrl(fileName);
+
+    return { success: true, url: publicUrl };
+  } catch (error: any) {
+    console.error("Error downloading/uploading image:", error);
+    return { success: false, error: error.message };
+  }
+}
