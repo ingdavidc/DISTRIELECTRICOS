@@ -84,7 +84,8 @@ export async function searchProductsAutocomplete(query: string) {
 
     const tokens = q.split(/\s+/).filter(Boolean);
 
-    const tokenConditions = {
+    // 1. Intentar búsqueda estricta (TODAS las palabras deben coincidir)
+    const strictConditions = {
       AND: tokens.map((token) => ({
         OR: [
           { sku: { contains: token, mode: 'insensitive' } as any },
@@ -94,26 +95,62 @@ export async function searchProductsAutocomplete(query: string) {
       })),
     };
 
-    const products = await prisma.product.findMany({
-      where: tokenConditions,
+    const selectFields = {
+      id: true, sku: true, name: true, price: true, stock: true, 
+      unit: true, imageUrl: true, cost: true, expertDiscount: true, 
+      volumeDiscount: true, corporateDiscount: true, brand: true
+    };
+
+    let products = await prisma.product.findMany({
+      where: strictConditions,
       take: 8,
-      select: {
-        id: true,
-        sku: true,
-        name: true,
-        price: true,
-        stock: true,
-        unit: true,
-        imageUrl: true,
-        cost: true,
-        expertDiscount: true,
-        volumeDiscount: true,
-        corporateDiscount: true
-      },
-      orderBy: {
-        stock: 'desc'
-      }
+      select: selectFields,
+      orderBy: { stock: 'desc' }
     });
+
+    // 2. Si no hay suficientes resultados, hacer búsqueda flexible (AL MENOS UNA palabra)
+    if (products.length < 4 && tokens.length > 1) {
+      const flexibleConditions = {
+        OR: tokens.map((token) => ({
+          OR: [
+            { sku: { contains: token, mode: 'insensitive' } as any },
+            { name: { contains: token, mode: 'insensitive' } as any },
+            { brand: { contains: token, mode: 'insensitive' } as any },
+          ],
+        })),
+      };
+
+      const flexibleProducts = await prisma.product.findMany({
+        where: flexibleConditions,
+        take: 100, // Traer suficientes para puntuar
+        select: selectFields,
+      });
+
+      // Puntuar los resultados flexibles
+      const scoredProducts = flexibleProducts.map(p => {
+        const textToSearch = `${p.name} ${p.sku} ${p.brand || ''}`.toLowerCase();
+        let score = 0;
+        tokens.forEach(token => {
+          if (textToSearch.includes(token.toLowerCase())) score++;
+        });
+        // Dar peso extra si está en stock
+        if (p.stock > 0) score += 0.5;
+        return { product: p, score };
+      });
+
+      // Ordenar por puntaje (mayor a menor)
+      scoredProducts.sort((a, b) => b.score - a.score);
+
+      // Mezclar evitando duplicados
+      const existingIds = new Set(products.map(p => p.id));
+      for (const item of scoredProducts) {
+        if (!existingIds.has(item.product.id)) {
+          products.push(item.product);
+          existingIds.add(item.product.id);
+        }
+        if (products.length >= 8) break;
+      }
+    }
 
     return products;
   } catch (error) {
