@@ -122,19 +122,43 @@ export async function searchProductsAutocomplete(query: string) {
 
       const flexibleProducts = await prisma.product.findMany({
         where: flexibleConditions,
-        take: 100, // Traer suficientes para puntuar
+        take: 300, // Aumentamos para no dejar por fuera resultados si hay muchos de una sola palabra
         select: selectFields,
+        orderBy: { stock: 'desc' } // Priorizar los que tienen stock desde la base de datos
       });
 
       // Puntuar los resultados flexibles
       const scoredProducts = flexibleProducts.map(p => {
-        const textToSearch = `${p.name} ${p.sku} ${p.brand || ''}`.toLowerCase();
+        const lowerName = p.name.toLowerCase();
+        const textToSearch = `${lowerName} ${p.sku} ${p.brand || ''}`.toLowerCase();
         let score = 0;
-        tokens.forEach(token => {
-          if (textToSearch.includes(token.toLowerCase())) score++;
+        
+        tokens.forEach((token, index) => {
+          const lowerToken = token.toLowerCase();
+          if (textToSearch.includes(lowerToken)) {
+            score += 1; // Coincidencia básica
+            
+            // Puntos extra si el nombre EMPIEZA con esta palabra (ej: SPOT)
+            if (lowerName.startsWith(lowerToken)) {
+              score += 3;
+            }
+            
+            // Puntos extra si es una palabra exacta (separada por espacios), no parte de otra palabra
+            const isExactWord = new RegExp(`\\b${lowerToken}\\b`).test(lowerName);
+            if (isExactWord) {
+              score += 1.5;
+            }
+            
+            // Puntos extra a la última palabra escrita, suele ser el filtro principal
+            if (index === tokens.length - 1) {
+              score += 0.5;
+            }
+          }
         });
+        
         // Dar peso extra si está en stock
-        if (p.stock > 0) score += 0.5;
+        if (p.stock > 0) score += 2;
+        
         return { product: p, score };
       });
 
