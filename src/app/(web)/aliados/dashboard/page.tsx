@@ -19,7 +19,7 @@ export default async function ExpertDashboard() {
   }
 
   return (
-    <div style={{ padding: "4rem 2rem", maxWidth: "1200px", margin: "0 auto", minHeight: "80vh" }}>
+    <div style={{ padding: "clamp(1.5rem, 4vw, 4rem) 1rem", maxWidth: "1200px", margin: "0 auto", minHeight: "80vh" }}>
       <style>{`
         .expert-card {
           transition: transform 0.2s, box-shadow 0.2s;
@@ -30,22 +30,22 @@ export default async function ExpertDashboard() {
         }
       `}</style>
 
-      <div style={{ marginBottom: "3rem" }}>
-        <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
+      <div style={{ marginBottom: "2.5rem" }}>
+        <h1 style={{ fontSize: "clamp(1.5rem, 5vw, 2rem)", fontWeight: 800, color: "var(--color-primary)" }}>
           Hola, {userName} 👋
         </h1>
-        <p style={{ color: "var(--color-text-muted)" }}>
+        <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
           Bienvenido a tu panel de Aliado Experto. ¿Qué deseas hacer hoy?
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
         
         {/* Catálogo con Descuento */}
         <Link
           href="/aliados/catalogo-mayorista"
           className="card expert-card"
-          style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit" }}
+          style={{ padding: "clamp(1.25rem, 3vw, 2rem)", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit" }}
         >
           <div style={{ background: "var(--color-background-alt)", width: "60px", height: "60px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)" }}>
             <ShoppingBag size={30} />
@@ -60,7 +60,7 @@ export default async function ExpertDashboard() {
         <Link
           href="/aliados/cotizador"
           className="card expert-card"
-          style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit", border: "2px solid var(--color-secondary)" }}
+          style={{ padding: "clamp(1.25rem, 3vw, 2rem)", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit", border: "2px solid var(--color-secondary)" }}
         >
           <div style={{ background: "var(--color-secondary)", width: "60px", height: "60px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
             <Calculator size={30} />
@@ -75,7 +75,7 @@ export default async function ExpertDashboard() {
         <Link
           href="/aliados/mis-cotizaciones"
           className="card expert-card"
-          style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit" }}
+          style={{ padding: "clamp(1.25rem, 3vw, 2rem)", display: "flex", flexDirection: "column", gap: "1rem", textDecoration: "none", color: "inherit" }}
         >
           <div style={{ background: "var(--color-background-alt)", width: "60px", height: "60px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)" }}>
             <Settings size={30} />

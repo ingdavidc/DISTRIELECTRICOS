@@ -519,6 +519,24 @@ button {
   display: flex;
   gap: 1.5rem;
   align-items: center;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.public-footer {
+  background: var(--color-primary);
+  color: white;
+  padding-top: 4rem;
+  padding-bottom: 2.5rem;
+}
+
+.public-footer-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2.5rem;
 }
 
 .mobile-bottom-nav {
@@ -1098,6 +1116,11 @@ button {
   
   .stack-on-mobile > * {
     width: 100% !important;
+    position: static !important;
+  }
+
+  .mobile-padding {
+    padding: 1rem !important;
   }
 
   .btn-full-mobile {
@@ -1273,6 +1296,17 @@ button {
   }
   .order-tracking-form button {
     width: 100% !important;
+  }
+
+  /* Footer on mobile */
+  .public-footer {
+    padding-top: 2.5rem !important;
+    padding-bottom: calc(58px + 2rem) !important;
+  }
+  .public-footer-grid {
+    grid-template-columns: 1fr !important;
+    padding: 0 1.25rem !important;
+    gap: 2rem !important;
   }
 }
 

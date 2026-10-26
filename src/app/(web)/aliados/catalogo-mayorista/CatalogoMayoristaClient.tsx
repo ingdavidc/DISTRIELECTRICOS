@@ -246,24 +246,24 @@ export default function CatalogoMayoristaClient({ userId, userName }: { userId: 
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {searchResults.length > 0 ? (
               searchResults.map(product => (
-                <div key={product.id} className="card" style={{ display: "flex", gap: "1rem", padding: "1rem", alignItems: "center" }}>
-                  <img src={product.imageUrl || "/placeholder.jpg"} alt={product.name} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", background: "#f0f0f0" }} />
-                  <div style={{ flex: 1 }}>
+                <div key={product.id} className="card" style={{ display: "flex", gap: "1rem", padding: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                  <img src={product.imageUrl || "/placeholder.jpg"} alt={product.name} style={{ width: "70px", height: "70px", objectFit: "contain", borderRadius: "8px", background: "#f0f0f0", flexShrink: 0 }} />
+                  <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                     <div style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", fontWeight: 600 }}>{product.sku}</div>
-                    <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--color-primary)" }}>{product.name}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "0.5rem" }}>
-                      <span style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--color-secondary)" }}>
+                    <div style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--color-primary)", lineHeight: 1.25 }}>{product.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginTop: "0.4rem", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-secondary)" }}>
                         ${product.discountedPrice.toLocaleString()}
                       </span>
-                      <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
+                      <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
                         PVP: ${product.price.toLocaleString()}
                       </span>
-                      <span style={{ fontSize: "0.75rem", background: "#e0f2fe", color: "#0369a1", padding: "0.2rem 0.5rem", borderRadius: "1rem", fontWeight: 700 }}>
+                      <span style={{ fontSize: "0.72rem", background: "#e0f2fe", color: "#0369a1", padding: "0.15rem 0.45rem", borderRadius: "1rem", fontWeight: 700 }}>
                         -{product.expertDiscount || 5}% Dcto
                       </span>
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
+                  <div style={{ textAlign: "right", marginLeft: "auto", flexShrink: 0 }}>
                     <div style={{ fontSize: "0.8rem", color: product.stock > 10 ? "var(--color-success)" : product.stock > 0 ? "#eab308" : "var(--color-danger)", fontWeight: 700, marginBottom: "0.5rem" }}>
                       {product.stock > 10 ? "Disponible" : product.stock > 0 ? "Pocas unidades" : "Agotado"}
                     </div>

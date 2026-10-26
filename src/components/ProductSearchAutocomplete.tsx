@@ -44,6 +44,7 @@ export default function ProductSearchAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const touchMovedRef = useRef<boolean>(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {
@@ -140,9 +141,17 @@ export default function ProductSearchAutocomplete({
                 e.preventDefault();
                 handleSelect(product);
               }}
+              onTouchStart={() => {
+                touchMovedRef.current = false;
+              }}
+              onTouchMove={() => {
+                touchMovedRef.current = true;
+              }}
               onTouchEnd={(e) => {
-                e.preventDefault();
-                handleSelect(product);
+                if (!touchMovedRef.current) {
+                  e.preventDefault();
+                  handleSelect(product);
+                }
               }}
               style={{
                 display: "flex",

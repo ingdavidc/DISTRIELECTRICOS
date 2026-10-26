@@ -56,7 +56,7 @@ export default function MisCotizacionesClient({ quotes }: { quotes: any[] }) {
   };
 
   return (
-    <div className="mobile-padding" style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
+    <div className="mobile-padding" style={{ maxWidth: "1000px", margin: "0 auto", padding: "clamp(1rem, 3vw, 2rem)" }}>
       <div className="flex-col-mobile" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
         <div>
           <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>Mis Cotizaciones</h1>

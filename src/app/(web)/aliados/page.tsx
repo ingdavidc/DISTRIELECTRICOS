@@ -80,17 +80,17 @@ export default function AliadosPage() {
   };
 
   return (
-    <div style={{ minHeight: "80vh", background: "var(--color-background-alt)", display: "flex", flexDirection: "column", alignItems: "center", padding: "4rem 2rem" }}>
+    <div style={{ minHeight: "80vh", background: "var(--color-background-alt)", display: "flex", flexDirection: "column", alignItems: "center", padding: "clamp(2rem, 5vw, 4rem) 1rem" }}>
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--color-primary)", letterSpacing: "-1px" }}>
+        <h1 style={{ fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: 800, color: "var(--color-primary)", letterSpacing: "-1px" }}>
           Portal Aliados Expertos
         </h1>
-        <p style={{ color: "var(--color-text-muted)", fontSize: "1.1rem", maxWidth: "600px", margin: "1rem auto" }}>
+        <p style={{ color: "var(--color-text-muted)", fontSize: "1rem", maxWidth: "600px", margin: "0.75rem auto" }}>
           Un espacio diseñado para electricistas e integradores independientes. Cotiza y compra con precios preferenciales exclusivos.
         </p>
       </div>
 
-      <div className="card" style={{ width: "100%", maxWidth: "450px", padding: "2.5rem" }}>
+      <div className="card" style={{ width: "100%", maxWidth: "450px", padding: "clamp(1.5rem, 4vw, 2.5rem)" }}>
         
         {/* Header Options */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>

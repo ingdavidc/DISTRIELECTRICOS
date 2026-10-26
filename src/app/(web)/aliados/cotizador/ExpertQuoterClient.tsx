@@ -92,10 +92,10 @@ export default function ExpertQuoterClient({ expertUser, products }: { expertUse
   };
 
   return (
-    <div className="stack-on-mobile mobile-padding" style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem", display: "grid", gridTemplateColumns: "1fr 400px", gap: "2rem", alignItems: "start" }}>
+    <div className="stack-on-mobile mobile-padding" style={{ maxWidth: "1400px", margin: "0 auto", padding: "clamp(1rem, 3vw, 2rem)", display: "grid", gridTemplateColumns: "1fr 400px", gap: "1.5rem", alignItems: "start" }}>
       
       {/* Left Column: Search & Add */}
-      <div className="card" style={{ padding: "2rem" }}>
+      <div className="card" style={{ padding: "clamp(1.25rem, 3vw, 2rem)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-primary)" }}>Buscar Productos (PVP)</h1>
           <Link href="/aliados/dashboard" style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", textDecoration: "underline" }}>Volver al Panel</Link>
@@ -119,7 +119,7 @@ export default function ExpertQuoterClient({ expertUser, products }: { expertUse
       </div>
 
       {/* Right Column: Quote Cart */}
-      <div className="card" style={{ padding: "2rem", position: "sticky", top: "80px" }}>
+      <div className="card" style={{ padding: "clamp(1.25rem, 3vw, 2rem)", position: "sticky", top: "80px" }}>
         <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)", marginBottom: "1.5rem" }}>Cotización Actual</h2>
         
         <div style={{ marginBottom: "1.5rem" }}>
