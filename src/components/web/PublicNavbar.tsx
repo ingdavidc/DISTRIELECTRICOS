@@ -166,7 +166,7 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
         </div>
 
         {/* Predictive Search Bar */}
-        <form onSubmit={handleSearch} className="navbar-search">
+        <form onSubmit={handleSearch} className="navbar-search" style={{ position: "relative", flex: 1, maxWidth: "600px" }}>
           <Search size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", pointerEvents: "none", zIndex: 2 }} />
           <ProductSearchAutocomplete 
             value={searchTerm}
