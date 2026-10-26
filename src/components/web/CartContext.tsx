@@ -9,6 +9,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   brand?: string;
+  imageUrl?: string | null;
 }
 
 interface CartContextType {
@@ -62,7 +63,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [...prevItems, { ...newItem, quantity }];
     });
     toast.success(`${newItem.name} agregado al carrito`);
-    setIsCartOpen(true); // Open cart automatically when adding items
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (id: string | number) => {
@@ -101,7 +102,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useCart must be used within a CartProvider");
   }
   return context;

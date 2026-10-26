@@ -46,13 +46,17 @@ export default function ProductSearchAutocomplete({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -66,11 +70,16 @@ export default function ProductSearchAutocomplete({
 
     debounceRef.current = setTimeout(async () => {
       setIsLoading(true);
-      const data = await searchProductsAutocomplete(value);
-      setResults(data);
-      setIsOpen(data.length > 0);
-      setIsLoading(false);
-    }, 300);
+      try {
+        const data = await searchProductsAutocomplete(value);
+        setResults(data);
+        setIsOpen(data.length > 0);
+      } catch (err) {
+        console.error("Search autocomplete error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 250);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -96,63 +105,77 @@ export default function ProductSearchAutocomplete({
         autoFocus={autoFocus}
       />
       {isLoading && (
-        <div style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)" }}>
-          <Loader2 size={16} className="spin" color="var(--color-text-muted)" />
+        <div style={{ position: "absolute", right: "75px", top: "50%", transform: "translateY(-50%)", zIndex: 3, pointerEvents: "none" }}>
+          <Loader2 size={18} className="spin" color="var(--color-secondary)" />
         </div>
       )}
       
       {isOpen && (
-        <ul style={{
-          position: "absolute",
-          top: "100%",
-          left: 0,
-          right: 0,
-          backgroundColor: "white",
-          border: "1px solid var(--color-border)",
-          borderRadius: "0.5rem",
-          boxShadow: "var(--shadow-md)",
-          maxHeight: "300px",
-          overflowY: "auto",
-          zIndex: 50,
-          margin: 0,
-          padding: 0,
-          listStyle: "none",
-          marginTop: "0.25rem"
-        }}>
+        <ul 
+          className="search-autocomplete-dropdown"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            left: 0,
+            right: 0,
+            backgroundColor: "white",
+            border: "1px solid var(--color-border)",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            maxHeight: "min(360px, 60vh)",
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
+            zIndex: 1000,
+            margin: 0,
+            padding: "0.25rem 0",
+            listStyle: "none"
+          }}
+        >
           {results.map((product) => (
             <li 
               key={product.id}
               onClick={() => handleSelect(product)}
+              onMouseDown={(e) => {
+                // Prevent input blur before click registers
+                e.preventDefault();
+                handleSelect(product);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleSelect(product);
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
-                padding: "0.5rem 1rem",
+                padding: "0.65rem 1rem",
                 cursor: "pointer",
                 borderBottom: "1px solid var(--color-border)",
-                gap: "1rem"
+                gap: "0.75rem",
+                minHeight: "52px"
               }}
               onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "var(--color-background)")}
               onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >
               <div style={{
-                width: "40px",
-                height: "40px",
+                width: "42px",
+                height: "42px",
                 flexShrink: 0,
-                borderRadius: "4px",
-                backgroundColor: "var(--color-background)",
+                borderRadius: "6px",
+                backgroundColor: "#f3f4f6",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                overflow: "hidden"
+                overflow: "hidden",
+                border: "1px solid #e5e7eb"
               }}>
                 {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 ) : (
                   <ImageIcon size={20} color="var(--color-text-muted)" />
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: "0.85rem", lineHeight: "1.2", marginBottom: "0.25rem", wordBreak: "break-word" }}>
+                <div style={{ fontWeight: 600, fontSize: "0.85rem", lineHeight: "1.25", marginBottom: "0.2rem", wordBreak: "break-word", color: "var(--color-primary)" }}>
                   {product.name}
                 </div>
                 <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", display: "flex", gap: "0.5rem" }}>
@@ -160,13 +183,15 @@ export default function ProductSearchAutocomplete({
                   {showStock && (
                     <>
                       <span>|</span>
-                      <span>Stock: {product.stock}</span>
+                      <span style={{ color: product.stock > 0 ? "var(--color-success)" : "var(--color-danger)", fontWeight: 600 }}>
+                        Stock: {product.stock}
+                      </span>
                     </>
                   )}
                 </div>
               </div>
-              <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--color-primary)" }}>
-                ${product.price.toLocaleString()}
+              <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--color-primary)", flexShrink: 0 }}>
+                ${product.price.toLocaleString('de-DE')}
               </div>
             </li>
           ))}

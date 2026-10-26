@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Search, Menu, User, Phone, X, LayoutGrid, Zap } from "lucide-react";
+import { ShoppingCart, Search, Menu, User, Phone, X, LayoutGrid, Zap, Sparkles } from "lucide-react";
 import { useCart } from "./CartContext";
 import { signOut } from "next-auth/react";
 
@@ -31,7 +31,7 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
     // Check on mount
     handleHashChange();
     
-    // Listen for changes (in case they click the footer link while already on the page)
+    // Listen for changes
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -77,9 +77,9 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
 
   return (
     <>
-    <header style={{ position: "sticky", top: 0, zIndex: 50, background: "white", boxShadow: "var(--shadow-sm)" }}>
-      {/* Top Bar for B2B/Contact */}
-      <div className="navbar-top" style={{ background: "var(--color-primary)", color: "white", padding: "0.5rem 2rem", display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+    <header className="public-navbar-header" style={{ position: "sticky", top: 0, zIndex: 50, background: "white", boxShadow: "var(--shadow-sm)" }}>
+      {/* Top Bar for B2B/Contact (Desktop) */}
+      <div className="navbar-top">
         <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
           {b2bUser ? (
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -118,46 +118,56 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
       </div>
 
       {/* Main Navbar */}
-      <div className="navbar-main" style={{ padding: "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem" }}>
-        
+      <div className="navbar-main">
+        {/* Mobile Header Row */}
         <div className="navbar-header-mobile">
           {/* Logo */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.6rem", textDecoration: "none" }}>
             <img 
               src="/logo.png" 
               alt="Logo" 
               className="logo-electric"
-              style={{ height: "45px", width: "45px", objectFit: "contain" }}
+              style={{ height: "40px", width: "40px", objectFit: "contain", flexShrink: 0 }}
             />
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ fontWeight: 800, fontSize: "1.5rem", color: "var(--color-primary)", letterSpacing: "-0.5px", lineHeight: 1.1 }}>
+              <div className="navbar-logo-text" style={{ fontWeight: 800, color: "var(--color-primary)", letterSpacing: "-0.5px", lineHeight: 1.1 }}>
                 DISTRIELECTRICOS <span style={{ color: "var(--color-secondary)" }}>E&D</span>
               </div>
-              <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 600, letterSpacing: "1px" }}>
+              <div className="navbar-logo-sub" style={{ fontSize: "0.68rem", color: "var(--color-text-muted)", fontWeight: 600, letterSpacing: "1px" }}>
                 IDEAS CON ENERGÍA
               </div>
             </div>
           </Link>
 
-          {/* Mobile Right Icons (Hamburger & Cart) */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }} className="mobile-menu-btn">
-            <div onClick={openCart} style={{ position: "relative", cursor: "pointer", color: "var(--color-primary)" }}>
+          {/* Mobile Right Icons (Cart & Hamburger) */}
+          <div className="navbar-mobile-actions">
+            <button 
+              type="button"
+              onClick={openCart} 
+              aria-label="Abrir carrito"
+              style={{ position: "relative", cursor: "pointer", color: "var(--color-primary)", background: "none", border: "none", padding: "0.4rem", display: "flex", alignItems: "center" }}
+            >
               <ShoppingCart size={24} />
               {totalItems > 0 && (
-                <span style={{ position: "absolute", top: "-8px", right: "-8px", background: "var(--color-secondary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", width: "20px", height: "20px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ position: "absolute", top: "-2px", right: "-2px", background: "var(--color-secondary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", minWidth: "18px", height: "18px", borderRadius: "9999px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
                   {totalItems}
                 </span>
               )}
-            </div>
-            <button onClick={() => setIsMobileMenuOpen(true)} className="mobile-menu-btn" style={{ display: "block" }}>
-              <Menu size={28} />
+            </button>
+            <button 
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)} 
+              aria-label="Abrir menú"
+              style={{ background: "none", border: "none", color: "var(--color-primary)", padding: "0.4rem", display: "flex", alignItems: "center" }}
+            >
+              <Menu size={26} />
             </button>
           </div>
         </div>
 
         {/* Predictive Search Bar */}
-        <form onSubmit={handleSearch} className="navbar-search" style={{ flex: 1, maxWidth: "600px", position: "relative" }}>
-          <Search size={20} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
+        <form onSubmit={handleSearch} className="navbar-search">
+          <Search size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", pointerEvents: "none", zIndex: 2 }} />
           <ProductSearchAutocomplete 
             value={searchTerm}
             onChange={(val) => setSearchTerm(val)}
@@ -165,23 +175,45 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
               setSearchTerm("");
               router.push(`/producto/${product.id}`);
             }}
-            placeholder="¿Qué estás buscando para tu proyecto?" 
+            placeholder="¿Qué producto buscas para tu proyecto?" 
             showStock={!!b2bUser || !!expertUser}
             style={{ 
-              width: "100%", padding: "0.85rem 1rem 0.85rem 3rem", 
-              borderRadius: "9999px", border: "2px solid var(--color-primary)", 
-              fontSize: "1rem", outline: "none", transition: "all 0.2s"
+              width: "100%", 
+              padding: "0.75rem 5.8rem 0.75rem 2.5rem", 
+              borderRadius: "9999px", 
+              border: "2px solid var(--color-primary)", 
+              fontSize: "0.95rem", 
+              outline: "none", 
+              transition: "all 0.2s",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
             }}
           />
-          <button type="submit" style={{ position: "absolute", right: "5px", top: "50%", transform: "translateY(-50%)", background: "var(--color-secondary)", color: "white", padding: "0.5rem 1.5rem", borderRadius: "9999px", fontWeight: 600, border: "none", cursor: "pointer" }}>
+          <button 
+            type="submit" 
+            style={{ 
+              position: "absolute", 
+              right: "4px", 
+              top: "50%", 
+              transform: "translateY(-50%)", 
+              background: "var(--color-secondary)", 
+              color: "white", 
+              padding: "0.48rem 1.1rem", 
+              borderRadius: "9999px", 
+              fontWeight: 700, 
+              border: "none", 
+              cursor: "pointer", 
+              fontSize: "0.85rem",
+              zIndex: 2 
+            }}
+          >
             Buscar
           </button>
         </form>
 
-        {/* User Actions */}
-        <div className="navbar-actions" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+        {/* Desktop User Actions */}
+        <div className="navbar-actions">
           <Link href="/profile" style={{ display: "flex", flexDirection: "column", alignItems: "center", color: "var(--color-primary)", gap: "0.25rem", textDecoration: "none" }}>
-            <User size={24} />
+            <User size={22} />
             <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Mi Cuenta</span>
           </Link>
           <div 
@@ -189,9 +221,9 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
             style={{ position: "relative", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", color: "var(--color-primary)", gap: "0.25rem" }}
           >
             <div style={{ position: "relative" }}>
-              <ShoppingCart size={24} />
+              <ShoppingCart size={22} />
               {totalItems > 0 && (
-                <span style={{ position: "absolute", top: "-8px", right: "-8px", background: "var(--color-secondary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", width: "20px", height: "20px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ position: "absolute", top: "-8px", right: "-8px", background: "var(--color-secondary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", width: "18px", height: "18px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {totalItems}
                 </span>
               )}
@@ -201,20 +233,19 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
         </div>
       </div>
 
-      {/* Navigation Categories */}
-      <nav className="categories-nav" style={{ borderTop: "1px solid var(--color-border)", padding: "0.75rem 2rem", display: "flex", gap: "2rem", overflowX: "auto" }}>
-        <Link href="/catalog" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 600, color: "var(--color-primary)", textDecoration: "none" }}>
-          <LayoutGrid size={20} />
-          Todos los Departamentos
+      {/* Navigation Categories (Swipeable on Mobile) */}
+      <nav className="categories-nav">
+        <Link href="/catalog" style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: 700, color: "var(--color-primary)", textDecoration: "none", flexShrink: 0, fontSize: "0.88rem" }}>
+          <LayoutGrid size={17} />
+          <span>Todos</span>
         </Link>
-        <div style={{ width: "1px", background: "var(--color-border)" }}></div>
-        <Link href="/catalog?category=11651069-bb4d-477b-9d77-afac5495b18f" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none" }}>Iluminación</Link>
-        <Link href="/catalog?category=204a74cb-97b1-4554-9bee-4d5b71dfc000" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none" }}>Conductores Eléctricos</Link>
-        <Link href="/catalog?category=18811ae2-62ea-45c5-b410-fce91ff5d585" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none" }}>Aparamenta</Link>
-        <Link href="/catalog?category=3bdc7419-5e3c-4537-a360-d774e8964ea7" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none" }}>Tubería y Accesorios</Link>
-        <a href="/catalog?flash=true" style={{ textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, color: "var(--color-danger)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-          <Zap size={16} /> Ofertas Flash
-        </a>
+        <Link href="/catalog?flash=true" style={{ textDecoration: "none", fontSize: "0.88rem", fontWeight: 700, color: "var(--color-danger)", display: "inline-flex", alignItems: "center", gap: "0.25rem", flexShrink: 0, background: "#fee2e2", padding: "0.2rem 0.6rem", borderRadius: "9999px" }}>
+          <Zap size={14} fill="currentColor" /> Ofertas Flash
+        </Link>
+        <Link href="/catalog?category=11651069-bb4d-477b-9d77-afac5495b18f" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none", flexShrink: 0, fontSize: "0.88rem" }}>Iluminación</Link>
+        <Link href="/catalog?category=204a74cb-97b1-4554-9bee-4d5b71dfc000" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none", flexShrink: 0, fontSize: "0.88rem" }}>Cables Eléctricos</Link>
+        <Link href="/catalog?category=18811ae2-62ea-45c5-b410-fce91ff5d585" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none", flexShrink: 0, fontSize: "0.88rem" }}>Aparamenta</Link>
+        <Link href="/catalog?category=3bdc7419-5e3c-4537-a360-d774e8964ea7" style={{ fontWeight: 500, color: "var(--color-text-main)", textDecoration: "none", flexShrink: 0, fontSize: "0.88rem" }}>Tubería</Link>
       </nav>
     </header>
     
@@ -223,26 +254,29 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
       <div className="mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)}>
         <div className="mobile-menu-content" onClick={(e) => e.stopPropagation()}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "1rem", borderBottom: "1px solid var(--color-border)" }}>
-            <span style={{ fontWeight: 800, color: "var(--color-primary)", fontSize: "1.2rem" }}>Menú</span>
-            <button onClick={() => setIsMobileMenuOpen(false)} style={{ background: "none", border: "none", color: "var(--color-text-muted)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <img src="/logo.png" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+              <span style={{ fontWeight: 800, color: "var(--color-primary)", fontSize: "1.1rem" }}>Menú</span>
+            </div>
+            <button onClick={() => setIsMobileMenuOpen(false)} style={{ background: "none", border: "none", color: "var(--color-text-muted)", padding: "0.25rem" }}>
               <X size={24} />
             </button>
           </div>
           
-          <nav style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <nav style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             {b2bUser ? (
               <div style={{ paddingBottom: "1rem", borderBottom: "1px solid var(--color-border)" }}>
                 <div style={{ fontWeight: 600, color: "var(--color-secondary)", marginBottom: "0.5rem" }}>🏢 B2B: {b2bUser.companyName}</div>
-                <button onClick={handleB2BLogout} style={{ color: "var(--color-text-muted)", textDecoration: "underline" }}>Cerrar Sesión B2B</button>
+                <button onClick={handleB2BLogout} style={{ color: "var(--color-text-muted)", textDecoration: "underline", fontSize: "0.85rem" }}>Cerrar Sesión B2B</button>
               </div>
             ) : expertUser ? (
               <div style={{ paddingBottom: "1rem", borderBottom: "1px solid var(--color-border)" }}>
                 <div style={{ fontWeight: 600, color: "var(--color-secondary)", marginBottom: "0.5rem" }}>⚡ Aliado: {expertUser.name}</div>
                 <Link href="/aliados/cotizador" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "block", marginBottom: "0.5rem", color: "var(--color-primary)", fontWeight: 600 }}>Ir al Cotizador</Link>
-                <button onClick={handleExpertLogout} style={{ color: "var(--color-text-muted)", textDecoration: "underline" }}>Cerrar Sesión Aliado</button>
+                <button onClick={handleExpertLogout} style={{ color: "var(--color-text-muted)", textDecoration: "underline", fontSize: "0.85rem" }}>Cerrar Sesión Aliado</button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", paddingBottom: "1rem", borderBottom: "1px solid var(--color-border)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingBottom: "1rem", borderBottom: "1px solid var(--color-border)" }}>
                 <button onClick={() => { setIsMobileMenuOpen(false); setShowB2BModal(true); }} className="btn btn-outline" style={{ justifyContent: "center" }}>
                   <User size={18} /> Acceso B2B
                 </button>
@@ -250,18 +284,26 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
               </div>
             )}
 
-            <Link href="/catalog" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontWeight: 600, color: "var(--color-primary)" }}>
+            <Link href="/catalog" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontWeight: 700, color: "var(--color-primary)" }}>
               <LayoutGrid size={20} /> Todos los Departamentos
             </Link>
-            <Link href="/catalog?category=11651069-bb4d-477b-9d77-afac5495b18f" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500 }}>Iluminación</Link>
-            <Link href="/catalog?category=204a74cb-97b1-4554-9bee-4d5b71dfc000" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500 }}>Conductores Eléctricos</Link>
-            <Link href="/catalog?category=18811ae2-62ea-45c5-b410-fce91ff5d585" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500 }}>Aparamenta</Link>
-            <Link href="/catalog?category=3bdc7419-5e3c-4537-a360-d774e8964ea7" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500 }}>Tubería y Accesorios</Link>
-            <Link href="/catalog?flash=true" onClick={() => setIsMobileMenuOpen(false)} style={{ color: "var(--color-danger)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Link href="/catalog?flash=true" onClick={() => setIsMobileMenuOpen(false)} style={{ color: "var(--color-danger)", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <Zap size={18} /> Ofertas Flash
             </Link>
+            <Link href="/catalog?category=11651069-bb4d-477b-9d77-afac5495b18f" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500, color: "var(--color-text-main)" }}>Iluminación</Link>
+            <Link href="/catalog?category=204a74cb-97b1-4554-9bee-4d5b71dfc000" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500, color: "var(--color-text-main)" }}>Conductores Eléctricos</Link>
+            <Link href="/catalog?category=18811ae2-62ea-45c5-b410-fce91ff5d585" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500, color: "var(--color-text-main)" }}>Aparamenta</Link>
+            <Link href="/catalog?category=3bdc7419-5e3c-4537-a360-d774e8964ea7" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500, color: "var(--color-text-main)" }}>Tubería y Accesorios</Link>
 
-            <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--color-border)" }}>
+            <Link href="/cotizar" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontWeight: 600, color: "var(--color-secondary)" }}>
+              <Sparkles size={18} /> Cotizar Proyecto
+            </Link>
+
+            <Link href="/estado-pedido" onClick={() => setIsMobileMenuOpen(false)} style={{ fontWeight: 500, color: "var(--color-text-muted)" }}>
+              Rastrear mi pedido
+            </Link>
+
+            <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontWeight: 600, color: "var(--color-primary)", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--color-border)" }}>
               <User size={20} /> Mi Cuenta
             </Link>
           </nav>

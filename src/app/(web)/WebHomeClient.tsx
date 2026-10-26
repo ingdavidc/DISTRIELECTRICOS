@@ -17,34 +17,31 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
   return (
     <div>
       {/* Hero Section */}
-      <section className="mobile-padding" style={{ 
-        background: "linear-gradient(135deg, var(--color-primary) 0%, #172646 100%)", 
-        color: "white", padding: "6rem 2rem", position: "relative", overflow: "hidden" 
-      }}>
+      <section className="home-hero-section">
         <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 10, display: "flex", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 500px", maxWidth: "600px" }}>
-            <h1 style={{ fontSize: "3.5rem", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.5rem" }}>
+          <div style={{ flex: "1 1 360px", maxWidth: "600px" }}>
+            <h1 className="home-hero-title">
               {config.heroTitle}
             </h1>
-            <p style={{ fontSize: "1.2rem", color: "var(--color-light-gray)", marginBottom: "2.5rem", lineHeight: 1.6 }}>
+            <p className="home-hero-subtitle">
               {config.heroSubtitle}
             </p>
-            <div className="flex-col-mobile" style={{ display: "flex", gap: "1rem" }}>
-              <Link href="/catalog" className="btn btn-secondary btn-full-mobile" style={{ fontSize: "1.1rem", padding: "1rem 2rem", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+            <div className="home-hero-buttons">
+              <Link href="/catalog" className="btn btn-secondary btn-full-mobile" style={{ fontSize: "1rem", padding: "0.85rem 1.75rem", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", borderRadius: "9999px" }}>
                 Ver Catálogo
-                <ArrowRight size={20} />
+                <ArrowRight size={18} />
               </Link>
-              <Link href="/cotizar" className="btn btn-full-mobile" style={{ fontSize: "1.1rem", padding: "1rem 2rem", background: "white", color: "var(--color-primary)", fontWeight: 600, textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+              <Link href="/cotizar" className="btn btn-full-mobile" style={{ fontSize: "1rem", padding: "0.85rem 1.75rem", background: "white", color: "var(--color-primary)", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "9999px" }}>
                 Cotizar Proyecto
               </Link>
             </div>
           </div>
-          <div style={{ flex: "1 1 300px", display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ flex: "1 1 280px", display: "flex", justifyContent: "center" }}>
             {config.heroImageUrl ? (
-               <img src={config.heroImageUrl} alt="Hero" style={{ width: "100%", maxWidth: "450px", borderRadius: "1rem", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }} />
+               <img src={config.heroImageUrl} alt="Hero" style={{ width: "100%", maxWidth: "420px", borderRadius: "1rem", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }} />
             ) : (
-              <div style={{ width: "400px", height: "400px", background: "rgba(255,255,255,0.05)", borderRadius: "50%", border: "2px dashed rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Zap size={100} color="var(--color-secondary)" opacity={0.5} />
+              <div style={{ width: "280px", height: "280px", background: "rgba(255,255,255,0.05)", borderRadius: "50%", border: "2px dashed rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Zap size={80} color="var(--color-secondary)" opacity={0.5} />
               </div>
             )}
           </div>
@@ -52,23 +49,23 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Trust Badges */}
-      <section className="mobile-padding" style={{ background: "white", borderBottom: "1px solid var(--color-border)" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem" }}>
+      <section style={{ background: "white", borderBottom: "1px solid var(--color-border)" }}>
+        <div className="home-trust-badges-grid">
           {[
             { icon: ShieldCheck, title: "Garantía de Fábrica", text: "En todos los productos" },
-            { icon: Truck, title: "Envíos Nacionales", text: "Gratis por compras > $200k" },
+            { icon: Truck, title: "Envíos Nacionales", text: "Seguros y rápidos" },
             { icon: Wrench, title: "Soporte Técnico", text: "Asesoría con Capi IA" },
-            { icon: Zap, title: "Pagos Seguros", text: "Múltiples métodos de pago" },
+            { icon: Zap, title: "Pagos Seguros", text: "Múltiples métodos" },
           ].map((feature, i) => {
             const Icon = feature.icon;
             return (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <div style={{ width: "50px", height: "50px", borderRadius: "50%", background: "var(--color-background)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Icon size={24} color="var(--color-primary)" />
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "var(--color-background)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon size={20} color="var(--color-primary)" />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700 }}>{feature.title}</div>
-                  <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{feature.text}</div>
+                  <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{feature.title}</div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>{feature.text}</div>
                 </div>
               </div>
             );
@@ -77,15 +74,15 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Categories Grid */}
-      <section className="mobile-padding" style={{ background: "var(--color-background)", padding: "5rem 2rem" }}>
+      <section className="home-section" style={{ background: "var(--color-background)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "2rem", color: "var(--color-primary)" }}>Categorías Principales</h2>
-          <div className="grid-cards">
+          <h2 className="home-section-title">Categorías Principales</h2>
+          <div className="home-categories-grid">
             {featuredCategories.map((cat, i) => (
               <Link key={i} href={cat.link} style={{ textDecoration: "none", color: "inherit" }}>
-                <div className="card product-card" style={{ display: "flex", alignItems: "center", gap: "1.5rem", cursor: "pointer" }}>
-                  <div style={{ fontSize: "3rem" }}>{cat.img}</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: 600 }}>{cat.name}</div>
+                <div className="card product-card" style={{ display: "flex", alignItems: "center", gap: "1rem", cursor: "pointer", padding: "1rem" }}>
+                  <div style={{ fontSize: "2.2rem", flexShrink: 0 }}>{cat.img}</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-primary)" }}>{cat.name}</div>
                 </div>
               </Link>
             ))}
@@ -94,30 +91,25 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Day-to-Day Gallery (Carousel) */}
-      <section className="mobile-padding" style={{ background: "white", padding: "5rem 2rem" }}>
+      <section className="home-section" style={{ background: "white" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-primary)" }}>El Día a Día en DISTRIELECTRICOS</h2>
-          <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem" }}>Una mirada detrás de escena de nuestro trabajo en tienda y bodegas.</p>
+          <h2 className="home-section-title">El Día a Día en DISTRIELECTRICOS</h2>
+          <p style={{ color: "var(--color-text-muted)", marginBottom: "1.5rem", fontSize: "0.95rem" }}>Una mirada de nuestro trabajo en tienda y bodegas.</p>
           
           {(!gallery || gallery.length === 0) ? (
             <div style={{ display: "flex", overflowX: "auto", gap: "1rem", paddingBottom: "1rem" }}>
               {[1, 2, 3].map(i => (
-                <div key={i} style={{ minWidth: "300px", height: "300px", borderRadius: "1rem", overflow: "hidden", background: "var(--color-background)", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed var(--color-border)", color: "var(--color-text-muted)" }}>
-                  <Zap size={40} style={{ opacity: 0.2, marginBottom: "1rem" }} />
-                  <p style={{ fontSize: "0.9rem", fontWeight: 600 }}>Próximamente</p>
+                <div key={i} style={{ minWidth: "260px", height: "240px", borderRadius: "1rem", overflow: "hidden", background: "var(--color-background)", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed var(--color-border)", color: "var(--color-text-muted)" }}>
+                  <Zap size={36} style={{ opacity: 0.2, marginBottom: "0.75rem" }} />
+                  <p style={{ fontSize: "0.85rem", fontWeight: 600 }}>Próximamente</p>
                 </div>
               ))}
             </div>
           ) : (
             <div className="marquee-container">
               <div className="marquee-content">
-                {/* 
-                  To make an infinite marquee, we duplicate the items so that when 
-                  it translates to -50%, it looks identical to the start.
-                  We multiply the array to ensure it's wide enough for large screens.
-                */}
-                {[...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery].map((item, idx) => (
-                  <div key={`${item.id}-${idx}`} className="marquee-item" style={{ width: "350px", height: "300px", borderRadius: "1rem", overflow: "hidden", background: "#f0f0f0", flexShrink: 0, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
+                {[...gallery, ...gallery, ...gallery, ...gallery, ...gallery, ...gallery].map((item, idx) => (
+                  <div key={`${item.id}-${idx}`} className="marquee-item" style={{ width: "280px", height: "240px", borderRadius: "1rem", overflow: "hidden", background: "#f0f0f0", flexShrink: 0, boxShadow: "0 8px 16px rgba(0,0,0,0.04)" }}>
                     {item.type === "VIDEO" ? (
                       <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay muted loop playsInline />
                     ) : (
@@ -132,53 +124,45 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
       </section>
 
       {/* Featured Products */}
-      <section className="mobile-padding" style={{ background: "var(--color-background)", padding: "5rem 2rem" }}>
+      <section className="home-section" style={{ background: "var(--color-background)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-            <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>Productos Destacados</h2>
-            <Link href="/catalog" className="btn btn-outline" style={{ textDecoration: "none" }}>Ver Todo</Link>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <h2 className="home-section-title" style={{ marginBottom: 0 }}>Productos Destacados</h2>
+            <Link href="/catalog" className="btn btn-outline" style={{ textDecoration: "none", fontSize: "0.85rem", padding: "0.45rem 1rem" }}>Ver Todo</Link>
           </div>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem" }}>
+          <div className="catalog-product-grid">
             {products.map((prod) => (
-              <div key={prod.id} className="card product-card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                <Link href={`/producto/${prod.id}`} className="product-img-wrapper" style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+              <div key={prod.id} className="card product-card catalog-product-card">
+                <Link href={`/producto/${prod.id}`} className="product-img-wrapper catalog-img-wrapper">
                   {prod.imageUrl ? (
-                    <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "1rem" }} />
+                    <img src={prod.imageUrl} alt={prod.name} loading="lazy" />
                   ) : (
-                    <ShoppingCart size={60} color="var(--color-medium-gray)" />
+                    <ShoppingCart size={40} color="var(--color-medium-gray)" />
                   )}
                 </Link>
-                <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "white" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                    <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{prod.brand || "Sin Marca"}</div>
+                <div className="catalog-product-info">
+                  <div className="catalog-product-brand-row">
+                    <span className="catalog-brand-name">{prod.brand || "General"}</span>
                     {prod.stock <= 0 ? (
-                      <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#fee2e2", color: "#ef4444" }}>Agotado</span>
+                      <span className="stock-badge stock-badge-out">Agotado</span>
                     ) : prod.stock <= 10 ? (
-                      <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#fef3c7", color: "#f59e0b" }}>Últimas unidades</span>
+                      <span className="stock-badge stock-badge-low">Pocas un.</span>
                     ) : (
-                      <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#dcfce7", color: "#22c55e" }}>Disponible</span>
+                      <span className="stock-badge stock-badge-in">Disponible</span>
                     )}
                   </div>
-                  <Link href={`/producto/${prod.id}`} style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1, textDecoration: "none", color: "inherit" }}>{prod.name}</Link>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <Link 
-                        href={`/producto/${prod.id}`}
-                        className="btn btn-outline"
-                        style={{ padding: "0.5rem 1rem", borderRadius: "2rem", display: "flex", alignItems: "center", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", color: "var(--color-primary)", border: "1px solid var(--color-primary)" }}
-                      >
-                        Ver
-                      </Link>
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ padding: "0.5rem", borderRadius: "50%" }}
-                        onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
-                      >
-                        <ShoppingCart size={20} />
-                      </button>
-                    </div>
+                  <Link href={`/producto/${prod.id}`} className="catalog-product-name">{prod.name}</Link>
+                  <div className="catalog-product-bottom-row">
+                    <div className="catalog-product-price">${prod.price.toLocaleString('de-DE')}</div>
+                    <button 
+                      type="button"
+                      className="btn btn-primary catalog-quick-add-btn" 
+                      onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand, imageUrl: prod.imageUrl })}
+                      aria-label="Agregar al carrito"
+                    >
+                      <ShoppingCart size={17} />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -186,53 +170,45 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
           </div>
         </div>
       </section>
+
       {/* Herramientas y Novedades Promocionadas */}
       {promoProducts && promoProducts.length > 0 && (
-        <section className="mobile-padding" style={{ background: "white", padding: "5rem 2rem", borderTop: "1px solid var(--color-border)" }}>
+        <section className="home-section" style={{ background: "white", borderTop: "1px solid var(--color-border)" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-              <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h2 className="home-section-title" style={{ marginBottom: 0 }}>
                 Herramientas y Novedades 🔥
               </h2>
             </div>
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+            <div className="catalog-product-grid">
               {promoProducts.map((prod) => (
-                <div key={prod.id} className="card product-card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column", border: "2px solid var(--color-secondary)", position: "relative" }}>
-                  <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.8rem", fontWeight: 800, zIndex: 10 }}>
-                    NUEVO
-                  </div>
-                  <Link href={`/producto/${prod.id}`} className="product-img-wrapper" style={{ height: "250px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+                <div key={prod.id} className="card product-card catalog-product-card" style={{ border: "2px solid var(--color-secondary)" }}>
+                  <Link href={`/producto/${prod.id}`} className="product-img-wrapper catalog-img-wrapper" style={{ position: "relative" }}>
+                    <div style={{ position: "absolute", top: "8px", left: "8px", background: "var(--color-secondary)", color: "white", padding: "0.2rem 0.5rem", borderRadius: "1rem", fontSize: "0.7rem", fontWeight: 800, zIndex: 10 }}>
+                      NUEVO
+                    </div>
                     {prod.imageUrl ? (
-                      <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      <img src={prod.imageUrl} alt={prod.name} loading="lazy" />
                     ) : (
-                      <Wrench size={80} color="var(--color-medium-gray)" />
+                      <Wrench size={40} color="var(--color-medium-gray)" />
                     )}
                   </Link>
-                  <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "linear-gradient(to bottom, #ffffff, #f8fafc)" }}>
-                    <div style={{ fontSize: "0.9rem", color: "var(--color-text-muted)", marginBottom: "0.5rem", fontWeight: 600 }}>{prod.brand || "Especial"}</div>
-                    <Link href={`/producto/${prod.id}`} style={{ fontWeight: 800, fontSize: "1.3rem", marginBottom: "0.5rem", color: "var(--color-text-main)", lineHeight: 1.2, textDecoration: "none" }}>{prod.name}</Link>
-                    <p style={{ fontSize: "0.95rem", color: "var(--color-text-muted)", marginBottom: "1.5rem", flex: 1 }}>
-                      {prod.description || "Equipamiento profesional de alto rendimiento para proyectos eléctricos de cualquier magnitud."}
-                    </p>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "auto" }}>
-                      <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
-                      <div style={{ display: "flex", gap: "0.5rem", flexDirection: "column" }}>
-                        <Link 
-                          href={`/producto/${prod.id}`}
-                          className="btn btn-outline"
-                          style={{ padding: "0.5rem 1rem", borderRadius: "2rem", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, textDecoration: "none", border: "1px solid var(--color-primary)", color: "var(--color-primary)" }}
-                        >
-                          Ver Detalles
-                        </Link>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ padding: "0.75rem 1.5rem", borderRadius: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
-                          onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
-                        >
-                          Comprar <ArrowRight size={18} />
-                        </button>
-                      </div>
+                  <div className="catalog-product-info">
+                    <div className="catalog-product-brand-row">
+                      <span className="catalog-brand-name">{prod.brand || "Especial"}</span>
+                    </div>
+                    <Link href={`/producto/${prod.id}`} className="catalog-product-name">{prod.name}</Link>
+                    <div className="catalog-product-bottom-row">
+                      <div className="catalog-product-price">${prod.price.toLocaleString('de-DE')}</div>
+                      <button 
+                        type="button"
+                        className="btn btn-secondary catalog-quick-add-btn" 
+                        onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand, imageUrl: prod.imageUrl })}
+                        aria-label="Agregar al carrito"
+                      >
+                        <ShoppingCart size={17} />
+                      </button>
                     </div>
                   </div>
                 </div>

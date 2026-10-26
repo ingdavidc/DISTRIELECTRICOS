@@ -9,7 +9,7 @@ import { useCart } from "@/components/web/CartContext";
 export default function CatalogClient({
   products,
   categories,
-  currentCategory: serverCategory, // unused, kept for prop signature
+  currentCategory: serverCategory,
   currentQuery: serverQuery,
   currentMin,
   currentMax,
@@ -59,18 +59,6 @@ export default function CatalogClient({
     return `/catalog?${params.toString()}`;
   };
 
-  const updateFilters = (key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== 'all') {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    // Always reset to page 1 when changing filters
-    params.delete('page');
-    window.location.href = `/catalog?${params.toString()}`;
-  };
-
   const applyPriceFilter = () => {
     const params = new URLSearchParams(searchParams.toString());
     if (minPrice) params.set('minPrice', minPrice);
@@ -95,18 +83,20 @@ export default function CatalogClient({
     window.location.href = `/catalog?${params.toString()}`;
   };
 
+  const activeFilterCount = (currentCategory !== 'all' ? 1 : 0) + (currentMin || currentMax ? 1 : 0) + (isFlash ? 1 : 0);
+
   return (
     <div style={{ background: "var(--color-background)", minHeight: "100vh" }}>
       {/* Page Header */}
-      <div style={{ background: "white", borderBottom: "1px solid var(--color-border)", padding: "2rem" }}>
+      <div className="catalog-header-banner">
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", gap: "1rem", alignItems: "center" }}>
-          {isFlash && <Zap size={32} color="var(--color-secondary)" fill="var(--color-secondary)" />}
+          {isFlash && <Zap size={32} color="var(--color-secondary)" fill="var(--color-secondary)" style={{ flexShrink: 0 }} />}
           <div>
-            <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-primary)" }}>
-              {isFlash ? "Ofertas Flash" : "Catálogo de Productos"}
+            <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--color-primary)", lineHeight: 1.2 }}>
+              {isFlash ? "Ofertas Flash Especiales" : "Catálogo de Productos"}
             </h1>
             {currentQuery && (
-              <p style={{ color: "var(--color-text-muted)", marginTop: "0.5rem" }}>
+              <p style={{ color: "var(--color-text-muted)", marginTop: "0.4rem", fontSize: "0.95rem" }}>
                 Resultados para: <strong style={{ color: "var(--color-secondary)" }}>"{currentQuery}"</strong>
               </p>
             )}
@@ -114,18 +104,18 @@ export default function CatalogClient({
         </div>
       </div>
 
-      <div style={{ maxWidth: "1200px", margin: "2rem auto", padding: "0 2rem", display: "flex", gap: "2rem", alignItems: "flex-start" }}>
-        {/* Sidebar Filters (Desktop) */}
-        <aside style={{ width: "250px", flexShrink: 0, background: "white", padding: "1.5rem", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "2rem" }} className="hidden md:flex">
+      <div className="catalog-container">
+        {/* Desktop Sidebar Filters */}
+        <aside className="catalog-sidebar-desktop">
           <div>
-            <h3 style={{ fontWeight: 600, marginBottom: "1rem", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <h3 style={{ fontWeight: 700, marginBottom: "1rem", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1.05rem" }}>
               <Filter size={18} /> Categorías
             </h3>
-            <ul style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <ul style={{ display: "flex", flexDirection: "column", gap: "0.5rem", listStyle: "none" }}>
               <li>
                 <Link 
                   href={getCategoryHref('all')}
-                  style={{ display: "block", textDecoration: "none", color: currentCategory === 'all' ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === 'all' ? 700 : 500, width: "100%" }}
+                  style={{ display: "block", textDecoration: "none", color: currentCategory === 'all' ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === 'all' ? 700 : 500, width: "100%", fontSize: "0.92rem" }}
                 >
                   Todas las Categorías
                 </Link>
@@ -134,7 +124,7 @@ export default function CatalogClient({
                 <li key={cat.id}>
                   <Link 
                     href={getCategoryHref(cat.id)}
-                    style={{ display: "block", textDecoration: "none", color: currentCategory === cat.id ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === cat.id ? 700 : 500, width: "100%" }}
+                    style={{ display: "block", textDecoration: "none", color: currentCategory === cat.id ? "var(--color-secondary)" : "var(--color-text-main)", fontWeight: currentCategory === cat.id ? 700 : 500, width: "100%", fontSize: "0.92rem" }}
                   >
                     {cat.name}
                   </Link>
@@ -144,7 +134,7 @@ export default function CatalogClient({
           </div>
 
           <div>
-            <h3 style={{ fontWeight: 600, marginBottom: "1rem", color: "var(--color-primary)" }}>Precio</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: "1rem", color: "var(--color-primary)", fontSize: "1.05rem" }}>Precio</h3>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "1rem" }}>
               <input 
                 type="number" 
@@ -152,7 +142,7 @@ export default function CatalogClient({
                 className="input" 
                 value={minPrice} 
                 onChange={(e) => setMinPrice(e.target.value)}
-                style={{ padding: "0.5rem" }}
+                style={{ padding: "0.5rem", fontSize: "0.9rem" }}
               />
               <span>-</span>
               <input 
@@ -161,83 +151,105 @@ export default function CatalogClient({
                 className="input" 
                 value={maxPrice} 
                 onChange={(e) => setMaxPrice(e.target.value)}
-                style={{ padding: "0.5rem" }}
+                style={{ padding: "0.5rem", fontSize: "0.9rem" }}
               />
             </div>
-            <button className="btn btn-primary" style={{ width: "100%" }} onClick={applyPriceFilter}>
+            <button className="btn btn-primary" style={{ width: "100%", padding: "0.6rem" }} onClick={applyPriceFilter}>
               Aplicar Precio
             </button>
           </div>
 
           {(currentQuery || currentCategory !== 'all' || currentMin || currentMax || isFlash) && (
-            <button className="btn btn-outline" onClick={clearFilters} style={{ width: "100%" }}>
+            <button className="btn btn-outline" onClick={clearFilters} style={{ width: "100%", padding: "0.6rem" }}>
               Limpiar Filtros
             </button>
           )}
         </aside>
 
-        {/* Product Grid */}
-        <main style={{ flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-            <span style={{ color: "var(--color-text-muted)" }}>
+        {/* Product Grid Area */}
+        <main className="catalog-main-content">
+          {/* Mobile Filter & Count Bar */}
+          <div className="catalog-mobile-filter-bar">
+            <button 
+              type="button"
+              onClick={() => setIsFiltersOpen(true)} 
+              className="btn btn-outline catalog-filter-btn"
+            >
+              <Filter size={18} />
+              <span>Filtros</span>
+              {activeFilterCount > 0 && (
+                <span style={{ background: "var(--color-secondary)", color: "white", padding: "0.15rem 0.5rem", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: 700 }}>
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            <span style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>
+              {products.length} producto{products.length !== 1 && 's'}
+            </span>
+          </div>
+
+          {/* Desktop Count Bar */}
+          <div className="catalog-desktop-count-bar">
+            <span style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
               Mostrando {products.length} producto{products.length !== 1 && 's'}
             </span>
           </div>
 
           {products.length === 0 ? (
-            <div style={{ background: "white", padding: "4rem", textAlign: "center", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ background: "white", padding: "3rem 1.5rem", textAlign: "center", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
               <Search size={48} color="var(--color-medium-gray)" style={{ margin: "0 auto 1rem auto" }} />
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>No se encontraron productos</h3>
-              <p style={{ color: "var(--color-text-muted)", marginBottom: "1.5rem" }}>
-                Intenta con otros términos de búsqueda o quita algunos filtros.
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "0.5rem" }}>No se encontraron productos</h3>
+              <p style={{ color: "var(--color-text-muted)", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
+                Intenta con otros términos de búsqueda o quita los filtros aplicados.
               </p>
               <button className="btn btn-primary" onClick={clearFilters}>Ver Todos los Productos</button>
             </div>
           ) : (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "2rem", marginBottom: "3rem" }}>
+              <div className="catalog-product-grid">
                 {products.map((prod) => (
-                  <div key={prod.id} className="card product-card" style={{ padding: "0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                    <Link href={`/producto/${prod.id}`} className="product-img-wrapper" style={{ height: "200px", background: "white", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                  <div key={prod.id} className="card product-card catalog-product-card">
+                    <Link href={`/producto/${prod.id}`} className="product-img-wrapper catalog-img-wrapper">
                       {flashOfferIds.includes(prod.id) && (
-                        <div style={{ position: "absolute", top: "10px", left: "10px", background: "var(--color-secondary)", color: "white", padding: "0.25rem 0.75rem", borderRadius: "1rem", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.25rem", zIndex: 10 }}>
-                          <Zap size={12} fill="white" /> FLASH
+                        <div className="catalog-flash-badge">
+                          <Zap size={11} fill="white" /> FLASH
                         </div>
                       )}
                       {prod.imageUrl ? (
-                        <img src={prod.imageUrl} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "1rem" }} />
+                        <img src={prod.imageUrl} alt={prod.name} loading="lazy" />
                       ) : (
-                        <ShoppingCart size={60} color="var(--color-medium-gray)" />
+                        <ShoppingCart size={40} color="var(--color-medium-gray)" />
                       )}
                     </Link>
-                    <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1, background: "white" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                        <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>{prod.brand || "Sin Marca"}</div>
+                    <div className="catalog-product-info">
+                      <div className="catalog-product-brand-row">
+                        <span className="catalog-brand-name">{prod.brand || "General"}</span>
                         {prod.stock <= 0 ? (
-                          <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#fee2e2", color: "#ef4444" }}>Agotado</span>
+                          <span className="stock-badge stock-badge-out">Agotado</span>
                         ) : prod.stock <= 10 ? (
-                          <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#fef3c7", color: "#f59e0b" }}>Últimas unidades</span>
+                          <span className="stock-badge stock-badge-low">Pocas un.</span>
                         ) : (
-                          <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.5rem", borderRadius: "1rem", background: "#dcfce7", color: "#22c55e" }}>Disponible</span>
+                          <span className="stock-badge stock-badge-in">Disponible</span>
                         )}
                       </div>
-                      <Link href={`/producto/${prod.id}`} style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", flex: 1, textDecoration: "none", color: "inherit" }}>{prod.name}</Link>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                        <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>${prod.price.toLocaleString()}</div>
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                          <Link 
-                            href={`/producto/${prod.id}`}
-                            className="btn btn-outline"
-                            style={{ padding: "0.5rem 1rem", borderRadius: "2rem", display: "flex", alignItems: "center", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", color: "var(--color-primary)", border: "1px solid var(--color-primary)" }}
-                          >
-                            Ver
-                          </Link>
+                      
+                      <Link href={`/producto/${prod.id}`} className="catalog-product-name">
+                        {prod.name}
+                      </Link>
+                      
+                      <div className="catalog-product-bottom-row">
+                        <div className="catalog-product-price">
+                          ${prod.price.toLocaleString('de-DE')}
+                        </div>
+                        <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
                           <button 
-                            className="btn btn-primary" 
-                            style={{ padding: "0.5rem", borderRadius: "50%" }}
-                            onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand })}
+                            type="button"
+                            className="btn btn-primary catalog-quick-add-btn"
+                            onClick={() => addToCart({ id: prod.id, name: prod.name, price: prod.price, brand: prod.brand, imageUrl: prod.imageUrl })}
+                            aria-label="Agregar al carrito"
+                            title="Agregar al carrito"
                           >
-                            <ShoppingCart size={20} />
+                            <ShoppingCart size={17} />
                           </button>
                         </div>
                       </div>
@@ -248,23 +260,25 @@ export default function CatalogClient({
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem", padding: "1rem" }}>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.75rem", padding: "2rem 0" }}>
                   <button 
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="btn btn-outline"
-                    style={{ padding: "0.5rem", borderRadius: "50%" }}
+                    style={{ padding: "0.5rem", borderRadius: "50%", minWidth: "40px", minHeight: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    aria-label="Página anterior"
                   >
                     <ChevronLeft size={20} />
                   </button>
-                  <div style={{ fontWeight: 600, color: "var(--color-text-main)" }}>
-                    Página {currentPage} de {totalPages}
+                  <div style={{ fontWeight: 600, color: "var(--color-text-main)", fontSize: "0.9rem" }}>
+                    Pág. {currentPage} de {totalPages}
                   </div>
                   <button 
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="btn btn-outline"
-                    style={{ padding: "0.5rem", borderRadius: "50%" }}
+                    style={{ padding: "0.5rem", borderRadius: "50%", minWidth: "40px", minHeight: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    aria-label="Página siguiente"
                   >
                     <ChevronRight size={20} />
                   </button>
@@ -274,6 +288,116 @@ export default function CatalogClient({
           )}
         </main>
       </div>
+
+      {/* Mobile Filters Drawer Modal */}
+      {isFiltersOpen && (
+        <div className="mobile-filters-drawer-overlay" onClick={() => setIsFiltersOpen(false)}>
+          <div className="mobile-filters-drawer-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "1rem", borderBottom: "1px solid var(--color-border)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Filter size={20} color="var(--color-primary)" />
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 700, margin: 0, color: "var(--color-primary)" }}>Filtros del Catálogo</h3>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setIsFiltersOpen(false)}
+                style={{ background: "none", border: "none", color: "var(--color-text-muted)", padding: "0.25rem" }}
+                aria-label="Cerrar filtros"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "1.5rem", padding: "1rem 0" }}>
+              <div>
+                <h4 style={{ fontWeight: 700, marginBottom: "0.75rem", color: "var(--color-primary)", fontSize: "1rem" }}>Categorías</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                  <Link 
+                    href={getCategoryHref('all')}
+                    onClick={() => setIsFiltersOpen(false)}
+                    style={{ 
+                      padding: "0.6rem 0.8rem", 
+                      borderRadius: "var(--radius-md)", 
+                      background: currentCategory === 'all' ? "rgba(32, 53, 98, 0.08)" : "transparent",
+                      color: currentCategory === 'all' ? "var(--color-secondary)" : "var(--color-text-main)",
+                      fontWeight: currentCategory === 'all' ? 700 : 500,
+                      textDecoration: "none",
+                      fontSize: "0.95rem"
+                    }}
+                  >
+                    Todas las Categorías
+                  </Link>
+                  {categories.map(cat => (
+                    <Link 
+                      key={cat.id}
+                      href={getCategoryHref(cat.id)}
+                      onClick={() => setIsFiltersOpen(false)}
+                      style={{ 
+                        padding: "0.6rem 0.8rem", 
+                        borderRadius: "var(--radius-md)", 
+                        background: currentCategory === cat.id ? "rgba(32, 53, 98, 0.08)" : "transparent",
+                        color: currentCategory === cat.id ? "var(--color-secondary)" : "var(--color-text-main)",
+                        fontWeight: currentCategory === cat.id ? 700 : 500,
+                        textDecoration: "none",
+                        fontSize: "0.95rem"
+                      }}
+                    >
+                      {cat.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ fontWeight: 700, marginBottom: "0.75rem", color: "var(--color-primary)", fontSize: "1rem" }}>Rango de Precio</h4>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.75rem" }}>
+                  <input 
+                    type="number" 
+                    placeholder="Mínimo" 
+                    className="input" 
+                    value={minPrice} 
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    style={{ padding: "0.6rem" }}
+                  />
+                  <span>-</span>
+                  <input 
+                    type="number" 
+                    placeholder="Máximo" 
+                    className="input" 
+                    value={maxPrice} 
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    style={{ padding: "0.6rem" }}
+                  />
+                </div>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: "100%", padding: "0.75rem" }} 
+                  onClick={() => { setIsFiltersOpen(false); applyPriceFilter(); }}
+                >
+                  Aplicar Precio
+                </button>
+              </div>
+            </div>
+
+            <div style={{ paddingTop: "1rem", borderTop: "1px solid var(--color-border)", display: "flex", gap: "0.75rem" }}>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => { setIsFiltersOpen(false); clearFilters(); }} 
+                style={{ flex: 1, padding: "0.75rem" }}
+              >
+                Limpiar Todo
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setIsFiltersOpen(false)} 
+                style={{ flex: 1, padding: "0.75rem" }}
+              >
+                Ver Resultados
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

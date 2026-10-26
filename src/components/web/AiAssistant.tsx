@@ -61,48 +61,47 @@ export default function AiAssistant() {
   };
 
   return (
-    <div style={{ position: "fixed", bottom: "2rem", right: "2rem", zIndex: 100, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+    <div className="ai-assistant-wrapper">
       
       {/* Chat Window */}
       {isOpen && (
-        <div style={{ 
-          width: "350px", height: "450px", background: "white", 
-          borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-lg)", 
-          marginBottom: "1rem", display: "flex", flexDirection: "column", overflow: "hidden",
-          border: "1px solid var(--color-border)",
-          animation: "slideUp 0.3s ease-out"
-        }}>
+        <div className="ai-assistant-chat-window">
           {/* Header */}
-          <div style={{ background: "var(--color-primary)", color: "white", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "white", overflow: "hidden", border: "2px solid var(--color-secondary)" }}>
-                 <Image src="/capybara.png" alt="Capi IA" width={40} height={40} style={{ objectFit: "cover" }} />
+          <div style={{ background: "var(--color-primary)", color: "white", padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "white", overflow: "hidden", border: "2px solid var(--color-secondary)", flexShrink: 0 }}>
+                 <Image src="/capybara.png" alt="Capi IA" width={36} height={36} style={{ objectFit: "cover" }} />
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: "1rem" }}>Capi, El Electricista</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-secondary)" }}>Asistente IA en línea</div>
+                <div style={{ fontWeight: 700, fontSize: "0.95rem", lineHeight: 1.2 }}>Capi, El Electricista</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--color-secondary)" }}>Asistente IA en línea</div>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} style={{ color: "white" }}>
+            <button 
+              type="button"
+              onClick={() => setIsOpen(false)} 
+              style={{ color: "white", background: "none", border: "none", padding: "0.3rem" }}
+              aria-label="Cerrar asistente"
+            >
               <X size={20} />
             </button>
           </div>
 
           {/* Chat Body */}
-          <div style={{ flex: 1, background: "var(--color-background)", padding: "1rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ flex: 1, background: "var(--color-background)", padding: "1rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             {messages.map((msg, index) => (
               <div 
                 key={index} 
                 style={{ 
                   background: msg.role === "model" ? "white" : "var(--color-primary)", 
                   color: msg.role === "model" ? "var(--color-text)" : "white",
-                  padding: "0.85rem 1rem", 
+                  padding: "0.75rem 0.95rem", 
                   borderRadius: "var(--radius-lg)", 
                   borderBottomLeftRadius: msg.role === "model" ? "0" : "var(--radius-lg)", 
                   borderBottomRightRadius: msg.role === "user" ? "0" : "var(--radius-lg)", 
                   boxShadow: "var(--shadow-sm)", 
-                  maxWidth: "85%", 
-                  fontSize: "0.95rem",
+                  maxWidth: "88%", 
+                  fontSize: "0.9rem",
                   alignSelf: msg.role === "model" ? "flex-start" : "flex-end",
                   lineHeight: "1.4"
                 }}
@@ -111,7 +110,7 @@ export default function AiAssistant() {
               </div>
             ))}
             {isLoading && (
-              <div style={{ background: "white", padding: "0.85rem 1.2rem", borderRadius: "var(--radius-lg)", borderBottomLeftRadius: "0", boxShadow: "var(--shadow-sm)", maxWidth: "30%", alignSelf: "flex-start", display: "flex", alignItems: "center" }}>
+              <div style={{ background: "white", padding: "0.75rem 1rem", borderRadius: "var(--radius-lg)", borderBottomLeftRadius: "0", boxShadow: "var(--shadow-sm)", maxWidth: "35%", alignSelf: "flex-start", display: "flex", alignItems: "center" }}>
                 <style>
                   {`
                     @keyframes typing-dot {
@@ -135,22 +134,24 @@ export default function AiAssistant() {
           </div>
 
           {/* Input Area */}
-          <div style={{ padding: "1rem", background: "white", borderTop: "1px solid var(--color-border)", display: "flex", gap: "0.5rem" }}>
+          <div style={{ padding: "0.75rem", background: "white", borderTop: "1px solid var(--color-border)", display: "flex", gap: "0.5rem" }}>
             <input 
               type="text" 
-              placeholder="Escribe tu mensaje, camarita..." 
+              placeholder="Pregúntale a Capi..." 
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
-              style={{ flex: 1, padding: "0.75rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
+              style={{ flex: 1, padding: "0.65rem 0.85rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
             />
             <button 
+              type="button"
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
-              style={{ background: input.trim() && !isLoading ? "var(--color-secondary)" : "var(--color-text-muted)", color: "white", padding: "0.75rem", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", cursor: input.trim() && !isLoading ? "pointer" : "default", border: "none", transition: "background 0.2s" }}
+              style={{ background: input.trim() && !isLoading ? "var(--color-secondary)" : "var(--color-text-muted)", color: "white", padding: "0.65rem 0.85rem", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", cursor: input.trim() && !isLoading ? "pointer" : "default", border: "none", transition: "background 0.2s" }}
+              aria-label="Enviar mensaje"
             >
-              <Send size={18} />
+              <Send size={17} />
             </button>
           </div>
         </div>
@@ -162,54 +163,22 @@ export default function AiAssistant() {
         position: "relative"
       }}>
         {!isOpen && (
-          <div style={{
-            position: "absolute",
-            bottom: "95px",
-            right: "0",
-            background: "white",
-            padding: "0.75rem 1rem",
-            borderRadius: "var(--radius-lg)",
-            borderBottomRightRadius: "0",
-            boxShadow: "var(--shadow-md)",
-            border: "1px solid var(--color-border)",
-            whiteSpace: "nowrap",
-            fontWeight: 600,
-            color: "var(--color-primary)",
-            fontSize: "0.95rem",
-            transformOrigin: "bottom right",
-            animation: "popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-          }}>
+          <div className="ai-assistant-bubble">
             ¡Pija, camarita! Estoy aquí pa' ayudarte 🤠
-            <div style={{
-              position: "absolute",
-              bottom: "-6px",
-              right: "0",
-              width: "12px",
-              height: "12px",
-              background: "white",
-              borderBottom: "1px solid var(--color-border)",
-              borderRight: "1px solid var(--color-border)",
-              transform: "rotate(45deg)"
-            }}></div>
+            <div className="ai-assistant-bubble-arrow"></div>
           </div>
         )}
         <button 
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
-          style={{ 
-            width: "90px", height: "90px", borderRadius: "50%", 
-            background: "var(--color-primary)", border: "4px solid white",
-            boxShadow: "var(--shadow-lg)", position: "relative",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "transform 0.3s",
-            transform: isOpen ? "scale(0.9)" : "scale(1)",
-            padding: 0,
-            cursor: "pointer"
-          }}
+          className="ai-assistant-btn"
+          aria-label="Abrir asistente inteligente Capi"
         >
           <Image 
             src="/chappy.png" 
             alt="Capi Assistant" 
             fill 
+            sizes="80px"
             style={{ 
               objectFit: "cover", 
               borderRadius: "50%",
@@ -219,7 +188,7 @@ export default function AiAssistant() {
           />
           {/* Notification dot */}
           {!isOpen && (
-            <div style={{ position: "absolute", top: "10px", right: "10px", width: "20px", height: "20px", background: "var(--color-danger)", borderRadius: "50%", border: "2px solid white", zIndex: 10 }}></div>
+            <div className="ai-assistant-dot"></div>
           )}
         </button>
       </div>
@@ -231,7 +200,7 @@ export default function AiAssistant() {
         }
         @keyframes float {
           0% { transform: translateY(0px); }
-          50% { transform: translateY(-12px); }
+          50% { transform: translateY(-8px); }
           100% { transform: translateY(0px); }
         }
         @keyframes waveGreeting {

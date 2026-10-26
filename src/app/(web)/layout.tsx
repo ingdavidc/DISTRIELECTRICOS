@@ -3,6 +3,7 @@ import Footer from "@/components/web/Footer";
 import AiAssistant from "@/components/web/AiAssistant";
 import { CartProvider } from "@/components/web/CartContext";
 import CartSidebar from "@/components/web/CartSidebar";
+import MobileBottomNav from "@/components/web/MobileBottomNav";
 import { auth } from "@/auth";
 
 export default async function WebLayout({
@@ -30,11 +31,12 @@ export default async function WebLayout({
     <CartProvider>
       <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <PublicNavbar b2bUser={b2bUser} expertUser={expertUser} />
-        <main style={{ flex: 1 }}>
+        <main className="web-main-content" style={{ flex: 1 }}>
           {children}
         </main>
         <Footer />
         <AiAssistant />
+        <MobileBottomNav expertUser={expertUser} b2bUser={b2bUser} />
       </div>
       <CartSidebar />
     </CartProvider>

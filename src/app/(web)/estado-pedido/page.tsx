@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 const STATUS_STEPS = [
   { id: "PENDING", label: "Aprobado", icon: CheckCircle },
   { id: "PREPARING", label: "En Preparación", icon: Package },
-  { id: "READY_OR_DELIVERED", label: "Finalizado", icon: Truck }, // Generic last step
+  { id: "READY_OR_DELIVERED", label: "Finalizado", icon: Truck },
 ];
 
 export default function OrderTrackingPage() {
@@ -19,7 +19,6 @@ export default function OrderTrackingPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Force immediate scroll to top and focus
     setTimeout(() => {
       window.scrollTo(0, 0);
       if (inputRef.current) {
@@ -70,26 +69,26 @@ export default function OrderTrackingPage() {
   const isCancelled = orderData?.status === "CANCELLED";
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "4rem 2rem", minHeight: "calc(100vh - 400px)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-      <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--color-primary)", marginBottom: "1rem" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "clamp(2rem, 5vw, 4rem) 1rem", minHeight: "calc(100vh - 350px)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <h1 style={{ fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: 800, color: "var(--color-primary)", marginBottom: "0.75rem" }}>
           Rastrea tu Pedido
         </h1>
-        <p style={{ color: "var(--color-text-muted)", fontSize: "1.1rem", maxWidth: "600px", margin: "0 auto" }}>
-          Ingresa el número de ticket que aparece en tu comprobante de compra para conocer en qué etapa se encuentra.
+        <p style={{ color: "var(--color-text-muted)", fontSize: "1rem", maxWidth: "600px", margin: "0 auto" }}>
+          Ingresa el número de ticket que aparece en tu comprobante de compra para conocer su estado actual.
         </p>
       </div>
 
-      <form onSubmit={handleSearch} style={{ display: "flex", gap: "1rem", marginBottom: "3rem", background: "white", padding: "1rem", borderRadius: "1rem", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-        <div style={{ position: "relative", flex: 1 }}>
-          <Search size={20} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
+      <form onSubmit={handleSearch} className="order-tracking-form">
+        <div style={{ position: "relative", flex: 1, width: "100%" }}>
+          <Search size={20} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", pointerEvents: "none" }} />
           <input 
             ref={inputRef}
             type="text" 
             placeholder="Ej: 2634DA"
             value={ticketId}
             onChange={e => setTicketId(e.target.value)}
-            style={{ width: "100%", padding: "1rem 1rem 1rem 3rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: "1rem", outline: "none" }}
+            style={{ width: "100%", padding: "0.85rem 1rem 0.85rem 2.85rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: "1rem", outline: "none" }}
             required
           />
         </div>
@@ -97,50 +96,50 @@ export default function OrderTrackingPage() {
           type="submit" 
           className="btn btn-secondary" 
           disabled={isLoading}
-          style={{ padding: "0 2rem", minWidth: "150px" }}
+          style={{ padding: "0.85rem 1.75rem", minWidth: "140px", width: "auto" }}
         >
-          {isLoading ? <Loader2 size={20} className="spin" /> : "Rastrear"}
+          {isLoading ? <Loader2 size={18} className="spin" /> : "Rastrear"}
         </button>
       </form>
 
       {error && (
-        <div style={{ background: "#fef2f2", color: "#ef4444", padding: "2rem", borderRadius: "var(--radius-md)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", border: "1px solid #fca5a5" }}>
-          <XCircle size={48} />
-          <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Pedido no encontrado</h3>
-          <p style={{ margin: 0, opacity: 0.8 }}>{error}</p>
+        <div style={{ background: "#fef2f2", color: "#ef4444", padding: "1.5rem", borderRadius: "var(--radius-md)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", border: "1px solid #fca5a5", marginBottom: "2rem" }}>
+          <XCircle size={40} />
+          <h3 style={{ fontSize: "1.15rem", fontWeight: 700, margin: 0 }}>Pedido no encontrado</h3>
+          <p style={{ margin: 0, opacity: 0.8, fontSize: "0.9rem" }}>{error}</p>
         </div>
       )}
 
       {orderData && (
-        <div className="card" style={{ padding: "3rem 2rem", background: "white" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "3rem", flexWrap: "wrap", gap: "1rem" }}>
+        <div className="card" style={{ padding: "clamp(1.5rem, 4vw, 3rem)", background: "white" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2.5rem", flexWrap: "wrap", gap: "1rem" }}>
             <div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-primary)", margin: 0 }}>
+              <h2 style={{ fontSize: "1.35rem", fontWeight: 700, color: "var(--color-primary)", margin: 0 }}>
                 Hola, {orderData.customerName.split(" ")[0]}
               </h2>
-              <p style={{ color: "var(--color-text-muted)", margin: "0.5rem 0 0 0" }}>
+              <p style={{ color: "var(--color-text-muted)", margin: "0.4rem 0 0 0", fontSize: "0.9rem" }}>
                 Pedido: <strong>{orderData.id.split("-")[0].toUpperCase()}...</strong>
               </p>
             </div>
-            <div style={{ textAlign: "right", background: "var(--color-background-alt)", padding: "1rem", borderRadius: "var(--radius-md)" }}>
-              <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", fontWeight: 600 }}>TIPO DE ENTREGA</div>
-              <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-secondary)", display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.25rem" }}>
-                {orderData.deliveryType === "RETIRO" ? <ShoppingBag size={18} /> : <Truck size={18} />}
+            <div style={{ textAlign: "right", background: "var(--color-background)", padding: "0.75rem 1rem", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 700 }}>TIPO DE ENTREGA</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-secondary)", display: "flex", alignItems: "center", gap: "0.4rem", justifyContent: "flex-end", marginTop: "0.2rem" }}>
+                {orderData.deliveryType === "RETIRO" ? <ShoppingBag size={16} /> : <Truck size={16} />}
                 {orderData.deliveryType === "RETIRO" ? "Retiro en Tienda" : "Envío a Domicilio"}
               </div>
             </div>
           </div>
 
           {isCancelled ? (
-            <div style={{ background: "#fef2f2", color: "#ef4444", padding: "2rem", borderRadius: "var(--radius-md)", textAlign: "center", border: "1px solid #fca5a5", marginBottom: "2rem" }}>
-              <XCircle size={48} style={{ margin: "0 auto 1rem auto" }} />
-              <h3 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0 }}>Pedido Cancelado</h3>
-              <p style={{ margin: "0.5rem 0 0 0", opacity: 0.8 }}>Este pedido ha sido anulado y ya no se encuentra en preparación.</p>
+            <div style={{ background: "#fef2f2", color: "#ef4444", padding: "1.5rem", borderRadius: "var(--radius-md)", textAlign: "center", border: "1px solid #fca5a5", marginBottom: "2rem" }}>
+              <XCircle size={40} style={{ margin: "0 auto 0.75rem auto" }} />
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Pedido Cancelado</h3>
+              <p style={{ margin: "0.4rem 0 0 0", opacity: 0.8, fontSize: "0.9rem" }}>Este pedido ha sido cancelado.</p>
             </div>
           ) : (
-            <div style={{ position: "relative", marginBottom: "4rem" }}>
+            <div style={{ position: "relative", marginBottom: "3rem" }}>
               {/* Progress Line */}
-              <div style={{ position: "absolute", top: "24px", left: "10%", right: "10%", height: "4px", background: "var(--color-border)", zIndex: 0, borderRadius: "2px" }}>
+              <div style={{ position: "absolute", top: "20px", left: "10%", right: "10%", height: "4px", background: "var(--color-border)", zIndex: 0, borderRadius: "2px" }}>
                 <div style={{ 
                   height: "100%", 
                   background: "var(--color-secondary)", 
@@ -153,44 +152,42 @@ export default function OrderTrackingPage() {
               {/* Steps */}
               <div style={{ display: "flex", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
                 {STATUS_STEPS.map((step, index) => {
-                  const Icon = step.icon;
                   const isActive = index <= currentIndex;
                   const isCurrent = index === currentIndex;
 
-                  // Customize the last step label based on delivery type
                   let label = step.label;
                   if (index === 2) {
                     if (orderData.status === "DELIVERED") {
-                      label = orderData.deliveryType === "RETIRO" ? "Entregado en Tienda" : "Entregado a Domicilio";
+                      label = orderData.deliveryType === "RETIRO" ? "Entregado" : "Entregado";
                     } else {
-                      label = orderData.deliveryType === "RETIRO" ? "Listo para Recoger" : "En Ruta / Salió";
+                      label = orderData.deliveryType === "RETIRO" ? "Listo" : "En Ruta";
                     }
                   }
 
                   return (
                     <div key={step.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "33%" }}>
                       <div style={{ 
-                        width: "48px", 
-                        height: "48px", 
+                        width: "40px", 
+                        height: "40px", 
                         borderRadius: "50%", 
                         background: isActive ? "var(--color-secondary)" : "white",
-                        border: `4px solid ${isActive ? "var(--color-secondary)" : "var(--color-border)"}`,
+                        border: `3px solid ${isActive ? "var(--color-secondary)" : "var(--color-border)"}`,
                         color: isActive ? "white" : "var(--color-text-muted)",
                         display: "flex", 
                         alignItems: "center", 
                         justifyContent: "center",
-                        marginBottom: "1rem",
+                        marginBottom: "0.75rem",
                         transition: "all 0.3s ease",
-                        boxShadow: isCurrent ? "0 0 0 8px rgba(251, 146, 60, 0.15)" : "none"
+                        boxShadow: isCurrent ? "0 0 0 6px rgba(251, 146, 60, 0.15)" : "none"
                       }}>
-                        {isActive ? <CheckCircle size={24} /> : <Clock size={24} />}
+                        {isActive ? <CheckCircle size={20} /> : <Clock size={20} />}
                       </div>
-                      <div style={{ fontWeight: 700, color: isActive ? "var(--color-primary)" : "var(--color-text-muted)", textAlign: "center" }}>
+                      <div style={{ fontWeight: 700, color: isActive ? "var(--color-primary)" : "var(--color-text-muted)", textAlign: "center", fontSize: "0.85rem" }}>
                         {label}
                       </div>
                       {isCurrent && (
-                        <div style={{ fontSize: "0.8rem", color: "var(--color-secondary)", fontWeight: 600, marginTop: "0.25rem", textAlign: "center" }}>
-                          Estado Actual
+                        <div style={{ fontSize: "0.72rem", color: "var(--color-secondary)", fontWeight: 700, marginTop: "0.2rem", textAlign: "center" }}>
+                          Actual
                         </div>
                       )}
                     </div>
@@ -200,11 +197,11 @@ export default function OrderTrackingPage() {
             </div>
           )}
 
-          <div style={{ borderTop: "1px dashed var(--color-border)", paddingTop: "2rem", color: "var(--color-text-muted)", fontSize: "0.9rem" }}>
+          <div style={{ borderTop: "1px dashed var(--color-border)", paddingTop: "1.5rem", color: "var(--color-text-muted)", fontSize: "0.88rem" }}>
             <p style={{ margin: "0 0 0.5rem 0" }}><strong>Artículos incluidos ({orderData.itemCount}):</strong></p>
-            <ul style={{ margin: 0, paddingLeft: "1.5rem" }}>
+            <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
               {orderData.sampleItems.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
+                <li key={i} style={{ marginBottom: "0.25rem" }}>{item}</li>
               ))}
               {orderData.itemCount > 2 && (
                 <li>Y {orderData.itemCount - 2} artículo(s) más...</li>
