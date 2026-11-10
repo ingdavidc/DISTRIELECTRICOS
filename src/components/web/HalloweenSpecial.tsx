@@ -12,7 +12,7 @@ import { Sparkles, ArrowRight, X } from "lucide-react";
  * Cambia HALLOWEEN_ACTIVE a false.
  * Todo volverá a su estado normal instantáneamente sin alterar nada más.
  */
-export const HALLOWEEN_ACTIVE = true;
+export const HALLOWEEN_ACTIVE = false;
 
 /**
  * Barra superior de anuncio de temporada de Halloween
