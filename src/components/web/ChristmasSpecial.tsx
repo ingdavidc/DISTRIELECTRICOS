@@ -380,51 +380,58 @@ export function ChristmasCornerDecoration() {
 }
 
 /**
- * Gorrito navideño delicado para colocar sobre el logo de la empresa
+ * Gorrito navideño delicado y perfectamente alineado sobre el logo de la empresa
  */
-export function ChristmasSantaHat() {
+export function ChristmasSantaHat({ size = "md" }: { size?: "sm" | "md" }) {
   if (!CHRISTMAS_ACTIVE) return null;
+
+  const isSmall = size === "sm";
 
   return (
     <div
       aria-hidden="true"
       style={{
         position: "absolute",
-        top: "-8px",
-        left: "-7px",
-        width: "24px",
-        height: "22px",
+        top: isSmall ? "-14px" : "-18px",
+        left: isSmall ? "3px" : "4px",
+        width: isSmall ? "26px" : "32px",
+        height: isSmall ? "20px" : "25px",
         pointerEvents: "none",
-        transform: "rotate(-14deg)",
         zIndex: 5,
-        filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))",
+        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
       }}
     >
-      <svg viewBox="0 0 32 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Cono rojo del gorro */}
+      <svg viewBox="0 0 36 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Cuerpo rojo del gorro con caída natural hacia la derecha */}
         <path
-          d="M6 22 C9 15 17 8 28 10 C24 14 22 20 22 22 Z"
+          d="M 6 21 C 7 11, 14 3, 20 2 C 26 2, 33 6, 34 13 C 33 16, 30 19, 28 21 Z"
           fill="#dc2626"
         />
-        {/* Borde inferior de felpa blanca */}
+        {/* Sombra suave en el pliegue del gorro */}
+        <path
+          d="M 23 7 C 28 9, 32 11, 34 13 C 33 16, 30 19, 28 21 C 26 19, 24 13, 23 7 Z"
+          fill="#991b1b"
+          opacity="0.35"
+        />
+        {/* Borde de felpa blanca nivelado horizontalmente con el tope del logo */}
         <rect
-          x="4"
+          x="3"
           y="20"
-          width="20"
-          height="5.5"
-          rx="2.5"
-          fill="#f8fafc"
+          width="28"
+          height="6.5"
+          rx="3.25"
+          fill="#ffffff"
           stroke="#e2e8f0"
-          strokeWidth="0.5"
+          strokeWidth="0.6"
         />
         {/* Pompón blanco en la punta */}
         <circle
-          cx="28"
-          cy="10"
-          r="3.5"
-          fill="#f8fafc"
+          cx="33"
+          cy="14"
+          r="4.2"
+          fill="#ffffff"
           stroke="#e2e8f0"
-          strokeWidth="0.5"
+          strokeWidth="0.6"
         />
       </svg>
     </div>

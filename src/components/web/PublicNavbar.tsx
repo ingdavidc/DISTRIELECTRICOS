@@ -261,7 +261,7 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <div style={{ position: "relative", display: "inline-flex" }}>
                 <img src="/logo.png" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
-                <ChristmasSantaHat />
+                <ChristmasSantaHat size="sm" />
               </div>
               <span style={{ fontWeight: 800, color: "var(--color-primary)", fontSize: "1.1rem" }}>Menú</span>
             </div>
