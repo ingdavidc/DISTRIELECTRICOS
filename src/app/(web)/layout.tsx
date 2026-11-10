@@ -4,6 +4,7 @@ import AiAssistant from "@/components/web/AiAssistant";
 import { CartProvider } from "@/components/web/CartContext";
 import CartSidebar from "@/components/web/CartSidebar";
 import MobileBottomNav from "@/components/web/MobileBottomNav";
+import { SnowfallEffect } from "@/components/web/ChristmasSpecial";
 import { auth } from "@/auth";
 
 export default async function WebLayout({
@@ -29,6 +30,7 @@ export default async function WebLayout({
 
   return (
     <CartProvider>
+      <SnowfallEffect />
       <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <PublicNavbar b2bUser={b2bUser} expertUser={expertUser} />
         <main className="web-main-content" style={{ flex: 1 }}>

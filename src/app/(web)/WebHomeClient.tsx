@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Zap, Truck, ShieldCheck, Wrench, ArrowRight, ShoppingCart } from "lucide-react";
 import { useCart } from "@/components/web/CartContext";
-import { HalloweenBanner, HalloweenHeroBadge, HalloweenCornerSpiderweb } from "@/components/web/HalloweenSpecial";
+import { ChristmasBanner, ChristmasHeroBadge, ChristmasCornerDecoration } from "@/components/web/ChristmasSpecial";
 
 export default function WebHomeClient({ config, gallery, products, promoProducts = [] }: { config: any, gallery: any[], products: any[], promoProducts?: any[] }) {
   const { addToCart } = useCart();
@@ -17,18 +17,18 @@ export default function WebHomeClient({ config, gallery, products, promoProducts
 
   return (
     <div>
-      {/* Aviso de Temporada de Halloween (Fácilmente desactivable) */}
-      <HalloweenBanner />
+      {/* Aviso de Temporada Navideña (Fácilmente desactivable con CHRISTMAS_ACTIVE) */}
+      <ChristmasBanner />
 
       {/* Hero Section */}
       <section className="home-hero-section">
-        {/* Decoración sutil de telaraña en esquina */}
-        <HalloweenCornerSpiderweb />
+        {/* Decoración sutil navideña en la esquina */}
+        <ChristmasCornerDecoration />
 
         <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 10, display: "flex", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 360px", maxWidth: "600px" }}>
-            {/* Insignia especial de temporada */}
-            <HalloweenHeroBadge />
+            {/* Insignia especial de temporada navideña */}
+            <ChristmasHeroBadge />
 
             <h1 className="home-hero-title">
               {config.heroTitle}

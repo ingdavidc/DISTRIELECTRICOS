@@ -10,6 +10,7 @@ import { signOut } from "next-auth/react";
 import { loginB2B, logoutB2B } from "@/actions/b2b-login";
 import toast from "react-hot-toast";
 import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
+import { ChristmasSantaHat } from "@/components/web/ChristmasSpecial";
 
 export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, expertUser?: any }) {
   const { totalItems, totalPrice, openCart } = useCart();
@@ -123,12 +124,15 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
         <div className="navbar-header-mobile">
           {/* Logo */}
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.6rem", textDecoration: "none" }}>
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              className="logo-electric"
-              style={{ height: "40px", width: "40px", objectFit: "contain", flexShrink: 0 }}
-            />
+            <div style={{ position: "relative", display: "inline-flex" }}>
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                className="logo-electric"
+                style={{ height: "40px", width: "40px", objectFit: "contain", flexShrink: 0 }}
+              />
+              <ChristmasSantaHat />
+            </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div className="navbar-logo-text" style={{ fontWeight: 800, color: "var(--color-primary)", letterSpacing: "-0.5px", lineHeight: 1.1 }}>
                 DISTRIELECTRICOS <span style={{ color: "var(--color-secondary)" }}>E&D</span>
@@ -255,7 +259,10 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
         <div className="mobile-menu-content" onClick={(e) => e.stopPropagation()}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "1rem", borderBottom: "1px solid var(--color-border)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <img src="/logo.png" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+              <div style={{ position: "relative", display: "inline-flex" }}>
+                <img src="/logo.png" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+                <ChristmasSantaHat />
+              </div>
               <span style={{ fontWeight: 800, color: "var(--color-primary)", fontSize: "1.1rem" }}>Menú</span>
             </div>
             <button onClick={() => setIsMobileMenuOpen(false)} style={{ background: "none", border: "none", color: "var(--color-text-muted)", padding: "0.25rem" }}>
