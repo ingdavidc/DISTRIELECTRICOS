@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { X, MessageSquare, Send, Loader2 } from "lucide-react";
 import { sendChatMessage } from "@/actions/chat";
+import { CHRISTMAS_ACTIVE, getDailyChristmasLlaneroMessage } from "@/components/web/ChristmasSpecial";
 
 type Message = {
   role: "user" | "model";
@@ -12,12 +13,21 @@ type Message = {
 
 export default function AiAssistant() {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "model", content: "¡Hola, camarita! 🤠 Soy Capi ⚡ ¿En qué te puedo ayudar hoy? ¿Necesitas calcular los materiales para tu proyecto o buscas algún repuesto en específico?" }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const bubbleMessage =
+    (mounted && CHRISTMAS_ACTIVE ? getDailyChristmasLlaneroMessage() : null) ||
+    "¡Pija, camarita! Estoy aquí pa' ayudarte 🤠";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -162,9 +172,9 @@ export default function AiAssistant() {
         animation: isOpen ? "none" : "float 3s ease-in-out infinite",
         position: "relative"
       }}>
-        {!isOpen && (
+        {!isOpen && mounted && (
           <div className="ai-assistant-bubble">
-            ¡Pija, camarita! Estoy aquí pa' ayudarte 🤠
+            {bubbleMessage}
             <div className="ai-assistant-bubble-arrow"></div>
           </div>
         )}

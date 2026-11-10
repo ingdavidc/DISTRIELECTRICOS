@@ -437,3 +437,23 @@ export function ChristmasSantaHat({ size = "md" }: { size?: "sm" | "md" }) {
     </div>
   );
 }
+
+/**
+ * 7 Mensajes navideños cortos y llaneros para nuestra mascota Capi.
+ * Rotan automáticamente cada día de la semana (0 = Domingo a 6 = Sábado)
+ * mientras CHRISTMAS_ACTIVE sea true.
+ */
+export const CHRISTMAS_LLANERO_MESSAGES = [
+  "¡Domingo en el llano! Que brille su Navidad 🎄🤠", // 0: Domingo
+  "¡Pija, camarita! Semana de luces y energía ⚡🎄",    // 1: Lunes
+  "¡Pija, pariente! Ilumine bonito su Navidad 🎄🤠",   // 2: Martes
+  "¡Camarita! Que brille lindo ese pesebre 🤠✨",     // 3: Miércoles
+  "¡En diciembre el llano brilla más bonito! 🎄💡",   // 4: Jueves
+  "¡Viernes de joropo y luces, camarita! 🎶🎄",      // 5: Viernes
+  "¡Sábado navideño! ¿Qué busca pa' su obra? 🤠🎁",   // 6: Sábado
+];
+
+export function getDailyChristmasLlaneroMessage(date: Date = new Date()): string | null {
+  if (!CHRISTMAS_ACTIVE) return null;
+  return CHRISTMAS_LLANERO_MESSAGES[date.getDay()] ?? CHRISTMAS_LLANERO_MESSAGES[0];
+}
