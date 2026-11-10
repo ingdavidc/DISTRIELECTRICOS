@@ -63,11 +63,11 @@ export function SnowfallEffect() {
         y: Math.random() * height,
         radius: Math.random() * 2 + 1.2, // Copos pequeños de 1.2px a 3.2px
         density: Math.random() * flakeCount,
-        speedY: Math.random() * 0.8 + 0.5, // Caída suave y constante
-        speedX: Math.random() * 0.4 - 0.2,
+        speedY: Math.random() * 0.4 + 0.25, // Caída desacelerada en un 50% para máxima sutileza
+        speedX: Math.random() * 0.2 - 0.1,
         opacity: Math.random() * 0.5 + 0.35, // Transparencia suave (35% a 85%)
         swing: Math.random() * Math.PI * 2,
-        swingSpeed: Math.random() * 0.02 + 0.01,
+        swingSpeed: Math.random() * 0.01 + 0.005,
       });
     }
 
@@ -101,9 +101,9 @@ export function SnowfallEffect() {
         ctx.shadowColor = "rgba(255, 255, 255, 0.6)";
         ctx.fill();
 
-        // Movimiento de oscilación y caída
+        // Movimiento de oscilación y caída (desacelerado al 50%)
         f.swing += f.swingSpeed;
-        f.x += Math.sin(f.swing) * 0.5 + f.speedX;
+        f.x += Math.sin(f.swing) * 0.25 + f.speedX;
         f.y += f.speedY;
 
         // Reinicio al salir de la pantalla
