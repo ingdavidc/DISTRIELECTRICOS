@@ -171,12 +171,13 @@ export default function InventoryPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const loadData = async () => {
+  const loadData = async (searchOverride?: string) => {
     setIsLoading(true);
     try {
+      const query = typeof searchOverride === 'string' ? searchOverride : debouncedSearch;
       const [prods, count, sups, cats] = await Promise.all([
-        getInventoryProducts(limit, sortField, sortOrder, debouncedSearch),
-        getTotalProductsCount(debouncedSearch),
+        getInventoryProducts(limit, sortField, sortOrder, query),
+        getTotalProductsCount(query),
         getSuppliers(), 
         getCategories()
       ]);
@@ -195,6 +196,26 @@ export default function InventoryPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSelectProduct = (product: any) => {
+    const term = product.sku || product.name;
+    setSearchTerm(term);
+    setDebouncedSearch(term);
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === product.id);
+      if (!exists) {
+        return [product as any, ...prev];
+      }
+      return prev;
+    });
+    loadData(term);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setDebouncedSearch("");
+    loadData("");
   };
 
   useEffect(() => {
@@ -418,11 +439,12 @@ export default function InventoryPage() {
     }
   };
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredProducts = products.filter(p => {
+    if (!searchTerm.trim()) return true;
+    const tokens = searchTerm.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const searchString = `${p.name} ${p.sku} ${p.brand || ''} ${p.commercialName || ''}`.toLowerCase();
+    return tokens.every(token => searchString.includes(token));
+  });
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -465,16 +487,40 @@ export default function InventoryPage() {
       <div className="card" style={{ padding: "0" }}>
         <div style={{ padding: "1.5rem", display: "flex", gap: "1rem", borderBottom: "1px solid var(--color-border)" }}>
           <div style={{ position: "relative", flex: 1 }}>
-            <Search size={18} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
+            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", zIndex: 2, pointerEvents: "none" }} />
             <ProductSearchAutocomplete 
               placeholder="Buscar por SKU, nombre o marca..." 
               value={searchTerm}
               onChange={(val) => setSearchTerm(val)}
-              onSelect={(product) => setSearchTerm(product.sku)}
+              onSelect={handleSelectProduct}
               className="input" 
-              style={{ paddingLeft: "35px" }}
+              style={{ paddingLeft: "38px", paddingRight: searchTerm ? "38px" : "12px" }}
               showStock={true}
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--color-text-muted)",
+                  padding: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 4,
+                }}
+                title="Limpiar búsqueda"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
           <select 
             className="input" 
@@ -487,7 +533,7 @@ export default function InventoryPage() {
             <option value={100}>Mostrar 100</option>
             <option value={500}>Mostrar 500</option>
           </select>
-          <button className="btn btn-outline" onClick={loadData}>Recargar</button>
+          <button className="btn btn-outline" onClick={() => loadData()}>Recargar</button>
         </div>
 
         <div className="data-table-container" style={{ border: "none", borderRadius: "0 0 var(--radius-lg) var(--radius-lg)" }}>

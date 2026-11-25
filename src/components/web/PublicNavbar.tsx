@@ -181,6 +181,7 @@ export default function PublicNavbar({ b2bUser, expertUser }: { b2bUser?: any, e
             }}
             placeholder="¿Qué producto buscas para tu proyecto?" 
             showStock={!!b2bUser || !!expertUser}
+            loaderRight="75px"
             style={{ 
               width: "100%", 
               padding: "0.75rem 5.8rem 0.75rem 2.5rem", 

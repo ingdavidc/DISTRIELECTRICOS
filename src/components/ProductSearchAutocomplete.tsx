@@ -27,6 +27,8 @@ interface ProductSearchAutocompleteProps {
   style?: React.CSSProperties;
   autoFocus?: boolean;
   showStock?: boolean;
+  clearOnSelect?: boolean;
+  loaderRight?: string;
 }
 
 export default function ProductSearchAutocomplete({
@@ -37,7 +39,9 @@ export default function ProductSearchAutocomplete({
   className = "",
   style = {},
   autoFocus = false,
-  showStock = false
+  showStock = false,
+  clearOnSelect = false,
+  loaderRight = "14px"
 }: ProductSearchAutocompleteProps) {
   const [results, setResults] = useState<Product[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -90,7 +94,20 @@ export default function ProductSearchAutocomplete({
   const handleSelect = (product: Product) => {
     onSelect(product);
     setIsOpen(false);
-    onChange(""); 
+    if (clearOnSelect) {
+      onChange("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (isOpen && results.length > 0) {
+        e.preventDefault();
+        handleSelect(results[0]);
+      }
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -100,13 +117,14 @@ export default function ProductSearchAutocomplete({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => { if (results.length > 0) setIsOpen(true); }}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={className}
         style={style}
         autoFocus={autoFocus}
       />
       {isLoading && (
-        <div style={{ position: "absolute", right: "75px", top: "50%", transform: "translateY(-50%)", zIndex: 3, pointerEvents: "none" }}>
+        <div style={{ position: "absolute", right: loaderRight, top: "50%", transform: "translateY(-50%)", zIndex: 3, pointerEvents: "none" }}>
           <Loader2 size={18} className="spin" color="var(--color-secondary)" />
         </div>
       )}
@@ -139,7 +157,6 @@ export default function ProductSearchAutocomplete({
               onMouseDown={(e) => {
                 // Prevent input blur before click registers
                 e.preventDefault();
-                handleSelect(product);
               }}
               onTouchStart={() => {
                 touchMovedRef.current = false;
