@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles, Barcode, Printer, RefreshCw, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles, Barcode, Printer, RefreshCw, ArrowUp, ArrowDown, Crop } from "lucide-react";
 import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, createCategory, deleteCategory, ProductInputData, getTotalProductsCount } from "@/actions/inventory";
 import { getSuppliers } from "@/actions/purchases";
 import AiPdfModal from "@/components/admin/AiPdfModal";
+import ImageCropperModal from "@/components/admin/ImageCropperModal";
 import { createClient } from "@supabase/supabase-js";
 import toast from "react-hot-toast";
 import { Trash2, Edit } from "lucide-react";
@@ -46,6 +47,45 @@ export default function InventoryPage() {
   // Image Assistant State
   const [isSearchingImage, setIsSearchingImage] = useState(false);
   const [imageSearchResults, setImageSearchResults] = useState<any[]>([]);
+
+  // Image Cropper State
+  const [cropperState, setCropperState] = useState<{
+    isOpen: boolean;
+    imageUrl?: string | null;
+    targetIndex?: number;
+    isAiSuggestion?: boolean;
+  }>({
+    isOpen: false,
+    imageUrl: null
+  });
+
+  const handleCropComplete = (croppedUrl: string) => {
+    if (cropperState.targetIndex !== undefined && cropperState.targetIndex >= 0) {
+      // Reemplazar imagen existente en la posición específica de la galería
+      setFormData(prev => {
+        const newUrls = [...(prev.imageUrls || [])];
+        newUrls[cropperState.targetIndex!] = croppedUrl;
+        return {
+          ...prev,
+          imageUrls: newUrls,
+          imageUrl: cropperState.targetIndex === 0 ? croppedUrl : prev.imageUrl
+        };
+      });
+      toast.success("Imagen de galería actualizada con el recorte");
+    } else {
+      // Agregar imagen recortada de IA o URL directa
+      setFormData(prev => {
+        const updated = Array.from(new Set([...(prev.imageUrls || []), croppedUrl]));
+        return {
+          ...prev,
+          imageUrl: prev.imageUrl || croppedUrl,
+          imageUrls: updated
+        };
+      });
+      toast.success(`Imagen recortada agregada (${(formData.imageUrls?.length || 0) + 1}/5)`);
+    }
+    setCropperState({ isOpen: false, imageUrl: null });
+  };
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -951,6 +991,17 @@ export default function InventoryPage() {
                             <div key={idx} style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={url} alt={`Preview ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              <button 
+                                type="button" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCropperState({ isOpen: true, imageUrl: url, targetIndex: idx });
+                                }} 
+                                title="Recortar imagen (quitar marca de agua o ajustar)" 
+                                style={{ position: "absolute", top: "4px", left: "4px", background: "rgba(32, 53, 98, 0.85)", color: "white", border: "none", borderRadius: "50%", width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+                              >
+                                <Crop size={12} />
+                              </button>
                               <button type="button" onClick={() => handleRemoveImage(idx)} style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(255,0,0,0.8)", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px" }}>
                                 <X size={14} />
                               </button>
@@ -960,6 +1011,17 @@ export default function InventoryPage() {
                           <div style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={formData.imageUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <button 
+                              type="button" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCropperState({ isOpen: true, imageUrl: formData.imageUrl });
+                              }} 
+                              title="Recortar imagen" 
+                              style={{ position: "absolute", top: "4px", left: "4px", background: "rgba(32, 53, 98, 0.85)", color: "white", border: "none", borderRadius: "50%", width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+                            >
+                              <Crop size={12} />
+                            </button>
                           </div>
                         ) : null}
                         
@@ -995,6 +1057,17 @@ export default function InventoryPage() {
                               placeholder="URL directa de la imagen..." 
                               style={{ flex: 1 }}
                             />
+                            {formData.imageUrl && (
+                              <button 
+                                type="button" 
+                                onClick={() => setCropperState({ isOpen: true, imageUrl: formData.imageUrl })}
+                                className="btn btn-outline" 
+                                title="Recortar imagen actual"
+                                style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 0.75rem", fontSize: "0.85rem", color: "var(--color-secondary, #f39423)", borderColor: "var(--color-secondary, #f39423)" }}
+                              >
+                                <Crop size={15} /> Recortar
+                              </button>
+                            )}
                             <button 
                               type="button" 
                               onClick={handleSearchImage}
@@ -1090,6 +1163,43 @@ export default function InventoryPage() {
                                       }}
                                       title={isAlreadyAdded ? "Ya agregada al producto" : img.title || "Clic para agregar"}
                                     >
+                                      {/* Botón de Recortar imagen encontrada por IA */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if ((formData.imageUrls?.length || 0) >= 5) {
+                                            toast.error("Máximo 5 imágenes permitidas por producto");
+                                            return;
+                                          }
+                                          setCropperState({
+                                            isOpen: true,
+                                            imageUrl: img.url,
+                                            isAiSuggestion: true
+                                          });
+                                        }}
+                                        title="Recortar marcas de agua o logos antes de agregar"
+                                        style={{
+                                          position: "absolute",
+                                          top: "3px",
+                                          left: "3px",
+                                          background: "rgba(243, 148, 35, 0.95)",
+                                          color: "white",
+                                          border: "none",
+                                          borderRadius: "4px",
+                                          padding: "2px 5px",
+                                          fontSize: "0.62rem",
+                                          fontWeight: 700,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "2px",
+                                          cursor: "pointer",
+                                          boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                                          zIndex: 2
+                                        }}
+                                      >
+                                        <Crop size={10} /> Recortar
+                                      </button>
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img src={img.preview} referrerPolicy="no-referrer" alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
                                       {isAlreadyAdded && (
@@ -1173,6 +1283,15 @@ export default function InventoryPage() {
           }));
           setActiveTab(3); // Saltar a la pestaña de costos
         } : undefined}
+      />
+
+      {/* MODAL DE RECORTE DE IMÁGENES */}
+      <ImageCropperModal
+        isOpen={cropperState.isOpen}
+        imageUrl={cropperState.imageUrl}
+        onClose={() => setCropperState({ isOpen: false, imageUrl: null })}
+        onCropComplete={handleCropComplete}
+        title="Recortar y Limpiar Imagen"
       />
     </>
   );
