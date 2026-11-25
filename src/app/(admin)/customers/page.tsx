@@ -1,16 +1,23 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Users, Search, Plus, Edit2, Trash2, Mail, Phone, ShoppingCart, Sparkles, Upload, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from "@/actions/customers";
 
 type Customer = Awaited<ReturnType<typeof getCustomers>>[0];
 
-export default function CustomersPage() {
+function CustomersContent() {
+  const searchParams = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const q = searchParams.get("search");
+    if (q) setSearchTerm(q);
+  }, [searchParams]);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -398,5 +405,13 @@ export default function CustomersPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function CustomersPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>Cargando clientes...</div>}>
+      <CustomersContent />
+    </Suspense>
   );
 }

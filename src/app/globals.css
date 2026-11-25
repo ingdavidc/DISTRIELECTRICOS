@@ -117,11 +117,74 @@ button {
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.2s;
+  background-color: #ffffff;
+  color: var(--color-text-main);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(32, 53, 98, 0.1);
+}
+
+/* Prevent duplicate native clear icon in type="search" inputs */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Search bars used across Admin CRM / Suppliers / POS */
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  background-color: #ffffff;
+  color: var(--color-text-main);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(32, 53, 98, 0.1);
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  color: var(--color-text-main);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin, .spin, .spinner {
+  animation: spin 1s linear infinite;
 }
 
 /* Layout Utilities */
@@ -193,8 +256,10 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
+  gap: 1rem;
   box-shadow: var(--shadow-sm);
-  z-index: 5;
+  position: relative;
+  z-index: 40;
 }
 
 .page-container {

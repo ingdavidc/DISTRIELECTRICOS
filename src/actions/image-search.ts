@@ -36,12 +36,12 @@ export async function searchProductImage(query: string) {
     const urls: string[] = [];
     
     while ((match = murlRegex.exec(text)) !== null) {
-      if (urls.length < 8) {
+      if (urls.length < 12) {
         let extractedUrl = match[1];
         if (extractedUrl.startsWith("http://")) {
           extractedUrl = extractedUrl.replace("http://", "https://");
         }
-        if (!urls.includes(extractedUrl)) {
+        if (extractedUrl.startsWith("https://") && !urls.includes(extractedUrl)) {
           urls.push(extractedUrl);
         }
       } else {

@@ -24,7 +24,7 @@ export async function getInventoryProducts(limit?: number, sortField: string = '
     
     let where: any = {};
     if (searchTerm) {
-      const tokenConditions = buildSearchTokenConditions(searchTerm, ['name', 'sku', 'commercialName']);
+      const tokenConditions = buildSearchTokenConditions(searchTerm, ['name', 'sku', 'commercialName', 'brand']);
       if (tokenConditions) {
         where = { ...where, ...tokenConditions };
       }
@@ -49,7 +49,7 @@ export async function getTotalProductsCount(searchTerm?: string) {
     await requireSession();
     let where: any = {};
     if (searchTerm) {
-      const tokenConditions = buildSearchTokenConditions(searchTerm, ['name', 'sku', 'commercialName']);
+      const tokenConditions = buildSearchTokenConditions(searchTerm, ['name', 'sku', 'commercialName', 'brand']);
       if (tokenConditions) {
         where = { ...where, ...tokenConditions };
       }
@@ -74,11 +74,15 @@ export async function getCategories() {
 
 export async function createCategory(name: string) {
   try {
-    const data = await prisma.category.create({ data: { name } });
-    await logUserAction("CREAR_CATEGORIA", `Nombre: ${name}`);
+    await requireSession();
+    const cleanName = name.trim();
+    if (!cleanName) return { error: 'Nombre de categoría inválido' };
+    const data = await prisma.category.create({ data: { name: cleanName } });
+    await logUserAction("CREAR_CATEGORIA", `Nombre: ${cleanName}`);
     revalidatePath('/inventory');
     return { success: true, data: JSON.parse(JSON.stringify(data)) };
   } catch (error: any) {
+    if (error.message === 'NO_AUTH') return { error: 'No autorizado' };
     console.error("Error creating category:", error);
     return { error: `Error: ${error.message}` };
   }
@@ -86,6 +90,7 @@ export async function createCategory(name: string) {
 
 export async function deleteCategory(id: string) {
   try {
+    await requireSession();
     // Check if there are products attached
     const productsCount = await prisma.product.count({ where: { categoryId: id } });
     if (productsCount > 0) {
@@ -97,6 +102,7 @@ export async function deleteCategory(id: string) {
     revalidatePath('/inventory');
     return { success: true };
   } catch (error: any) {
+    if (error.message === 'NO_AUTH') return { error: 'No autorizado' };
     console.error("Error deleting category:", error);
     return { error: `Error: ${error.message}` };
   }
@@ -137,22 +143,57 @@ export type ProductInputData = {
   popularity?: number;
 };
 
+function sanitizeProductData(data: ProductInputData) {
+  const cleanUrls = Array.from(new Set((data.imageUrls || []).map(u => u?.trim()).filter(Boolean))) as string[];
+  const primaryImageUrl = cleanUrls[0] || data.imageUrl?.trim() || null;
+
+  return {
+    sku: data.sku.trim(),
+    name: data.name.trim(),
+    commercialName: data.commercialName?.trim() || null,
+    description: data.description?.trim() || null,
+    features: data.features?.trim() || null,
+    brand: data.brand?.trim() || null,
+    categoryId: data.categoryId,
+    unit: data.unit || "Und",
+    stock: Number(data.stock) || 0,
+    minStockLimit: Number(data.minStockLimit) || 0,
+    maxStockLimit: data.maxStockLimit || null,
+    location: data.location?.trim() || null,
+    cost: Number(data.cost) || 0,
+    profitMargin: Number(data.profitMargin) || 0,
+    expertDiscount: Number(data.expertDiscount) || 0,
+    volumeDiscount: Number(data.volumeDiscount) || 0,
+    corporateDiscount: Number(data.corporateDiscount) || 0,
+    tax: Number(data.tax) || 0,
+    price: Number(data.price) || 0,
+    supplierId: data.supplierId || null,
+    altSupplierId: data.altSupplierId || null,
+    imageUrl: primaryImageUrl,
+    imageUrls: cleanUrls,
+    technicalSheetUrl: data.technicalSheetUrl?.trim() || null,
+    salesCount: Number(data.salesCount) || 0,
+    popularity: Number(data.popularity) || 0,
+  };
+}
+
 export async function createProduct(data: ProductInputData) {
   try {
-    const product = await prisma.product.create({ 
-      data: {
-        ...data,
-        maxStockLimit: data.maxStockLimit || null,
-        supplierId: data.supplierId || null,
-        altSupplierId: data.altSupplierId || null,
-      } 
+    await requireSession();
+    const payload = sanitizeProductData(data);
+    const product = await prisma.product.create({
+      data: payload
     });
     
-    await logUserAction("CREAR_PRODUCTO", `SKU: ${data.sku} | Nombre: ${data.name}`);
+    await logUserAction("CREAR_PRODUCTO", `SKU: ${payload.sku} | Nombre: ${payload.name}`);
     
     revalidatePath('/inventory');
-    return { success: true, product };
-  } catch (error) {
+    return { success: true, product: JSON.parse(JSON.stringify(product)) };
+  } catch (error: any) {
+    if (error.message === 'NO_AUTH') return { success: false, error: 'No autorizado' };
+    if (error.code === 'P2002') {
+      return { success: false, error: `Ya existe un producto con el SKU "${data.sku}"` };
+    }
     console.error("Error creating product:", error);
     return { success: false, error: "Error al crear el producto" };
   }
@@ -160,21 +201,22 @@ export async function createProduct(data: ProductInputData) {
 
 export async function updateProduct(id: string, data: ProductInputData) {
   try {
+    await requireSession();
+    const payload = sanitizeProductData(data);
     const product = await prisma.product.update({ 
       where: { id },
-      data: {
-        ...data,
-        maxStockLimit: data.maxStockLimit || null,
-        supplierId: data.supplierId || null,
-        altSupplierId: data.altSupplierId || null,
-      } 
+      data: payload
     });
     
-    await logUserAction("ACTUALIZAR_PRODUCTO", `SKU: ${data.sku} | Nombre: ${data.name}`);
+    await logUserAction("ACTUALIZAR_PRODUCTO", `SKU: ${payload.sku} | Nombre: ${payload.name}`);
     
     revalidatePath('/inventory');
-    return { success: true, product };
-  } catch (error) {
+    return { success: true, product: JSON.parse(JSON.stringify(product)) };
+  } catch (error: any) {
+    if (error.message === 'NO_AUTH') return { success: false, error: 'No autorizado' };
+    if (error.code === 'P2002') {
+      return { success: false, error: `Ya existe otro producto con el SKU "${data.sku}"` };
+    }
     console.error("Error updating product:", error);
     return { success: false, error: "Error al actualizar el producto" };
   }
@@ -182,6 +224,7 @@ export async function updateProduct(id: string, data: ProductInputData) {
 
 export async function deleteProduct(id: string) {
   try {
+    await requireSession();
     // Delete related records first to avoid foreign key constraints errors
     // Note: depending on the DB schema, cascade delete might be better configured in Prisma.
     // For now, let's just delete the product. If it has transactions/orders it might fail, which is good (we don't want to break history).
@@ -190,7 +233,8 @@ export async function deleteProduct(id: string) {
     await logUserAction("ELIMINAR_PRODUCTO", `SKU: ${prod?.sku} | Nombre: ${prod?.name}`);
     revalidatePath('/inventory');
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'NO_AUTH') return { success: false, error: 'No autorizado' };
     console.error("Error deleting product:", error);
     return { success: false, error: "No se puede eliminar porque tiene historial de compras o ventas asociado." };
   }

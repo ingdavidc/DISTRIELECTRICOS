@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { X, Crop, RotateCw, Check, Loader2, RefreshCw, ZoomIn, Sparkles, AlertCircle } from "lucide-react";
+import { X, Crop, RotateCw, Check, Loader2, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { fetchImageForCropping, saveCroppedImage } from "@/actions/image-search";
 
@@ -27,16 +27,15 @@ export default function ImageCropperModal({
   onCropComplete,
   title = "Recortar Imagen"
 }: ImageCropperModalProps) {
+  const [originalDataUrl, setOriginalDataUrl] = useState<string | null>(null);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<"free" | "1:1" | "4:5">("free");
-  const [rotation, setRotation] = useState<number>(0); // 0, 90, 180, 270
 
   // Crop box in percentages relative to the displayed image
   const [crop, setCrop] = useState<CropBox>({ x: 5, y: 5, width: 90, height: 90 });
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const dragRef = useRef<{
     handle: string | null;
@@ -54,11 +53,26 @@ export default function ImageCropperModal({
     imgHeight: 0
   });
 
-  // When modal opens or imageUrl changes, fetch image via server proxy to ensure no CORS canvas tainting
+  // Handle Escape key cleanly inside Cropper without closing parent modals
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (!isProcessing) onClose();
+      }
+    };
+    window.addEventListener("keydown", handleEsc, true);
+    return () => window.removeEventListener("keydown", handleEsc, true);
+  }, [isOpen, isProcessing, onClose]);
+
+  // Fetch image via server proxy when modal opens to avoid CORS tainted canvas
   useEffect(() => {
     if (!isOpen || !imageUrl) {
       setDataUrl(null);
-      setRotation(0);
+      setOriginalDataUrl(null);
+      setAspectRatio("free");
       setCrop({ x: 5, y: 5, width: 90, height: 90 });
       return;
     }
@@ -69,15 +83,15 @@ export default function ImageCropperModal({
       try {
         const res = await fetchImageForCropping(imageUrl);
         if (!isMounted) return;
-        if (res.success && res.dataUrl) {
-          setDataUrl(res.dataUrl);
-        } else {
-          // Fallback to direct url if proxy fails
-          setDataUrl(imageUrl);
-        }
+        const safeUrl = res.success && res.dataUrl ? res.dataUrl : imageUrl;
+        setOriginalDataUrl(safeUrl);
+        setDataUrl(safeUrl);
       } catch (err) {
         console.error("Error loading image for cropper:", err);
-        if (isMounted) setDataUrl(imageUrl);
+        if (isMounted) {
+          setOriginalDataUrl(imageUrl);
+          setDataUrl(imageUrl);
+        }
       } finally {
         if (isMounted) setIsLoadingImage(false);
       }
@@ -93,40 +107,36 @@ export default function ImageCropperModal({
   // Adjust crop for aspect ratio
   const applyAspectRatio = (ratio: "free" | "1:1" | "4:5") => {
     setAspectRatio(ratio);
-    if (!imgRef.current) return;
+    if (!imgRef.current || !imgRef.current.naturalWidth || !imgRef.current.naturalHeight) return;
 
     const img = imgRef.current;
     const naturalRatio = img.naturalWidth / img.naturalHeight;
 
     if (ratio === "1:1") {
       if (naturalRatio >= 1) {
-        // Landscape: height determines square
         const h = 85;
-        const w = (h / naturalRatio);
-        const x = (100 - w) / 2;
-        const y = (100 - h) / 2;
-        setCrop({ x: Math.max(2, x), y: Math.max(2, y), width: Math.min(96, w), height: h });
+        const w = h / naturalRatio;
+        setCrop({ x: Math.max(2, (100 - w) / 2), y: Math.max(2, (100 - h) / 2), width: Math.min(96, w), height: h });
       } else {
-        // Portrait: width determines square
         const w = 85;
-        const h = (w * naturalRatio);
-        const x = (100 - w) / 2;
-        const y = (100 - h) / 2;
-        setCrop({ x: Math.max(2, x), y: Math.max(2, y), width: w, height: Math.min(96, h) });
+        const h = w * naturalRatio;
+        setCrop({ x: Math.max(2, (100 - w) / 2), y: Math.max(2, (100 - h) / 2), width: w, height: Math.min(96, h) });
       }
     } else if (ratio === "4:5") {
-      // 4:5 vertical
       const targetRatio = 4 / 5;
-      const w = 80;
-      const h = Math.min(95, (w / targetRatio) * naturalRatio);
-      setCrop({ x: 10, y: 5, width: w, height: h });
+      let w = 80;
+      let h = (w / targetRatio) * naturalRatio;
+      if (h > 92) {
+        h = 92;
+        w = (h / naturalRatio) * targetRatio;
+      }
+      setCrop({ x: (100 - w) / 2, y: (100 - h) / 2, width: w, height: h });
     } else {
-      // Free: default generous box
       setCrop({ x: 5, y: 5, width: 90, height: 90 });
     }
   };
 
-  // Quick preset: remove bottom watermark (e.g. 18% from bottom)
+  // Quick preset: remove bottom watermark (~18% from bottom)
   const handleRemoveBottomWatermark = () => {
     setAspectRatio("free");
     setCrop(prev => {
@@ -140,16 +150,46 @@ export default function ImageCropperModal({
     toast.success("Se excluyó la franja inferior (marca de agua)", { icon: "✂️", duration: 2500 });
   };
 
-  // Reset crop to full
+  // Reset crop & rotation back to original image
   const handleResetCrop = () => {
     setAspectRatio("free");
-    setRotation(0);
+    if (originalDataUrl) setDataUrl(originalDataUrl);
     setCrop({ x: 2, y: 2, width: 96, height: 96 });
   };
 
-  // Rotate 90deg
-  const handleRotate = () => {
-    setRotation(prev => ((prev + 90) % 360));
+  // Rotate pixels 90deg clockwise directly on a canvas so overlay & bounding box always stay pixel-exact
+  const handleRotate = async () => {
+    if (!dataUrl || isProcessing) return;
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = dataUrl;
+      await new Promise<void>((resolve, reject) => {
+        if (img.complete) resolve();
+        else {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("No se pudo rotar la imagen"));
+        }
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalHeight;
+      canvas.height = img.naturalWidth;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+
+      const rotatedUrl = canvas.toDataURL("image/png");
+      setDataUrl(rotatedUrl);
+      setAspectRatio("free");
+      setCrop({ x: 5, y: 5, width: 90, height: 90 });
+    } catch (err) {
+      console.error("Rotate error:", err);
+      toast.error("No se pudo girar esta imagen");
+    }
   };
 
   // Pointer drag logic
@@ -176,13 +216,12 @@ export default function ImageCropperModal({
       const deltaX = ((moveEvent.clientX - startX) / imgWidth) * 100;
       const deltaY = ((moveEvent.clientY - startY) / imgHeight) * 100;
 
-      let newCrop = { ...startCrop };
+      const newCrop = { ...startCrop };
 
       if (handle === "move") {
         newCrop.x = Math.max(0, Math.min(100 - startCrop.width, startCrop.x + deltaX));
         newCrop.y = Math.max(0, Math.min(100 - startCrop.height, startCrop.y + deltaY));
       } else {
-        // Resizing
         if (handle.includes("w")) {
           const right = startCrop.x + startCrop.width;
           const newX = Math.max(0, Math.min(right - 10, startCrop.x + deltaX));
@@ -202,28 +241,48 @@ export default function ImageCropperModal({
           newCrop.height = Math.max(10, Math.min(100 - startCrop.y, startCrop.height + deltaY));
         }
 
-        // Maintain aspect ratio if locked
-        if (aspectRatio === "1:1" && imgRef.current) {
-          const naturalRatio = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
-          // In 1:1, pixel width === pixel height
-          // (width% * imgWidth) === (height% * imgHeight)
-          // height% = width% * (imgWidth / imgHeight)
-          const pxRatio = imgWidth / imgHeight;
-          if (handle === "e" || handle === "w") {
-            const desiredHeight = newCrop.width * pxRatio;
-            if (newCrop.y + desiredHeight <= 100) {
-              newCrop.height = desiredHeight;
-            } else {
-              newCrop.height = 100 - newCrop.y;
-              newCrop.width = newCrop.height / pxRatio;
-            }
-          } else if (handle === "s" || handle === "n") {
-            const desiredWidth = newCrop.height / pxRatio;
-            if (newCrop.x + desiredWidth <= 100) {
-              newCrop.width = desiredWidth;
+        // Maintain locked aspect ratio cleanly
+        if (aspectRatio !== "free") {
+          const targetPxRatio = aspectRatio === "1:1" ? 1 : 4 / 5;
+          // pxWidth / pxHeight = targetPxRatio => (width% * imgWidth) / (height% * imgHeight) = targetPxRatio
+          // height% = width% * (imgWidth / imgHeight) / targetPxRatio
+          const factor = (imgWidth / imgHeight) / targetPxRatio;
+
+          if (handle === "n" || handle === "s") {
+            const desiredW = newCrop.height / factor;
+            if (newCrop.x + desiredW <= 100) {
+              newCrop.width = desiredW;
             } else {
               newCrop.width = 100 - newCrop.x;
-              newCrop.height = newCrop.width * pxRatio;
+              newCrop.height = newCrop.width * factor;
+            }
+          } else {
+            const desiredH = newCrop.width * factor;
+            if (handle.includes("n")) {
+              const bottom = startCrop.y + startCrop.height;
+              if (bottom - desiredH >= 0) {
+                newCrop.height = desiredH;
+                newCrop.y = bottom - desiredH;
+              } else {
+                newCrop.y = 0;
+                newCrop.height = bottom;
+                const adjustedW = newCrop.height / factor;
+                if (handle.includes("w")) {
+                  newCrop.x = (startCrop.x + startCrop.width) - adjustedW;
+                }
+                newCrop.width = adjustedW;
+              }
+            } else {
+              if (newCrop.y + desiredH <= 100) {
+                newCrop.height = desiredH;
+              } else {
+                newCrop.height = 100 - newCrop.y;
+                const adjustedW = newCrop.height / factor;
+                if (handle.includes("w")) {
+                  newCrop.x = (startCrop.x + startCrop.width) - adjustedW;
+                }
+                newCrop.width = adjustedW;
+              }
             }
           }
         }
@@ -242,7 +301,7 @@ export default function ImageCropperModal({
     window.addEventListener("pointerup", handlePointerUp);
   };
 
-  // Perform crop and save
+  // Perform crop and upload
   const handleApplyCrop = async () => {
     if (!dataUrl) return;
 
@@ -250,7 +309,6 @@ export default function ImageCropperModal({
       setIsProcessing(true);
       const tid = toast.loading("Recortando y optimizando imagen...");
 
-      // 1. Create source image
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.src = dataUrl;
@@ -263,29 +321,9 @@ export default function ImageCropperModal({
         }
       });
 
-      // 2. Setup intermediate canvas for rotation if needed
-      let sourceCanvas: HTMLCanvasElement | HTMLImageElement = img;
-      if (rotation !== 0) {
-        const rotCanvas = document.createElement("canvas");
-        const rad = (rotation * Math.PI) / 180;
-        const sin = Math.abs(Math.sin(rad));
-        const cos = Math.abs(Math.cos(rad));
-        rotCanvas.width = img.naturalWidth * cos + img.naturalHeight * sin;
-        rotCanvas.height = img.naturalWidth * sin + img.naturalHeight * cos;
+      const srcW = img.naturalWidth;
+      const srcH = img.naturalHeight;
 
-        const rotCtx = rotCanvas.getContext("2d");
-        if (rotCtx) {
-          rotCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
-          rotCtx.rotate(rad);
-          rotCtx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-          sourceCanvas = rotCanvas;
-        }
-      }
-
-      const srcW = sourceCanvas instanceof HTMLImageElement ? sourceCanvas.naturalWidth : sourceCanvas.width;
-      const srcH = sourceCanvas instanceof HTMLImageElement ? sourceCanvas.naturalHeight : sourceCanvas.height;
-
-      // 3. Calculate crop coordinates on the source
       const sx = (crop.x / 100) * srcW;
       const sy = (crop.y / 100) * srcH;
       const sw = (crop.width / 100) * srcW;
@@ -295,9 +333,7 @@ export default function ImageCropperModal({
         throw new Error("Área de recorte inválida");
       }
 
-      // 4. Output canvas
       const outCanvas = document.createElement("canvas");
-      // Cap at 1000px max for speed & <100KB compression
       const maxDim = 1000;
       let targetW = sw;
       let targetH = sh;
@@ -311,27 +347,21 @@ export default function ImageCropperModal({
         }
       }
 
-      outCanvas.width = Math.round(targetW);
-      outCanvas.height = Math.round(targetH);
+      outCanvas.width = Math.max(1, Math.round(targetW));
+      outCanvas.height = Math.max(1, Math.round(targetH));
 
       const outCtx = outCanvas.getContext("2d");
       if (!outCtx) throw new Error("No se pudo inicializar contexto 2D");
 
-      // Smooth scaling
       outCtx.imageSmoothingEnabled = true;
       outCtx.imageSmoothingQuality = "high";
 
-      // White background for PNG transparency if converted to JPEG
+      // White background for PNG transparency converted to JPEG
       outCtx.fillStyle = "#FFFFFF";
       outCtx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+      outCtx.drawImage(img, sx, sy, sw, sh, 0, 0, outCanvas.width, outCanvas.height);
 
-      // Draw cropped area
-      outCtx.drawImage(sourceCanvas, sx, sy, sw, sh, 0, 0, outCanvas.width, outCanvas.height);
-
-      // 5. Convert to JPEG base64 (quality 0.88 stays comfortably under 100KB)
       const croppedBase64 = outCanvas.toDataURL("image/jpeg", 0.88);
-
-      // 6. Save permanently to Supabase via server action
       const saveRes = await saveCroppedImage(croppedBase64);
       if (!saveRes.success || !saveRes.url) {
         throw new Error(saveRes.error || "Error al subir imagen recortada a Supabase");
@@ -462,7 +492,7 @@ export default function ImageCropperModal({
                 fontSize: "0.75rem",
                 borderRadius: "6px",
                 background: aspectRatio === "free" ? "var(--color-primary, #203562)" : "#f1f5f9",
-                color: aspectRatio === "free" ? "#fff" : "var(--color-text)",
+                color: aspectRatio === "free" ? "#fff" : "var(--color-text-main)",
                 border: "none",
                 fontWeight: 600
               }}
@@ -478,7 +508,7 @@ export default function ImageCropperModal({
                 fontSize: "0.75rem",
                 borderRadius: "6px",
                 background: aspectRatio === "1:1" ? "var(--color-primary, #203562)" : "#f1f5f9",
-                color: aspectRatio === "1:1" ? "#fff" : "var(--color-text)",
+                color: aspectRatio === "1:1" ? "#fff" : "var(--color-text-main)",
                 border: "none",
                 fontWeight: 600
               }}
@@ -494,7 +524,7 @@ export default function ImageCropperModal({
                 fontSize: "0.75rem",
                 borderRadius: "6px",
                 background: aspectRatio === "4:5" ? "var(--color-primary, #203562)" : "#f1f5f9",
-                color: aspectRatio === "4:5" ? "#fff" : "var(--color-text)",
+                color: aspectRatio === "4:5" ? "#fff" : "var(--color-text-main)",
                 border: "none",
                 fontWeight: 600
               }}
@@ -504,7 +534,7 @@ export default function ImageCropperModal({
           </div>
 
           {/* Quick Watermark Removal & Tools */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
             <button
               type="button"
               onClick={handleRemoveBottomWatermark}
@@ -534,7 +564,7 @@ export default function ImageCropperModal({
                 fontSize: "0.75rem",
                 borderRadius: "6px",
                 background: "#f1f5f9",
-                color: "var(--color-text)",
+                color: "var(--color-text-main)",
                 border: "none",
                 display: "flex",
                 alignItems: "center",
@@ -552,7 +582,7 @@ export default function ImageCropperModal({
                 fontSize: "0.75rem",
                 borderRadius: "6px",
                 background: "#f1f5f9",
-                color: "var(--color-text)",
+                color: "var(--color-text-main)",
                 border: "none"
               }}
             >
@@ -565,7 +595,7 @@ export default function ImageCropperModal({
         <div
           style={{
             flex: 1,
-            minHeight: "360px",
+            minHeight: "340px",
             maxHeight: "58vh",
             background: "#0f172a",
             display: "flex",
@@ -576,7 +606,6 @@ export default function ImageCropperModal({
             userSelect: "none",
             touchAction: "none"
           }}
-          ref={containerRef}
         >
           {isLoadingImage ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", color: "#94a3b8" }}>
@@ -593,7 +622,6 @@ export default function ImageCropperModal({
                 boxShadow: "0 10px 25px rgba(0,0,0,0.5)"
               }}
             >
-              {/* Image */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imgRef}
@@ -603,62 +631,16 @@ export default function ImageCropperModal({
                   display: "block",
                   maxWidth: "100%",
                   maxHeight: "54vh",
-                  objectFit: "contain",
-                  transform: rotation ? `rotate(${rotation}deg)` : undefined,
-                  transition: "transform 0.2s ease"
+                  objectFit: "contain"
                 }}
                 draggable={false}
               />
 
               {/* Dark Overlays Outside Crop Area */}
-              {/* Top mask */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: `${crop.y}%`,
-                  background: "rgba(0, 0, 0, 0.65)",
-                  pointerEvents: "none"
-                }}
-              />
-              {/* Bottom mask */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: `${100 - crop.y - crop.height}%`,
-                  background: "rgba(0, 0, 0, 0.65)",
-                  pointerEvents: "none"
-                }}
-              />
-              {/* Left mask */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: `${crop.y}%`,
-                  bottom: `${100 - crop.y - crop.height}%`,
-                  left: 0,
-                  width: `${crop.x}%`,
-                  background: "rgba(0, 0, 0, 0.65)",
-                  pointerEvents: "none"
-                }}
-              />
-              {/* Right mask */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: `${crop.y}%`,
-                  bottom: `${100 - crop.y - crop.height}%`,
-                  right: 0,
-                  width: `${100 - crop.x - crop.width}%`,
-                  background: "rgba(0, 0, 0, 0.65)",
-                  pointerEvents: "none"
-                }}
-              />
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: `${crop.y}%`, background: "rgba(0, 0, 0, 0.65)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: `${100 - crop.y - crop.height}%`, background: "rgba(0, 0, 0, 0.65)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", top: `${crop.y}%`, bottom: `${100 - crop.y - crop.height}%`, left: 0, width: `${crop.x}%`, background: "rgba(0, 0, 0, 0.65)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", top: `${crop.y}%`, bottom: `${100 - crop.y - crop.height}%`, right: 0, width: `${100 - crop.x - crop.width}%`, background: "rgba(0, 0, 0, 0.65)", pointerEvents: "none" }} />
 
               {/* Active Crop Frame */}
               <div
@@ -695,134 +677,16 @@ export default function ImageCropperModal({
                 </div>
 
                 {/* Corner Handles */}
-                {/* NW */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "nw")}
-                  style={{
-                    position: "absolute",
-                    top: "-6px",
-                    left: "-6px",
-                    width: "12px",
-                    height: "12px",
-                    background: "#f39423",
-                    border: "2px solid #fff",
-                    borderRadius: "2px",
-                    cursor: "nw-resize"
-                  }}
-                />
-                {/* NE */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "ne")}
-                  style={{
-                    position: "absolute",
-                    top: "-6px",
-                    right: "-6px",
-                    width: "12px",
-                    height: "12px",
-                    background: "#f39423",
-                    border: "2px solid #fff",
-                    borderRadius: "2px",
-                    cursor: "ne-resize"
-                  }}
-                />
-                {/* SW */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "sw")}
-                  style={{
-                    position: "absolute",
-                    bottom: "-6px",
-                    left: "-6px",
-                    width: "12px",
-                    height: "12px",
-                    background: "#f39423",
-                    border: "2px solid #fff",
-                    borderRadius: "2px",
-                    cursor: "sw-resize"
-                  }}
-                />
-                {/* SE */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "se")}
-                  style={{
-                    position: "absolute",
-                    bottom: "-6px",
-                    right: "-6px",
-                    width: "12px",
-                    height: "12px",
-                    background: "#f39423",
-                    border: "2px solid #fff",
-                    borderRadius: "2px",
-                    cursor: "se-resize"
-                  }}
-                />
+                <div onPointerDown={(e) => handlePointerDown(e, "nw")} style={{ position: "absolute", top: "-6px", left: "-6px", width: "12px", height: "12px", background: "#f39423", border: "2px solid #fff", borderRadius: "2px", cursor: "nw-resize" }} />
+                <div onPointerDown={(e) => handlePointerDown(e, "ne")} style={{ position: "absolute", top: "-6px", right: "-6px", width: "12px", height: "12px", background: "#f39423", border: "2px solid #fff", borderRadius: "2px", cursor: "ne-resize" }} />
+                <div onPointerDown={(e) => handlePointerDown(e, "sw")} style={{ position: "absolute", bottom: "-6px", left: "-6px", width: "12px", height: "12px", background: "#f39423", border: "2px solid #fff", borderRadius: "2px", cursor: "sw-resize" }} />
+                <div onPointerDown={(e) => handlePointerDown(e, "se")} style={{ position: "absolute", bottom: "-6px", right: "-6px", width: "12px", height: "12px", background: "#f39423", border: "2px solid #fff", borderRadius: "2px", cursor: "se-resize" }} />
 
                 {/* Edge Handles */}
-                {/* N */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "n")}
-                  style={{
-                    position: "absolute",
-                    top: "-5px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "18px",
-                    height: "8px",
-                    background: "#f39423",
-                    border: "1.5px solid #fff",
-                    borderRadius: "2px",
-                    cursor: "n-resize"
-                  }}
-                />
-                {/* S (crucial for trimming bottom watermark!) */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "s")}
-                  title="Arrastra hacia arriba para quitar marca de agua inferior"
-                  style={{
-                    position: "absolute",
-                    bottom: "-5px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "26px",
-                    height: "10px",
-                    background: "#f39423",
-                    border: "2px solid #fff",
-                    borderRadius: "3px",
-                    cursor: "s-resize",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.4)"
-                  }}
-                />
-                {/* W */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "w")}
-                  style={{
-                    position: "absolute",
-                    left: "-5px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: "8px",
-                    height: "18px",
-                    background: "#f39423",
-                    border: "1.5px solid #fff",
-                    borderRadius: "2px",
-                    cursor: "w-resize"
-                  }}
-                />
-                {/* E */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, "e")}
-                  style={{
-                    position: "absolute",
-                    right: "-5px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: "8px",
-                    height: "18px",
-                    background: "#f39423",
-                    border: "1.5px solid #fff",
-                    borderRadius: "2px",
-                    cursor: "e-resize"
-                  }}
-                />
+                <div onPointerDown={(e) => handlePointerDown(e, "n")} style={{ position: "absolute", top: "-5px", left: "50%", transform: "translateX(-50%)", width: "18px", height: "8px", background: "#f39423", border: "1.5px solid #fff", borderRadius: "2px", cursor: "n-resize" }} />
+                <div onPointerDown={(e) => handlePointerDown(e, "s")} title="Arrastra hacia arriba para quitar marca de agua inferior" style={{ position: "absolute", bottom: "-5px", left: "50%", transform: "translateX(-50%)", width: "26px", height: "10px", background: "#f39423", border: "2px solid #fff", borderRadius: "3px", cursor: "s-resize", boxShadow: "0 2px 4px rgba(0,0,0,0.4)" }} />
+                <div onPointerDown={(e) => handlePointerDown(e, "w")} style={{ position: "absolute", left: "-5px", top: "50%", transform: "translateY(-50%)", width: "8px", height: "18px", background: "#f39423", border: "1.5px solid #fff", borderRadius: "2px", cursor: "w-resize" }} />
+                <div onPointerDown={(e) => handlePointerDown(e, "e")} style={{ position: "absolute", right: "-5px", top: "50%", transform: "translateY(-50%)", width: "8px", height: "18px", background: "#f39423", border: "1.5px solid #fff", borderRadius: "2px", cursor: "e-resize" }} />
               </div>
             </div>
           ) : (
@@ -833,7 +697,7 @@ export default function ImageCropperModal({
           )}
         </div>
 
-        {/* Footer info & buttons */}
+        {/* Footer */}
         <div
           style={{
             padding: "0.85rem 1.25rem",

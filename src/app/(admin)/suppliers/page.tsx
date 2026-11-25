@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Building2, Search, Plus, Edit2, Trash2, Mail, Phone, CheckCircle, XCircle, FileText, CreditCard, Landmark, BookOpen } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSuppliers, createSupplier, updateSupplier, deleteSupplier } from "@/actions/suppliers";
 
 type Supplier = Awaited<ReturnType<typeof getSuppliers>>[0];
 
-export default function SuppliersPage() {
+function SuppliersContent() {
+  const searchParams = useSearchParams();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const q = searchParams.get("search");
+    if (q) setSearchTerm(q);
+  }, [searchParams]);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -450,5 +457,13 @@ export default function SuppliersPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function SuppliersPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>Cargando proveedores...</div>}>
+      <SuppliersContent />
+    </Suspense>
   );
 }

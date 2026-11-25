@@ -14,12 +14,12 @@ export default function Navbar({ user }: { user?: any }) {
 
   return (
     <header className="topbar">
-      <div style={{ display: "flex", alignItems: "center", width: "400px" }}>
+      <div style={{ display: "flex", alignItems: "center", flex: "1 1 auto", maxWidth: "420px", minWidth: "180px" }}>
         <GlobalSearch />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-        <button style={{ color: "var(--color-text-muted)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexShrink: 0 }}>
+        <button type="button" style={{ color: "var(--color-text-muted)", display: "flex", alignItems: "center", padding: "0.35rem" }}>
           <Bell size={24} />
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", borderLeft: "1px solid var(--color-border)", paddingLeft: "1rem" }}>
@@ -30,8 +30,11 @@ export default function Navbar({ user }: { user?: any }) {
           <UserCircle size={32} color="var(--color-primary)" />
           
           <button 
+            type="button"
             onClick={handleLogout}
-            className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-colors text-red-500"
+            style={{ marginLeft: "0.35rem", padding: "0.45rem", borderRadius: "9999px", color: "var(--color-danger)", display: "flex", alignItems: "center", justifyContent: "center", transition: "background-color 0.2s" }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#fee2e2"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
             title="Cerrar sesión"
           >
             <LogOut size={20} />

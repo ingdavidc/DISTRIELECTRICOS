@@ -12,6 +12,7 @@ export default function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const requestIdRef = useRef<number>(0);
 
   // Close when clicking outside
   useEffect(() => {
@@ -24,18 +25,33 @@ export default function GlobalSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounce search
+  // Debounce search with race condition guard
   useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      requestIdRef.current += 1;
+      setResults(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const reqId = ++requestIdRef.current;
     const timer = setTimeout(async () => {
-      if (query.trim().length >= 2) {
-        setIsLoading(true);
-        const res = await globalSearch(query);
+      setIsLoading(true);
+      try {
+        const res = await globalSearch(trimmed);
+        if (reqId !== requestIdRef.current) return;
         setResults(res);
-        setIsLoading(false);
-      } else {
-        setResults(null);
+      } catch (err) {
+        if (reqId === requestIdRef.current) {
+          console.error("GlobalSearch error:", err);
+        }
+      } finally {
+        if (reqId === requestIdRef.current) {
+          setIsLoading(false);
+        }
       }
-    }, 400);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [query]);
@@ -43,6 +59,7 @@ export default function GlobalSearch() {
   const handleNavigate = (url: string) => {
     setIsOpen(false);
     setQuery("");
+    setResults(null);
     router.push(url);
   };
 
@@ -55,14 +72,15 @@ export default function GlobalSearch() {
   );
 
   return (
-    <div ref={wrapperRef} style={{ position: "relative", width: "100%", maxWidth: "400px" }}>
+    <div ref={wrapperRef} style={{ position: "relative", width: "100%", maxWidth: "420px" }}>
       <div style={{ position: "relative", width: "100%" }}>
-        <Search size={18} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
+        <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", pointerEvents: "none", zIndex: 2 }} />
         <input 
           type="text" 
+          autoComplete="off"
           placeholder="Buscar atajos, productos, clientes..." 
           className="input" 
-          style={{ paddingLeft: "35px", paddingRight: "35px", borderRadius: "9999px", background: "var(--color-background)", width: "100%" }}
+          style={{ paddingLeft: "38px", paddingRight: query ? "36px" : "14px", borderRadius: "9999px", background: "var(--color-background)", width: "100%" }}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -71,11 +89,16 @@ export default function GlobalSearch() {
           onFocus={() => {
             if (query.trim().length >= 2) setIsOpen(true);
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setIsOpen(false);
+          }}
         />
         {query && (
           <button 
+            type="button"
+            aria-label="Limpiar búsqueda global"
             onClick={() => { setQuery(""); setIsOpen(false); setResults(null); }}
-            style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", background: "none", border: "none", cursor: "pointer" }}
+            style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "2px", zIndex: 2 }}
           >
             <X size={16} />
           </button>
@@ -91,11 +114,11 @@ export default function GlobalSearch() {
           marginTop: "0.5rem",
           background: "white", 
           borderRadius: "var(--radius-lg)", 
-          boxShadow: "0 10px 25px rgba(0,0,0,0.1)", 
+          boxShadow: "0 12px 28px rgba(0,0,0,0.14)", 
           border: "1px solid var(--color-border)",
           maxHeight: "500px",
           overflowY: "auto",
-          zIndex: 50,
+          zIndex: 1100,
           padding: "0.5rem"
         }}>
           {isLoading && (
@@ -106,7 +129,7 @@ export default function GlobalSearch() {
 
           {!isLoading && !hasResults && results && (
             <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-muted)" }}>
-              No se encontraron resultados para "{query}"
+              No se encontraron resultados para &quot;{query}&quot;
             </div>
           )}
 
@@ -119,7 +142,8 @@ export default function GlobalSearch() {
                   <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", padding: "0 0.5rem 0.5rem 0.5rem" }}>Atajos</div>
                   {results.shortcuts.map((s: any, i: number) => (
                     <button 
-                      key={i} 
+                      key={i}
+                      type="button"
                       onClick={() => handleNavigate(s.url)}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.2s" }}
                       onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-background)"}
@@ -141,7 +165,8 @@ export default function GlobalSearch() {
                   {results.products.map((p: any) => (
                     <button 
                       key={p.id} 
-                      onClick={() => handleNavigate(`/inventory`)}
+                      type="button"
+                      onClick={() => handleNavigate(`/inventory?search=${encodeURIComponent(p.sku || p.name)}`)}
                       style={{ display: "flex", alignItems: "center", width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.2s" }}
                       onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-background)"}
                       onMouseLeave={(e) => e.currentTarget.style.background = "none"}
@@ -163,7 +188,8 @@ export default function GlobalSearch() {
                   {results.customers.map((c: any) => (
                     <button 
                       key={c.id} 
-                      onClick={() => handleNavigate(`/customers`)}
+                      type="button"
+                      onClick={() => handleNavigate(`/customers?search=${encodeURIComponent(c.identification || c.name)}`)}
                       style={{ display: "flex", alignItems: "center", width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.2s" }}
                       onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-background)"}
                       onMouseLeave={(e) => e.currentTarget.style.background = "none"}
@@ -185,7 +211,8 @@ export default function GlobalSearch() {
                   {results.suppliers.map((s: any) => (
                     <button 
                       key={s.id} 
-                      onClick={() => handleNavigate(`/suppliers`)}
+                      type="button"
+                      onClick={() => handleNavigate(`/suppliers?search=${encodeURIComponent(s.nit || s.name)}`)}
                       style={{ display: "flex", alignItems: "center", width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.2s" }}
                       onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-background)"}
                       onMouseLeave={(e) => e.currentTarget.style.background = "none"}
@@ -207,6 +234,7 @@ export default function GlobalSearch() {
                   {results.orders.map((o: any) => (
                     <button 
                       key={o.id} 
+                      type="button"
                       onClick={() => handleNavigate(`/pos?orderId=${o.id}`)}
                       style={{ display: "flex", alignItems: "center", width: "100%", padding: "0.5rem", borderRadius: "var(--radius-md)", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.2s" }}
                       onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-background)"}

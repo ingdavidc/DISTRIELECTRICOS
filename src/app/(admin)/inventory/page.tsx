@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Filter, Loader2, X, Save, Box, DollarSign, Truck, Image as ImageIcon, Sparkles, Barcode, Printer, RefreshCw, ArrowUp, ArrowDown, Crop } from "lucide-react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Plus, Search, Loader2, X, Save, Box, DollarSign, Image as ImageIcon, Sparkles, Printer, RefreshCw, ArrowUp, ArrowDown, Crop, Star } from "lucide-react";
 import { getInventoryProducts, getCategories, createProduct, updateProduct, deleteProduct, createCategory, deleteCategory, ProductInputData, getTotalProductsCount } from "@/actions/inventory";
 import { getSuppliers } from "@/actions/purchases";
 import AiPdfModal from "@/components/admin/AiPdfModal";
@@ -18,11 +19,30 @@ import { Product } from "@prisma/client";
 type Supplier = Awaited<ReturnType<typeof getSuppliers>>[0];
 type Category = Awaited<ReturnType<typeof getCategories>>[0];
 
-export default function InventoryPage() {
+const initialProductState: ProductInputData = {
+  name: "", sku: "", commercialName: "", description: "", features: "", brand: "", categoryId: "",
+  unit: "Und", stock: 0, minStockLimit: 10, maxStockLimit: 100, location: "",
+  cost: 0, profitMargin: 30, expertDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
+  supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: "", salesCount: 0, popularity: 0
+};
+
+function calculateSuggestedPvp(cost: number, profitMargin: number, tax: number): number {
+  const c = Number(cost) || 0;
+  const m = Number(profitMargin) || 0;
+  const t = Number(tax) || 0;
+  const costWithTax = c + (c * t) / 100;
+  let u = 1 - (m / 100);
+  if (u <= 0) u = 0.01;
+  return Math.ceil((costWithTax / u) / 100) * 100;
+}
+
+function InventoryContent() {
+  const searchParams = useSearchParams();
+  const initialUrlQuery = searchParams.get("search") || "";
   const [products, setProducts] = useState<Product[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialUrlQuery);
   const [limit, setLimit] = useState(50);
   const [totalCount, setTotalCount] = useState(0);
   const [sortField, setSortField] = useState("createdAt");
@@ -44,45 +64,78 @@ export default function InventoryPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isSavingCategory, setIsSavingCategory] = useState(false);
 
-  // Image Assistant State
+  // Image Assistant State (strictly isolated per product modal session)
   const [isSearchingImage, setIsSearchingImage] = useState(false);
   const [imageSearchResults, setImageSearchResults] = useState<any[]>([]);
+  const [failedAiImages, setFailedAiImages] = useState<Record<string, boolean>>({});
+  const [aiUrlToUploadedUrl, setAiUrlToUploadedUrl] = useState<Record<string, string>>({});
+  const [directUrlInput, setDirectUrlInput] = useState("");
+  const searchSessionRef = useRef(0);
+
+  // Table search coordination refs
+  const loadRequestIdRef = useRef(0);
+  const skipNextDebounceRef = useRef(false);
 
   // Image Cropper State
   const [cropperState, setCropperState] = useState<{
     isOpen: boolean;
     imageUrl?: string | null;
     targetIndex?: number;
-    isAiSuggestion?: boolean;
+    sourceAiUrl?: string;
   }>({
     isOpen: false,
     imageUrl: null
   });
 
+  const resetModalTransientState = () => {
+    searchSessionRef.current += 1;
+    setImageSearchResults([]);
+    setIsSearchingImage(false);
+    setFailedAiImages({});
+    setAiUrlToUploadedUrl({});
+    setDirectUrlInput("");
+    setCropperState({ isOpen: false, imageUrl: null });
+  };
+
   const handleCropComplete = (croppedUrl: string) => {
+    const sourceAiUrl = cropperState.sourceAiUrl;
     if (cropperState.targetIndex !== undefined && cropperState.targetIndex >= 0) {
-      // Reemplazar imagen existente en la posición específica de la galería
+      const idx = cropperState.targetIndex;
       setFormData(prev => {
         const newUrls = [...(prev.imageUrls || [])];
-        newUrls[cropperState.targetIndex!] = croppedUrl;
+        newUrls[idx] = croppedUrl;
         return {
           ...prev,
           imageUrls: newUrls,
-          imageUrl: cropperState.targetIndex === 0 ? croppedUrl : prev.imageUrl
+          imageUrl: idx === 0 ? croppedUrl : (newUrls[0] || "")
         };
       });
       toast.success("Imagen de galería actualizada con el recorte");
     } else {
-      // Agregar imagen recortada de IA o URL directa
+      let addedCount = 0;
+      let limitReached = false;
       setFormData(prev => {
-        const updated = Array.from(new Set([...(prev.imageUrls || []), croppedUrl]));
+        const current = prev.imageUrls || [];
+        if (current.length >= 5) {
+          limitReached = true;
+          return prev;
+        }
+        const updated = Array.from(new Set([...current, croppedUrl]));
+        addedCount = updated.length;
         return {
           ...prev,
-          imageUrl: prev.imageUrl || croppedUrl,
+          imageUrl: updated[0] || croppedUrl,
           imageUrls: updated
         };
       });
-      toast.success(`Imagen recortada agregada (${(formData.imageUrls?.length || 0) + 1}/5)`);
+      if (limitReached) {
+        toast.error("Máximo 5 imágenes permitidas por producto");
+      } else {
+        if (sourceAiUrl) {
+          setAiUrlToUploadedUrl(prev => ({ ...prev, [sourceAiUrl]: croppedUrl }));
+        }
+        toast.success(`Imagen recortada agregada (${addedCount}/5)`);
+      }
     }
     setCropperState({ isOpen: false, imageUrl: null });
   };
@@ -92,12 +145,13 @@ export default function InventoryPage() {
   }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+    const inputEl = e.target;
+    const files = inputEl.files;
     if (!files || files.length === 0) return;
 
-    // Check if adding these files would exceed 5 images
     if ((formData.imageUrls?.length || 0) + files.length > 5) {
       toast.error("Máximo 5 imágenes por producto");
+      inputEl.value = "";
       return;
     }
 
@@ -114,35 +168,31 @@ export default function InventoryPage() {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
-        // Comprimir
         const options = {
-          maxSizeMB: 0.1, // Max 100KB
+          maxSizeMB: 0.1,
           maxWidthOrHeight: 800,
           useWebWorker: true,
           fileType: "image/jpeg" as string,
         };
         const compressedFile = await imageCompression(file, options);
-  
         const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, "_")}.jpeg`;
-        
+
         const { error } = await supabase.storage
           .from("products")
           .upload(fileName, compressedFile, { contentType: "image/jpeg", upsert: true });
-  
+
         if (error) throw error;
-  
+
         const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(fileName);
         newUrls.push(publicUrl);
       }
 
       setFormData(prev => {
-        const updatedUrls = [...(prev.imageUrls || []), ...newUrls];
-        return { 
-          ...prev, 
+        const updatedUrls = Array.from(new Set([...(prev.imageUrls || []), ...newUrls])).slice(0, 5);
+        return {
+          ...prev,
           imageUrls: updatedUrls,
-          // Mantener la primera imagen como imageUrl principal para retrocompatibilidad
-          imageUrl: prev.imageUrl || updatedUrls[0] 
+          imageUrl: updatedUrls[0] || ""
         };
       });
       toast.success("Imágenes subidas con éxito", { id: tid });
@@ -150,8 +200,44 @@ export default function InventoryPage() {
       console.error(error);
       toast.error("Error al subir: " + (error.message || "Revisa las políticas de Supabase"), { duration: 5000 });
     } finally {
+      inputEl.value = "";
       setIsUploadingImage(false);
     }
+  };
+
+  const handleAddDirectUrl = () => {
+    const clean = directUrlInput.trim();
+    if (!clean) return;
+    if ((formData.imageUrls?.length || 0) >= 5) {
+      toast.error("Máximo 5 imágenes permitidas por producto");
+      return;
+    }
+    setFormData(prev => {
+      const updated = Array.from(new Set([...(prev.imageUrls || []), clean])).slice(0, 5);
+      return {
+        ...prev,
+        imageUrls: updated,
+        imageUrl: updated[0] || ""
+      };
+    });
+    setDirectUrlInput("");
+    toast.success("URL agregada a la galería");
+  };
+
+  const handleSetPrimaryImage = (indexToPromote: number) => {
+    if (indexToPromote === 0) return;
+    setFormData(prev => {
+      const current = [...(prev.imageUrls || [])];
+      if (!current[indexToPromote]) return prev;
+      const [chosen] = current.splice(indexToPromote, 1);
+      const updated = [chosen, ...current];
+      return {
+        ...prev,
+        imageUrls: updated,
+        imageUrl: updated[0] || ""
+      };
+    });
+    toast.success("Imagen principal actualizada");
   };
 
   const handleRemoveImage = (indexToRemove: number) => {
@@ -170,15 +256,21 @@ export default function InventoryPage() {
       toast.error("Por favor ingresa primero el Nombre del producto");
       return;
     }
-    
+
+    const sessionId = ++searchSessionRef.current;
     setIsSearchingImage(true);
     setImageSearchResults([]);
-    
+    setFailedAiImages({});
+
     const query = `${formData.name} ${formData.brand || ""} ${formData.sku || ""}`.trim();
     const tid = toast.loading(`Buscando imágenes para "${query}"...`);
-    
+
     try {
       const res = await searchProductImage(query);
+      if (sessionId !== searchSessionRef.current) {
+        toast.dismiss(tid);
+        return;
+      }
       if (res.success && res.images) {
         setImageSearchResults(res.images);
         toast.success(`Encontradas ${res.images.length} opciones`, { id: tid });
@@ -186,42 +278,71 @@ export default function InventoryPage() {
         toast.error(res.error || "No se encontraron resultados", { id: tid });
       }
     } catch (err) {
-      toast.error("Error al conectar con el asistente visual", { id: tid });
+      if (sessionId === searchSessionRef.current) {
+        toast.error("Error al conectar con el asistente visual", { id: tid });
+      } else {
+        toast.dismiss(tid);
+      }
     } finally {
-      setIsSearchingImage(false);
+      if (sessionId === searchSessionRef.current) {
+        setIsSearchingImage(false);
+      }
     }
   };
 
-  const initialProductState: ProductInputData = {
-    name: "", sku: "", commercialName: "", description: "", features: "", brand: "", categoryId: "",
-    unit: "Und", stock: 0, minStockLimit: 10, maxStockLimit: 100, location: "",
-    cost: 0, profitMargin: 30, expertDiscount: 5, volumeDiscount: 10, corporateDiscount: 15, tax: 19, price: 0,
-    supplierId: "", altSupplierId: "", imageUrl: "", imageUrls: [], technicalSheetUrl: "", salesCount: 0, popularity: 0
-  };
-  
   const [formData, setFormData] = useState<ProductInputData>(initialProductState);
   const [initialFormData, setInitialFormData] = useState<ProductInputData>(initialProductState);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(initialUrlQuery);
+  const lastAppliedUrlSearchRef = useRef(initialUrlQuery);
 
-  // Debounce search term
+  // Sync URL params (?search=... or ?action=new) from GlobalSearch / Shortcuts
   useEffect(() => {
+    const qParam = searchParams.get("search") || "";
+    const actionParam = searchParams.get("action");
+
+    if (qParam.trim() !== "" && qParam !== lastAppliedUrlSearchRef.current) {
+      lastAppliedUrlSearchRef.current = qParam;
+      skipNextDebounceRef.current = true;
+      setSearchTerm(qParam);
+      setDebouncedSearch(qParam);
+    }
+
+    if (actionParam === "new") {
+      resetModalTransientState();
+      setEditingProductId(null);
+      setFormData(initialProductState);
+      setInitialFormData(initialProductState);
+      setActiveTab(1);
+      setIsModalOpen(true);
+    }
+  }, [searchParams]);
+
+  // Debounce typing in search bar
+  useEffect(() => {
+    if (skipNextDebounceRef.current) {
+      skipNextDebounceRef.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-    }, 500);
+    }, 400);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const loadData = async (searchOverride?: string) => {
+    const reqId = ++loadRequestIdRef.current;
     setIsLoading(true);
     try {
-      const query = typeof searchOverride === 'string' ? searchOverride : debouncedSearch;
+      const query = typeof searchOverride === "string" ? searchOverride : debouncedSearch;
       const [prods, count, sups, cats] = await Promise.all([
         getInventoryProducts(limit, sortField, sortOrder, query),
         getTotalProductsCount(query),
-        getSuppliers(), 
+        getSuppliers(),
         getCategories()
       ]);
-      
+
+      if (reqId !== loadRequestIdRef.current) return;
+
       if (prods && (prods as any).error) {
         throw new Error((prods as any).error);
       }
@@ -231,15 +352,20 @@ export default function InventoryPage() {
       setSuppliers(sups);
       setCategories(cats);
     } catch (error: any) {
-      console.error("loadData error:", error);
-      toast.error(`Error al cargar datos: ${error.message || "Fallo de conexión"}`);
+      if (reqId === loadRequestIdRef.current) {
+        console.error("loadData error:", error);
+        toast.error(`Error al cargar datos: ${error.message || "Fallo de conexión"}`);
+      }
     } finally {
-      setIsLoading(false);
+      if (reqId === loadRequestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleSelectProduct = (product: any) => {
     const term = product.sku || product.name;
+    skipNextDebounceRef.current = true;
     setSearchTerm(term);
     setDebouncedSearch(term);
     setProducts(prev => {
@@ -249,13 +375,16 @@ export default function InventoryPage() {
       }
       return prev;
     });
-    loadData(term);
   };
 
   const handleClearSearch = () => {
+    skipNextDebounceRef.current = true;
+    lastAppliedUrlSearchRef.current = "";
     setSearchTerm("");
     setDebouncedSearch("");
-    loadData("");
+    if (typeof window !== "undefined" && window.location.search) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   };
 
   useEffect(() => {
@@ -269,15 +398,15 @@ export default function InventoryPage() {
 
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);
-      
+
       const channel = supabase
-        .channel('inventory-changes')
+        .channel("inventory-changes")
         .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'Order' },
-          (payload) => {
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "Order" },
+          () => {
             toast.success("🚨 ¡Nueva venta registrada en el POS!", {
-              duration: 5000, icon: '🛎️', style: { background: 'var(--color-primary)', color: '#fff', fontWeight: 'bold' }
+              duration: 5000, icon: "🛎️", style: { background: "var(--color-primary)", color: "#fff", fontWeight: "bold" }
             });
             loadData();
           }
@@ -287,20 +416,6 @@ export default function InventoryPage() {
       return () => { supabase.removeChannel(channel); };
     }
   }, []);
-
-  // Auto-calculate PVP based on cost, margin and tax
-  useEffect(() => {
-    const cost = Number(formData.cost) || 0;
-    const margin = Number(formData.profitMargin) || 0;
-    const tax = Number(formData.tax) || 0;
-    const costWithTax = cost + (cost * tax / 100);
-    let u = 1 - (margin / 100);
-    if (u <= 0) u = 0.01; // Avoid division by zero
-    
-    const finalPrice = costWithTax / u;
-    
-    setFormData(prev => ({ ...prev, price: Math.ceil(finalPrice / 100) * 100 }));
-  }, [formData.cost, formData.profitMargin, formData.tax]);
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -341,6 +456,7 @@ export default function InventoryPage() {
         return;
       }
     }
+    resetModalTransientState();
     setIsModalOpen(false);
   };
 
@@ -351,13 +467,19 @@ export default function InventoryPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && document.querySelector(".modal-overlay")) {
+      if (e.key !== "Escape") return;
+      if (cropperState.isOpen || isAiModalOpen) return;
+      if (isCategoryModalOpen) {
+        setIsCategoryModalOpen(false);
+        return;
+      }
+      if (isModalOpen) {
         handleCloseModalRef.current();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [isModalOpen, isCategoryModalOpen, cropperState.isOpen, isAiModalOpen]);
 
   const handleSaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -369,19 +491,28 @@ export default function InventoryPage() {
 
     setIsSaving(true);
     const toastId = toast.loading(editingProductId ? "Guardando cambios del producto..." : "Creando producto...");
-    
+
     try {
-      let result;
-      if (editingProductId) {
-        result = await updateProduct(editingProductId, formData);
-      } else {
-        result = await createProduct(formData);
+      const finalImages = Array.from(new Set([...(formData.imageUrls || [])].filter(Boolean)));
+      if (finalImages.length === 0 && formData.imageUrl?.trim()) {
+        finalImages.push(formData.imageUrl.trim());
       }
+      const dataToSave: ProductInputData = {
+        ...formData,
+        imageUrls: finalImages,
+        imageUrl: finalImages[0] || ""
+      };
+
+      const result = editingProductId
+        ? await updateProduct(editingProductId, dataToSave)
+        : await createProduct(dataToSave);
 
       if (result.success) {
         toast.success(editingProductId ? "¡Producto actualizado con éxito!" : "¡Producto creado con éxito!", { id: toastId, duration: 4000 });
+        resetModalTransientState();
         setIsModalOpen(false);
         setFormData(initialProductState);
+        setInitialFormData(initialProductState);
         setEditingProductId(null);
         setActiveTab(1);
         await loadData();
@@ -459,12 +590,17 @@ export default function InventoryPage() {
   };
 
   const handleEditClick = (prod: any) => {
+    resetModalTransientState();
     setEditingProductId(prod.id);
+    const normalizedUrls: string[] = Array.isArray(prod.imageUrls) && prod.imageUrls.length > 0
+      ? prod.imageUrls.filter(Boolean)
+      : (prod.imageUrl ? [prod.imageUrl] : []);
+
     const updatedFormData: ProductInputData = {
       name: prod.name, sku: prod.sku, commercialName: prod.commercialName || "", description: prod.description || "", features: prod.features || "", brand: prod.brand || "", categoryId: prod.categoryId,
       unit: prod.unit, stock: prod.stock, minStockLimit: prod.minStockLimit, maxStockLimit: prod.maxStockLimit || 100, location: prod.location || "",
-      cost: prod.cost, profitMargin: prod.profitMargin, expertDiscount: prod.expertDiscount || 5, volumeDiscount: prod.volumeDiscount || 10, corporateDiscount: prod.corporateDiscount || 15, tax: prod.tax, price: prod.price,
-      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: prod.imageUrl || "", imageUrls: prod.imageUrls || [], technicalSheetUrl: prod.technicalSheetUrl || "", salesCount: prod.salesCount || 0, popularity: prod.popularity || 0
+      cost: prod.cost, profitMargin: prod.profitMargin, expertDiscount: prod.expertDiscount ?? 5, volumeDiscount: prod.volumeDiscount ?? 10, corporateDiscount: prod.corporateDiscount ?? 15, tax: prod.tax ?? 19, price: prod.price,
+      supplierId: prod.supplierId || "", altSupplierId: prod.altSupplierId || "", imageUrl: normalizedUrls[0] || prod.imageUrl || "", imageUrls: normalizedUrls, technicalSheetUrl: prod.technicalSheetUrl || "", salesCount: prod.salesCount || 0, popularity: prod.popularity || 0
     };
     setFormData(updatedFormData);
     setInitialFormData(updatedFormData);
@@ -508,14 +644,14 @@ export default function InventoryPage() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <h1 className="page-title">Inventario y Abastecimiento</h1>
           <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem", maxWidth: "600px", marginTop: "0.5rem" }}>
             Gestiona stock, ficha técnica y configura compras automáticas. ({totalCount} productos en BD)
           </p>
         </div>
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
           <button className="btn btn-outline" style={{ borderColor: "var(--color-secondary)", color: "var(--color-secondary)", display: "flex", alignItems: "center", gap: "0.5rem" }} onClick={() => { setAiFillMode(false); setIsAiModalOpen(true); }}>
             <Sparkles size={18} />
             Importar PDF con IA
@@ -523,7 +659,7 @@ export default function InventoryPage() {
           <button className="btn btn-outline" onClick={() => setIsCategoryModalOpen(true)}>
             Gestionar Categorías
           </button>
-          <button className="btn btn-primary" onClick={() => { setEditingProductId(null); setFormData(initialProductState); setInitialFormData(initialProductState); setIsModalOpen(true); }}>
+          <button className="btn btn-primary" onClick={() => { resetModalTransientState(); setEditingProductId(null); setFormData(initialProductState); setInitialFormData(initialProductState); setActiveTab(1); setIsModalOpen(true); }}>
             <Plus size={18} />
             Nuevo Producto
           </button>
@@ -531,8 +667,8 @@ export default function InventoryPage() {
       </div>
 
       <div className="card" style={{ padding: "0" }}>
-        <div style={{ padding: "1.5rem", display: "flex", gap: "1rem", borderBottom: "1px solid var(--color-border)" }}>
-          <div style={{ position: "relative", flex: 1 }}>
+        <div style={{ padding: "1.5rem", display: "flex", gap: "1rem", borderBottom: "1px solid var(--color-border)", flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ position: "relative", flex: "1 1 280px" }}>
             <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", zIndex: 2, pointerEvents: "none" }} />
             <ProductSearchAutocomplete 
               placeholder="Buscar por SKU, nombre o marca..." 
@@ -540,7 +676,8 @@ export default function InventoryPage() {
               onChange={(val) => setSearchTerm(val)}
               onSelect={handleSelectProduct}
               className="input" 
-              style={{ paddingLeft: "38px", paddingRight: searchTerm ? "38px" : "12px" }}
+              style={{ paddingLeft: "38px", paddingRight: searchTerm ? "62px" : "36px" }}
+              loaderRight={searchTerm ? "38px" : "12px"}
               showStock={true}
             />
             {searchTerm && (
@@ -549,7 +686,7 @@ export default function InventoryPage() {
                 onClick={handleClearSearch}
                 style={{
                   position: "absolute",
-                  right: "12px",
+                  right: "10px",
                   top: "50%",
                   transform: "translateY(-50%)",
                   background: "transparent",
@@ -579,10 +716,13 @@ export default function InventoryPage() {
             <option value={100}>Mostrar 100</option>
             <option value={500}>Mostrar 500</option>
           </select>
-          <button className="btn btn-outline" onClick={() => loadData()}>Recargar</button>
+          <button type="button" className="btn btn-outline" onClick={() => loadData()} disabled={isLoading}>
+            {isLoading && <Loader2 size={15} className="animate-spin" />}
+            Recargar
+          </button>
         </div>
 
-        <div className="data-table-container" style={{ border: "none", borderRadius: "0 0 var(--radius-lg) var(--radius-lg)" }}>
+        <div className="data-table-container" style={{ border: "none", borderRadius: "0 0 var(--radius-lg) var(--radius-lg)", opacity: isLoading && products.length > 0 ? 0.65 : 1, transition: "opacity 0.2s" }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -595,7 +735,7 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
+              {isLoading && filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: '3rem' }}>
                     <Loader2 className="animate-spin" size={30} color="var(--color-primary)" style={{ margin: "0 auto" }} />
@@ -723,7 +863,7 @@ export default function InventoryPage() {
 
       {/* MODAL AVANZADO DE CREACIÓN/EDICIÓN DE PRODUCTO */}
       {isModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "2rem" }}>
+        <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "2rem" }}>
           <div className="card" style={{ width: "100%", maxWidth: "800px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
             
             {/* Header del Modal */}
@@ -898,21 +1038,57 @@ export default function InventoryPage() {
                           value={formData.cost} 
                           thousandSeparator="." 
                           decimalSeparator="," 
-                          onValueChange={(values) => setFormData({...formData, cost: values.floatValue || 0})} 
+                          onValueChange={(values, sourceInfo) => {
+                            if (sourceInfo?.source !== "event") return;
+                            const newCost = values.floatValue || 0;
+                            setFormData(prev => ({
+                              ...prev,
+                              cost: newCost,
+                              price: calculateSuggestedPvp(newCost, prev.profitMargin, prev.tax)
+                            }));
+                          }} 
                         />
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Porcentaje de Utilidad Esperada</label>
                       <div style={{ position: "relative" }}>
-                        <input type="number" min="0" max="100" className="input" value={formData.profitMargin} onChange={(e) => setFormData({...formData, profitMargin: parseFloat(e.target.value) || 0})} />
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="input"
+                          value={formData.profitMargin}
+                          onChange={(e) => {
+                            const newMargin = parseFloat(e.target.value) || 0;
+                            setFormData(prev => ({
+                              ...prev,
+                              profitMargin: newMargin,
+                              price: calculateSuggestedPvp(prev.cost, newMargin, prev.tax)
+                            }));
+                          }}
+                        />
                         <span style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", fontWeight: 600 }}>%</span>
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                       <label style={{ fontWeight: 600, fontSize: "0.95rem" }}>Impuestos (IVA)</label>
                       <div style={{ position: "relative" }}>
-                        <input type="number" min="0" max="100" className="input" value={formData.tax} onChange={(e) => setFormData({...formData, tax: parseFloat(e.target.value) || 0})} />
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="input"
+                          value={formData.tax}
+                          onChange={(e) => {
+                            const newTax = parseFloat(e.target.value) || 0;
+                            setFormData(prev => ({
+                              ...prev,
+                              tax: newTax,
+                              price: calculateSuggestedPvp(prev.cost, prev.profitMargin, newTax)
+                            }));
+                          }}
+                        />
                         <span style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", fontWeight: 600 }}>%</span>
                       </div>
                     </div>
@@ -988,7 +1164,7 @@ export default function InventoryPage() {
                       <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
                         {formData.imageUrls && formData.imageUrls.length > 0 ? (
                           formData.imageUrls.map((url, idx) => (
-                            <div key={idx} style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
+                            <div key={`${url}-${idx}`} style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: idx === 0 ? "2px solid var(--color-primary)" : "1px solid var(--color-border)", flexShrink: 0, background: "#fff" }}>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={url} alt={`Preview ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                               <button 
@@ -1002,13 +1178,27 @@ export default function InventoryPage() {
                               >
                                 <Crop size={12} />
                               </button>
-                              <button type="button" onClick={() => handleRemoveImage(idx)} style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(255,0,0,0.8)", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px" }}>
+                              <button type="button" onClick={() => handleRemoveImage(idx)} title="Eliminar imagen" style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(255,0,0,0.85)", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px" }}>
                                 <X size={14} />
                               </button>
+                              {idx === 0 ? (
+                                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(32,53,98,0.88)", color: "white", fontSize: "0.62rem", fontWeight: 700, textAlign: "center", padding: "2px 0" }}>
+                                  Principal
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetPrimaryImage(idx)}
+                                  title="Marcar como imagen principal"
+                                  style={{ position: "absolute", bottom: "4px", left: "4px", background: "rgba(255,255,255,0.92)", color: "var(--color-secondary)", border: "1px solid var(--color-border)", borderRadius: "50%", width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}
+                                >
+                                  <Star size={12} />
+                                </button>
+                              )}
                             </div>
                           ))
                         ) : formData.imageUrl ? (
-                          <div style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", flexShrink: 0 }}>
+                          <div style={{ position: "relative", width: "100px", height: "100px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "2px solid var(--color-primary)", flexShrink: 0, background: "#fff" }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={formData.imageUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             <button 
@@ -1021,6 +1211,14 @@ export default function InventoryPage() {
                               style={{ position: "absolute", top: "4px", left: "4px", background: "rgba(32, 53, 98, 0.85)", color: "white", border: "none", borderRadius: "50%", width: "22px", height: "22px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
                             >
                               <Crop size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, imageUrl: "", imageUrls: [] }))}
+                              title="Eliminar imagen"
+                              style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(255,0,0,0.85)", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "12px" }}
+                            >
+                              <X size={14} />
                             </button>
                           </div>
                         ) : null}
@@ -1048,25 +1246,40 @@ export default function InventoryPage() {
                               style={{ padding: "0.5rem" }}
                             />
                           )}
-                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                             <input 
                               type="text" 
                               className="input" 
-                              value={formData.imageUrl} 
-                              onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
-                              placeholder="URL directa de la imagen..." 
-                              style={{ flex: 1 }}
+                              value={directUrlInput} 
+                              onChange={(e) => setDirectUrlInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleAddDirectUrl();
+                                }
+                              }}
+                              placeholder="Pegar URL directa de imagen..." 
+                              style={{ flex: "1 1 200px" }}
                             />
-                            {formData.imageUrl && (
-                              <button 
-                                type="button" 
-                                onClick={() => setCropperState({ isOpen: true, imageUrl: formData.imageUrl })}
-                                className="btn btn-outline" 
-                                title="Recortar imagen actual"
-                                style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 0.75rem", fontSize: "0.85rem", color: "var(--color-secondary, #f39423)", borderColor: "var(--color-secondary, #f39423)" }}
-                              >
-                                <Crop size={15} /> Recortar
-                              </button>
+                            {directUrlInput.trim() && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={handleAddDirectUrl}
+                                  className="btn btn-outline"
+                                  style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.5rem 0.75rem", fontSize: "0.85rem" }}
+                                >
+                                  <Plus size={15} /> Usar URL
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCropperState({ isOpen: true, imageUrl: directUrlInput.trim() })}
+                                  className="btn btn-outline"
+                                  style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.5rem 0.75rem", fontSize: "0.85rem", color: "var(--color-secondary, #f39423)", borderColor: "var(--color-secondary, #f39423)" }}
+                                >
+                                  <Crop size={15} /> Recortar URL
+                                </button>
+                              </>
                             )}
                             <button 
                               type="button" 
@@ -1075,147 +1288,203 @@ export default function InventoryPage() {
                               className="btn btn-outline" 
                               style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", color: "var(--color-primary)", borderColor: "var(--color-primary)" }}
                             >
-                              <Sparkles size={16} /> 
+                              {isSearchingImage ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                               {isSearchingImage ? "Buscando..." : "Asistente IA"}
                             </button>
                           </div>
                           
                           {/* Resultados de búsqueda IA */}
-                          {imageSearchResults.length > 0 && (
-                            <div style={{ marginTop: "1rem", padding: "1rem", background: "var(--color-light-gray)", borderRadius: "var(--radius-md)", border: "1px dashed var(--color-border)" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                                <div>
-                                  <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text)", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
-                                    <Sparkles size={16} color="var(--color-primary)" /> Resultados Sugeridos por IA
-                                  </h4>
-                                  <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                                    Selecciona una o varias imágenes para tu producto ({formData.imageUrls?.length || 0}/5 seleccionadas)
-                                  </span>
+                          {imageSearchResults.length > 0 && (() => {
+                            const visibleAiResults = imageSearchResults.filter(img => !failedAiImages[img.url]);
+                            return (
+                              <div style={{ marginTop: "1rem", padding: "1rem", background: "var(--color-light-gray)", borderRadius: "var(--radius-md)", border: "1px dashed var(--color-border)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                                  <div>
+                                    <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text)", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
+                                      <Sparkles size={16} color="var(--color-primary)" /> Resultados Sugeridos por IA
+                                    </h4>
+                                    <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                                      Selecciona una o varias imágenes para tu producto ({formData.imageUrls?.length || 0}/5 seleccionadas)
+                                    </span>
+                                  </div>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => setImageSearchResults([])} 
+                                    className="btn btn-outline"
+                                    style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                                  >
+                                    <X size={14} /> Listo / Cerrar
+                                  </button>
                                 </div>
-                                <button 
-                                  type="button" 
-                                  onClick={() => setImageSearchResults([])} 
-                                  className="btn btn-outline"
-                                  style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.35rem" }}
-                                >
-                                  <X size={14} /> Listo / Cerrar
-                                </button>
-                              </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.65rem" }}>
-                                {imageSearchResults.map((img, idx) => {
-                                  const isAlreadyAdded = (formData.imageUrls || []).some(u => u === img.url || (img.preview && u.includes(img.preview.split('?')[0])));
-                                  return (
-                                    <div 
-                                      key={idx} 
-                                      onClick={async () => {
-                                        if (isAlreadyAdded) {
-                                          toast("Esta imagen ya está agregada al producto", { icon: "ℹ️" });
-                                          return;
-                                        }
-                                        if ((formData.imageUrls?.length || 0) >= 5) {
-                                          toast.error("Máximo 5 imágenes permitidas por producto");
-                                          return;
-                                        }
-                                        const tid = toast.loading("Guardando imagen permanentemente...");
-                                        try {
-                                          const res = await downloadAndUploadExternalImage(img.url);
-                                          if (!res.success || !res.url) throw new Error(res.error || "Error al guardar");
-                                          
-                                          const newUrl = res.url as string;
-                                          setFormData(prev => {
-                                            const updated = Array.from(new Set([...(prev.imageUrls || []), newUrl]));
-                                            return { 
-                                              ...prev, 
-                                              imageUrl: prev.imageUrl || newUrl,
-                                              imageUrls: updated 
-                                            };
-                                          });
-                                          toast.success(`Imagen agregada (${(formData.imageUrls?.length || 0) + 1}/5)`, { id: tid });
-                                        } catch (error) {
-                                          console.error(error);
-                                          setFormData(prev => {
-                                            const updated = Array.from(new Set([...(prev.imageUrls || []), img.url]));
-                                            return { 
-                                              ...prev, 
-                                              imageUrl: prev.imageUrl || img.url,
-                                              imageUrls: updated 
-                                            };
-                                          });
-                                          toast.success(`Enlazada temporalmente (${(formData.imageUrls?.length || 0) + 1}/5)`, { id: tid });
-                                        }
-                                      }}
-                                      style={{ 
-                                        position: "relative",
-                                        aspectRatio: "1", 
-                                        borderRadius: "var(--radius-sm)", 
-                                        overflow: "hidden", 
-                                        border: isAlreadyAdded ? "2px solid var(--color-success)" : "2px solid var(--color-border)", 
-                                        cursor: isAlreadyAdded ? "default" : "pointer", 
-                                        transition: "all 0.2s",
-                                        background: "#fff",
-                                        boxShadow: isAlreadyAdded ? "0 0 0 2px rgba(16, 185, 129, 0.25)" : "none"
-                                      }}
-                                      onMouseOver={(e) => {
-                                        if (!isAlreadyAdded) e.currentTarget.style.borderColor = "var(--color-primary)";
-                                      }}
-                                      onMouseOut={(e) => {
-                                        if (!isAlreadyAdded) e.currentTarget.style.borderColor = "var(--color-border)";
-                                      }}
-                                      title={isAlreadyAdded ? "Ya agregada al producto" : img.title || "Clic para agregar"}
-                                    >
-                                      {/* Botón de Recortar imagen encontrada por IA */}
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if ((formData.imageUrls?.length || 0) >= 5) {
-                                            toast.error("Máximo 5 imágenes permitidas por producto");
-                                            return;
-                                          }
-                                          setCropperState({
-                                            isOpen: true,
-                                            imageUrl: img.url,
-                                            isAiSuggestion: true
-                                          });
-                                        }}
-                                        title="Recortar marcas de agua o logos antes de agregar"
-                                        style={{
-                                          position: "absolute",
-                                          top: "3px",
-                                          left: "3px",
-                                          background: "rgba(243, 148, 35, 0.95)",
-                                          color: "white",
-                                          border: "none",
-                                          borderRadius: "4px",
-                                          padding: "2px 5px",
-                                          fontSize: "0.62rem",
-                                          fontWeight: 700,
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: "2px",
-                                          cursor: "pointer",
-                                          boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                                          zIndex: 2
-                                        }}
-                                      >
-                                        <Crop size={10} /> Recortar
-                                      </button>
-                                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img src={img.preview} referrerPolicy="no-referrer" alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
-                                      {isAlreadyAdded && (
-                                        <div style={{ position: "absolute", top: "3px", right: "3px", background: "var(--color-success)", color: "white", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "bold", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
-                                          ✓
+                                {visibleAiResults.length === 0 ? (
+                                  <div style={{ padding: "1.25rem", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.85rem", background: "white", borderRadius: "var(--radius-sm)" }}>
+                                    Las imágenes encontradas tenían enlaces externos protegidos. Intenta ajustar el nombre o marca e intenta de nuevo.
+                                  </div>
+                                ) : (
+                                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(95px, 1fr))", gap: "0.65rem" }}>
+                                    {visibleAiResults.map((img, idx) => {
+                                      const mappedUploaded = aiUrlToUploadedUrl[img.url];
+                                      const isAlreadyAdded = (formData.imageUrls || []).some(
+                                        u => u === img.url || (mappedUploaded && u === mappedUploaded)
+                                      );
+                                      return (
+                                        <div 
+                                          key={`${img.url}-${idx}`} 
+                                          onClick={async () => {
+                                            if (isAlreadyAdded) {
+                                              toast("Esta imagen ya está agregada al producto", { icon: "ℹ️" });
+                                              return;
+                                            }
+                                            if ((formData.imageUrls?.length || 0) >= 5) {
+                                              toast.error("Máximo 5 imágenes permitidas por producto");
+                                              return;
+                                            }
+                                            const activeSession = searchSessionRef.current;
+                                            const tid = toast.loading("Guardando imagen permanentemente...");
+                                            try {
+                                              const res = await downloadAndUploadExternalImage(img.url);
+                                              if (activeSession !== searchSessionRef.current) {
+                                                toast.dismiss(tid);
+                                                return;
+                                              }
+                                              if (!res.success || !res.url) throw new Error(res.error || "Error al guardar");
+                                              
+                                              const newUrl = res.url as string;
+                                              let finalCount = 0;
+                                              let exceeded = false;
+                                              setFormData(prev => {
+                                                const current = prev.imageUrls || [];
+                                                if (current.length >= 5) {
+                                                  exceeded = true;
+                                                  return prev;
+                                                }
+                                                const updated = Array.from(new Set([...current, newUrl]));
+                                                finalCount = updated.length;
+                                                return { 
+                                                  ...prev, 
+                                                  imageUrl: updated[0] || newUrl,
+                                                  imageUrls: updated 
+                                                };
+                                              });
+                                              if (exceeded) {
+                                                toast.error("Máximo 5 imágenes permitidas por producto", { id: tid });
+                                              } else {
+                                                setAiUrlToUploadedUrl(prev => ({ ...prev, [img.url]: newUrl }));
+                                                toast.success(`Imagen agregada (${finalCount}/5)`, { id: tid });
+                                              }
+                                            } catch (error) {
+                                              if (activeSession !== searchSessionRef.current) {
+                                                toast.dismiss(tid);
+                                                return;
+                                              }
+                                              console.error(error);
+                                              let finalCount = 0;
+                                              let exceeded = false;
+                                              setFormData(prev => {
+                                                const current = prev.imageUrls || [];
+                                                if (current.length >= 5) {
+                                                  exceeded = true;
+                                                  return prev;
+                                                }
+                                                const updated = Array.from(new Set([...current, img.url]));
+                                                finalCount = updated.length;
+                                                return { 
+                                                  ...prev, 
+                                                  imageUrl: updated[0] || img.url,
+                                                  imageUrls: updated 
+                                                };
+                                              });
+                                              if (exceeded) {
+                                                toast.error("Máximo 5 imágenes permitidas por producto", { id: tid });
+                                              } else {
+                                                setAiUrlToUploadedUrl(prev => ({ ...prev, [img.url]: img.url }));
+                                                toast.success(`Enlazada (${finalCount}/5)`, { id: tid });
+                                              }
+                                            }
+                                          }}
+                                          style={{ 
+                                            position: "relative",
+                                            aspectRatio: "1", 
+                                            borderRadius: "var(--radius-sm)", 
+                                            overflow: "hidden", 
+                                            border: isAlreadyAdded ? "2px solid var(--color-success)" : "2px solid var(--color-border)", 
+                                            cursor: isAlreadyAdded ? "default" : "pointer", 
+                                            transition: "all 0.2s",
+                                            background: "#fff",
+                                            boxShadow: isAlreadyAdded ? "0 0 0 2px rgba(16, 185, 129, 0.25)" : "none"
+                                          }}
+                                          onMouseOver={(e) => {
+                                            if (!isAlreadyAdded) e.currentTarget.style.borderColor = "var(--color-primary)";
+                                          }}
+                                          onMouseOut={(e) => {
+                                            if (!isAlreadyAdded) e.currentTarget.style.borderColor = "var(--color-border)";
+                                          }}
+                                          title={isAlreadyAdded ? "Ya agregada al producto" : img.title || "Clic para agregar"}
+                                        >
+                                          {/* Botón de Recortar imagen encontrada por IA */}
+                                          {!isAlreadyAdded && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if ((formData.imageUrls?.length || 0) >= 5) {
+                                                  toast.error("Máximo 5 imágenes permitidas por producto");
+                                                  return;
+                                                }
+                                                setCropperState({
+                                                  isOpen: true,
+                                                  imageUrl: img.url,
+                                                  sourceAiUrl: img.url
+                                                });
+                                              }}
+                                              title="Recortar marcas de agua o logos antes de agregar"
+                                              style={{
+                                                position: "absolute",
+                                                top: "3px",
+                                                left: "3px",
+                                                background: "rgba(243, 148, 35, 0.95)",
+                                                color: "white",
+                                                border: "none",
+                                                borderRadius: "4px",
+                                                padding: "2px 5px",
+                                                fontSize: "0.62rem",
+                                                fontWeight: 700,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "2px",
+                                                cursor: "pointer",
+                                                boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                                                zIndex: 2
+                                              }}
+                                            >
+                                              <Crop size={10} /> Recortar
+                                            </button>
+                                          )}
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img
+                                            src={img.preview}
+                                            referrerPolicy="no-referrer"
+                                            alt=""
+                                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                                            loading="lazy"
+                                            onError={() => setFailedAiImages(prev => ({ ...prev, [img.url]: true }))}
+                                          />
+                                          {isAlreadyAdded && (
+                                            <div style={{ position: "absolute", top: "3px", right: "3px", background: "var(--color-success)", color: "white", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "bold", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
+                                              ✓
+                                            </div>
+                                          )}
+                                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: isAlreadyAdded ? "rgba(16,185,129,0.9)" : "rgba(0,0,0,0.75)", color: "white", fontSize: "0.55rem", padding: "2px 4px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 }}>
+                                            {isAlreadyAdded ? "Agregada ✓" : "+ Agregar"}
+                                          </div>
                                         </div>
-                                      )}
-                                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: isAlreadyAdded ? "rgba(16,185,129,0.9)" : "rgba(0,0,0,0.75)", color: "white", fontSize: "0.55rem", padding: "2px 4px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 }}>
-                                        {isAlreadyAdded ? "Agregada ✓" : "+ Agregar"}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
                           
                           <div style={{ marginTop: "0.5rem", background: "#fff3cd", border: "1px solid #ffe69c", color: "#664d03", padding: "0.75rem", borderRadius: "var(--radius-sm)", fontSize: "0.8rem" }}>
                             <strong>⚠️ Requisitos de Instagram (Ofertas/Novedades):</strong>
@@ -1273,14 +1542,19 @@ export default function InventoryPage() {
         isOpen={isAiModalOpen} 
         onClose={() => setIsAiModalOpen(false)}
         onSingleProductFill={aiFillMode ? (parsedProd: any, suppId?: string) => {
-          setFormData(prev => ({
-            ...prev,
-            sku: parsedProd.sku || prev.sku,
-            name: parsedProd.name || prev.name,
-            cost: parsedProd.cost || prev.cost,
-            tax: parsedProd.tax || prev.tax,
-            supplierId: suppId || prev.supplierId
-          }));
+          setFormData(prev => {
+            const newCost = parsedProd.cost ?? prev.cost;
+            const newTax = parsedProd.tax ?? prev.tax;
+            return {
+              ...prev,
+              sku: parsedProd.sku || prev.sku,
+              name: parsedProd.name || prev.name,
+              cost: newCost,
+              tax: newTax,
+              price: calculateSuggestedPvp(newCost, prev.profitMargin, newTax),
+              supplierId: suppId || prev.supplierId
+            };
+          });
           setActiveTab(3); // Saltar a la pestaña de costos
         } : undefined}
       />
@@ -1294,5 +1568,13 @@ export default function InventoryPage() {
         title="Recortar y Limpiar Imagen"
       />
     </>
+  );
+}
+
+export default function InventoryPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>Cargando módulo de inventario...</div>}>
+      <InventoryContent />
+    </Suspense>
   );
 }
