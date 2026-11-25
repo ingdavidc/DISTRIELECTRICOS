@@ -321,33 +321,39 @@ export default function InventoryPage() {
 
   const handleSaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.sku || !formData.categoryId) {
-      toast.error("Llena los campos obligatorios en la pestaña 1");
+    if (!formData.name?.trim() || !formData.sku?.trim() || !formData.categoryId) {
+      toast.error("Por favor completa los campos obligatorios en la pestaña 1 (Nombre, SKU y Categoría)");
       setActiveTab(1);
       return;
     }
 
     setIsSaving(true);
-    const toastId = toast.loading("Guardando producto...");
+    const toastId = toast.loading(editingProductId ? "Guardando cambios del producto..." : "Creando producto...");
     
-    let result;
-    if (editingProductId) {
-      result = await updateProduct(editingProductId, formData);
-    } else {
-      result = await createProduct(formData);
-    }
+    try {
+      let result;
+      if (editingProductId) {
+        result = await updateProduct(editingProductId, formData);
+      } else {
+        result = await createProduct(formData);
+      }
 
-    if (result.success) {
-      toast.success(editingProductId ? "Producto actualizado" : "Producto creado", { id: toastId });
-      setIsModalOpen(false);
-      setFormData(initialProductState);
-      setEditingProductId(null);
-      setActiveTab(1);
-      await loadData();
-    } else {
-      toast.error(result.error || "Error al guardar", { id: toastId });
+      if (result.success) {
+        toast.success(editingProductId ? "¡Producto actualizado con éxito!" : "¡Producto creado con éxito!", { id: toastId, duration: 4000 });
+        setIsModalOpen(false);
+        setFormData(initialProductState);
+        setEditingProductId(null);
+        setActiveTab(1);
+        await loadData();
+      } else {
+        toast.error(result.error || "Error al guardar el producto", { id: toastId, duration: 5000 });
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Error al guardar: ${err.message || "Fallo de conexión"}`, { id: toastId, duration: 5000 });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   const handleGenerateSKU = () => {
@@ -717,7 +723,7 @@ export default function InventoryPage() {
             </div>
 
             {/* Contenido del Formulario */}
-            <form onSubmit={handleSaveSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+            <form onSubmit={handleSaveSubmit} noValidate style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
               <div style={{ flex: 1, overflowY: "auto", padding: "2rem", background: "white" }}>
                 
                 {/* TAB 1: IDENTIFICACIÓN */}
@@ -1004,64 +1010,99 @@ export default function InventoryPage() {
                           {/* Resultados de búsqueda IA */}
                           {imageSearchResults.length > 0 && (
                             <div style={{ marginTop: "1rem", padding: "1rem", background: "var(--color-light-gray)", borderRadius: "var(--radius-md)", border: "1px dashed var(--color-border)" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                                <h4 style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                  <Sparkles size={14} color="var(--color-primary)" /> Resultados Sugeridos
-                                </h4>
-                                <button type="button" onClick={() => setImageSearchResults([])} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)" }}>
-                                  <X size={16} />
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                                <div>
+                                  <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text)", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
+                                    <Sparkles size={16} color="var(--color-primary)" /> Resultados Sugeridos por IA
+                                  </h4>
+                                  <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                                    Selecciona una o varias imágenes para tu producto ({formData.imageUrls?.length || 0}/5 seleccionadas)
+                                  </span>
+                                </div>
+                                <button 
+                                  type="button" 
+                                  onClick={() => setImageSearchResults([])} 
+                                  className="btn btn-outline"
+                                  style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                                >
+                                  <X size={14} /> Listo / Cerrar
                                 </button>
                               </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
-                                {imageSearchResults.map((img, idx) => (
-                                  <div 
-                                    key={idx} 
-                                    onClick={async () => {
-                                      const tid = toast.loading("Guardando imagen...");
-                                      try {
-                                        const res = await downloadAndUploadExternalImage(img.url);
-                                        if (!res.success || !res.url) throw new Error(res.error || "Error al guardar");
-                                        
-                                        const newUrl = res.url as string;
-                                        setFormData(prev => ({ 
-                                          ...prev, 
-                                          imageUrl: newUrl,
-                                          imageUrls: Array.from(new Set([...(prev.imageUrls || []), newUrl])) 
-                                        }));
-                                        setImageSearchResults([]);
-                                        toast.success("Imagen guardada permanentemente", { id: tid });
-                                      } catch (error) {
-                                        console.error(error);
-                                        setFormData(prev => ({ 
-                                          ...prev, 
-                                          imageUrl: img.url,
-                                          imageUrls: Array.from(new Set([...(prev.imageUrls || []), img.url])) 
-                                        }));
-                                        setImageSearchResults([]);
-                                        toast.success("Enlazada temporalmente (falló guardado permanente)", { id: tid });
-                                      }
-                                    }}
-                                    style={{ 
-                                      position: "relative",
-                                      aspectRatio: "1", 
-                                      borderRadius: "var(--radius-sm)", 
-                                      overflow: "hidden", 
-                                      border: "2px solid transparent", 
-                                      cursor: "pointer", 
-                                      transition: "transform 0.2s",
-                                      background: "#fff"
-                                    }}
-                                    onMouseOver={(e) => (e.currentTarget.style.border = "2px solid var(--color-primary)")}
-                                    onMouseOut={(e) => (e.currentTarget.style.border = "2px solid transparent")}
-                                    title={img.title}
-                                  >
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={img.preview} referrerPolicy="no-referrer" alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
-                                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.8)", color: "white", fontSize: "0.5rem", padding: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                      {img.preview ? img.preview.substring(0, 30) : "NO-URL"}
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.65rem" }}>
+                                {imageSearchResults.map((img, idx) => {
+                                  const isAlreadyAdded = (formData.imageUrls || []).some(u => u === img.url || (img.preview && u.includes(img.preview.split('?')[0])));
+                                  return (
+                                    <div 
+                                      key={idx} 
+                                      onClick={async () => {
+                                        if (isAlreadyAdded) {
+                                          toast("Esta imagen ya está agregada al producto", { icon: "ℹ️" });
+                                          return;
+                                        }
+                                        if ((formData.imageUrls?.length || 0) >= 5) {
+                                          toast.error("Máximo 5 imágenes permitidas por producto");
+                                          return;
+                                        }
+                                        const tid = toast.loading("Guardando imagen permanentemente...");
+                                        try {
+                                          const res = await downloadAndUploadExternalImage(img.url);
+                                          if (!res.success || !res.url) throw new Error(res.error || "Error al guardar");
+                                          
+                                          const newUrl = res.url as string;
+                                          setFormData(prev => {
+                                            const updated = Array.from(new Set([...(prev.imageUrls || []), newUrl]));
+                                            return { 
+                                              ...prev, 
+                                              imageUrl: prev.imageUrl || newUrl,
+                                              imageUrls: updated 
+                                            };
+                                          });
+                                          toast.success(`Imagen agregada (${(formData.imageUrls?.length || 0) + 1}/5)`, { id: tid });
+                                        } catch (error) {
+                                          console.error(error);
+                                          setFormData(prev => {
+                                            const updated = Array.from(new Set([...(prev.imageUrls || []), img.url]));
+                                            return { 
+                                              ...prev, 
+                                              imageUrl: prev.imageUrl || img.url,
+                                              imageUrls: updated 
+                                            };
+                                          });
+                                          toast.success(`Enlazada temporalmente (${(formData.imageUrls?.length || 0) + 1}/5)`, { id: tid });
+                                        }
+                                      }}
+                                      style={{ 
+                                        position: "relative",
+                                        aspectRatio: "1", 
+                                        borderRadius: "var(--radius-sm)", 
+                                        overflow: "hidden", 
+                                        border: isAlreadyAdded ? "2px solid var(--color-success)" : "2px solid var(--color-border)", 
+                                        cursor: isAlreadyAdded ? "default" : "pointer", 
+                                        transition: "all 0.2s",
+                                        background: "#fff",
+                                        boxShadow: isAlreadyAdded ? "0 0 0 2px rgba(16, 185, 129, 0.25)" : "none"
+                                      }}
+                                      onMouseOver={(e) => {
+                                        if (!isAlreadyAdded) e.currentTarget.style.borderColor = "var(--color-primary)";
+                                      }}
+                                      onMouseOut={(e) => {
+                                        if (!isAlreadyAdded) e.currentTarget.style.borderColor = "var(--color-border)";
+                                      }}
+                                      title={isAlreadyAdded ? "Ya agregada al producto" : img.title || "Clic para agregar"}
+                                    >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={img.preview} referrerPolicy="no-referrer" alt="Option" style={{ width: "100%", height: "100%", objectFit: "contain" }} loading="lazy" />
+                                      {isAlreadyAdded && (
+                                        <div style={{ position: "absolute", top: "3px", right: "3px", background: "var(--color-success)", color: "white", borderRadius: "50%", width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "bold", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
+                                          ✓
+                                        </div>
+                                      )}
+                                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: isAlreadyAdded ? "rgba(16,185,129,0.9)" : "rgba(0,0,0,0.75)", color: "white", fontSize: "0.55rem", padding: "2px 4px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600 }}>
+                                        {isAlreadyAdded ? "Agregada ✓" : "+ Agregar"}
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           )}
